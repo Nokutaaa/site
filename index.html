@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title>Nokuta - Vidéos flottantes sans superposition</title>
+<title>Nokuta</title>
 <link rel="icon" href="favicon.jpg" type="image/jpg" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 <style>
@@ -20,6 +20,7 @@
     height: 100vh;
     object-fit: cover;
     z-index: -10;
+    /* filtre enlevé */
   }
 
   #logo {
@@ -44,7 +45,7 @@
   .floating-video {
     position: absolute;
     border-radius: 12px;
-    filter: blur(1.5px);
+    filter: blur(1.2px);
     opacity: 0.75;
     cursor: pointer;
     pointer-events: auto;
@@ -127,70 +128,52 @@
   const container = document.getElementById('video-container');
   const logo = document.getElementById('logo');
 
-  const minDistance = 25; // px margin around videos and logo
-  const floatingRange = 15; 
-  const floatingSpeed = 0.0035;
-  const baseMinSize = 220;
-  const baseMaxSize = 320;
+  const minDistance = 25; // marge minimum
+  const floatingRange = 8; // flottement réduit
+  const floatingSpeed = 0.002; // vitesse flottement plus lente
+  const baseMinSize = 280;  // vidéos un peu plus grandes
+  const baseMaxSize = 340;
 
   let floatingVideos = [];
 
-  // Fonction pour vérifier chevauchement rectangulaire avec marge
-  function isOverlapping(rectA, rectB, margin=0) {
-    return !(
-      rectA.left + rectA.width + margin < rectB.left ||
-      rectA.left > rectB.left + rectB.width + margin ||
-      rectA.top + rectA.height + margin < rectB.top ||
-      rectA.top > rectB.top + rectB.height + margin
-    );
+  // Coordonnées fixes approximatives pour chaque vidéo autour du logo
+  // Positions un peu "irrégulières" pour éviter cercle parfait
+  // Les positions sont données en angles (deg) et distance au centre (px)
+  // Le logo est centré au milieu de la page
+  const centerX = window.innerWidth / 2;
+  const centerY = window.innerHeight / 2;
+
+  // 6 vidéos avec angle +/- 60° écart et distance +/- avec variation
+  const videoPositionsPolar = [
+    {angleDeg: 0, distance: 280},
+    {angleDeg: 55, distance: 260},
+    {angleDeg: 120, distance: 300},
+    {angleDeg: 190, distance: 270},
+    {angleDeg: 240, distance: 320},
+    {angleDeg: 300, distance: 290}
+  ];
+
+  function polarToCartesian(angleDeg, distance) {
+    const rad = angleDeg * Math.PI / 180;
+    return {
+      x: centerX + Math.cos(rad) * distance,
+      y: centerY + Math.sin(rad) * distance
+    };
   }
 
-  // Vérifier que rect ne chevauche aucun dans la liste + logo
-  function isTooClose(newRect, others) {
-    // Logo rectangle
-    const logoRect = logo.getBoundingClientRect();
-
-    // Vérif avec logo
-    if(isOverlapping(newRect, logoRect, minDistance)) return true;
-
-    // Vérif avec autres vidéos
-    for(const other of others){
-      if(isOverlapping(newRect, other, minDistance)) return true;
-    }
-    return false;
-  }
-
-  // Générer position aléatoire sans chevauchement
-  function generatePositionAndSize(existingRects) {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    let tries = 0;
-
-    while(tries < 2000){
-      const width = baseMinSize + Math.random() * (baseMaxSize - baseMinSize);
-      const height = width * 9/16;
-      const left = Math.random() * (vw - width);
-      const top = Math.random() * (vh - height);
-
-      const rect = {left, top, width, height};
-      if(!isTooClose(rect, existingRects)){
-        return rect;
-      }
-      tries++;
-    }
-
-    // Fallback si pas trouvé après essais
-    return {left: 50, top: 50, width: baseMinSize, height: baseMinSize*9/16};
-  }
-
+  // Créer les vidéos positionnées autour du logo
   function createFloatingVideos(){
-    const existingRects = [];
     floatingVideos = [];
     container.innerHTML = '';
 
     for(let i=0; i < videosSrc.length; i++){
-      const rect = generatePositionAndSize(existingRects);
-      existingRects.push(rect);
+      const pos = polarToCartesian(videoPositionsPolar[i].angleDeg, videoPositionsPolar[i].distance);
+      const width = baseMinSize + Math.random() * (baseMaxSize - baseMinSize);
+      const height = width * 9/16;
+
+      // Calcule la position en haut-gauche à partir du centre de la vidéo
+      const left = pos.x - width / 2;
+      const top = pos.y - height / 2;
 
       const vid = document.createElement('video');
       vid.src = videosSrc[i];
@@ -200,18 +183,18 @@
       vid.playsInline = true;
       vid.preload = 'auto';
       vid.classList.add('floating-video');
-      vid.style.width = rect.width + 'px';
-      vid.style.height = rect.height + 'px';
-      vid.style.left = rect.left + 'px';
-      vid.style.top = rect.top + 'px';
+      vid.style.width = width + 'px';
+      vid.style.height = height + 'px';
+      vid.style.left = left + 'px';
+      vid.style.top = top + 'px';
 
       container.appendChild(vid);
 
       floatingVideos.push({
         video: vid,
-        baseLeft: rect.left,
-        baseTop: rect.top,
-        size: {width: rect.width, height: rect.height},
+        baseLeft: left,
+        baseTop: top,
+        size: {width, height},
         phaseX: Math.random() * 2 * Math.PI,
         phaseY: Math.random() * 2 * Math.PI,
         speedX: floatingSpeed * (0.5 + Math.random()),
@@ -265,7 +248,7 @@
       closeBtn.remove();
 
       floatingVideos.forEach(({video}) => {
-        video.style.filter = 'blur(1.5px)';
+        video.style.filter = 'blur(1.2px)';
         video.style.opacity = '0.75';
         video.style.pointerEvents = 'auto';
       });
@@ -280,19 +263,3 @@
       const dx = floatingRange * Math.sin(time * speedX + phaseX);
       const dy = floatingRange * Math.cos(time * speedY + phaseY);
 
-      video.style.transform = `translate(${dx}px, ${dy}px)`;
-    });
-    requestAnimationFrame(animate);
-  }
-
-  createFloatingVideos();
-  animate();
-
-  window.addEventListener('resize', () => {
-    createFloatingVideos();
-  });
-
-</script>
-
-</body>
-</html>
