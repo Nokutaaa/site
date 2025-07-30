@@ -11,7 +11,6 @@
     width: 100%; height: 100%;
     overflow: hidden;
     font-family: 'Poppins', sans-serif;
-    /* background: transparent; */ /* enlever le fond noir */
     background: none;
   }
   #bg-video {
@@ -25,7 +24,6 @@
     position: fixed;
     top: 50%;
     left: 50%;
-    width: auto;
     height: 80px;
     transform: translate(-50%, -50%);
     z-index: 1000;
@@ -214,8 +212,8 @@
       pos.angleX += pos.offsetSpeedX;
       pos.angleY += pos.offsetSpeedY;
 
-      const floatX = Math.cos(pos.angleX) * 8;
-      const floatY = Math.sin(pos.angleY) * 6;
+      const floatX = Math.cos(pos.angleX) * 6; // subtil flottement
+      const floatY = Math.sin(pos.angleY) * 4;
 
       const x = pos.baseX + floatX - positions[i].width/2;
       const y = pos.baseY + floatY - positions[i].height/2;
