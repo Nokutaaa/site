@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title>Nokuta - Vidéos flottantes</title>
+<title>Nokuta - Vidéos flottantes sans superposition</title>
 <link rel="icon" href="favicon.jpg" type="image/jpg" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 <style>
@@ -38,7 +38,7 @@
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
-    pointer-events: none; /* pour que flottantes soient cliquables */
+    pointer-events: none;
     z-index: 5000;
   }
 
@@ -83,7 +83,6 @@
     object-fit: contain;
   }
 
-  /* Bouton fermer */
   #close-btn {
     position: fixed;
     top: 25px;
@@ -129,45 +128,48 @@
   const container = document.getElementById('video-container');
   const logo = document.getElementById('logo');
 
-  // Paramètres
-  const videoCount = videosSrc.length;
-  const minDistance = 25; // px minimal entre vidéos et logo
-  const floatingRange = 15; // px de déplacement flottant max
-  const floatingSpeed = 0.0035; // vitesse flottement
-  const baseMinSize = 220; // min width
-  const baseMaxSize = 320; // max width
+  const minDistance = 25; // px margin around videos and logo
+  const floatingRange = 15; 
+  const floatingSpeed = 0.0035;
+  const baseMinSize = 220;
+  const baseMaxSize = 320;
 
   let floatingVideos = [];
 
-  // Fonction pour calculer distance entre deux rectangles (simplifié à distance centre)
-  function distance(rect1, rect2){
-    const x1 = rect1.left + rect1.width/2;
-    const y1 = rect1.top + rect1.height/2;
-    const x2 = rect2.left + rect2.width/2;
-    const y2 = rect2.top + rect2.height/2;
-    return Math.hypot(x1 - x2, y1 - y2);
+  // Fonction pour vérifier chevauchement rectangulaire avec marge
+  function isOverlapping(rectA, rectB, margin=0) {
+    return !(
+      rectA.left + rectA.width + margin < rectB.left ||
+      rectA.left > rectB.left + rectB.width + margin ||
+      rectA.top + rectA.height + margin < rectB.top ||
+      rectA.top > rectB.top + rectB.height + margin
+    );
   }
 
-  // Fonction pour vérifier recouvrement (distance plus que minDistance)
-  function isTooClose(newRect, others){
-    for(const other of others){
-      if(distance(newRect, other) < minDistance) return true;
-    }
-    // Vérif avec logo aussi
+  // Vérifier que rect ne chevauche aucun dans la liste + logo
+  function isTooClose(newRect, others) {
+    // Logo rectangle
     const logoRect = logo.getBoundingClientRect();
-    if(distance(newRect, logoRect) < minDistance) return true;
+
+    // Vérif avec logo
+    if(isOverlapping(newRect, logoRect, minDistance)) return true;
+
+    // Vérif avec autres vidéos
+    for(const other of others){
+      if(isOverlapping(newRect, other, minDistance)) return true;
+    }
     return false;
   }
 
-  // Générer position aléatoire et taille pour une vidéo, en évitant recouvrement
+  // Générer position aléatoire sans chevauchement
   function generatePositionAndSize(existingRects) {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-
     let tries = 0;
-    while(tries < 1000){
+
+    while(tries < 2000){
       const width = baseMinSize + Math.random() * (baseMaxSize - baseMinSize);
-      const height = width * 9/16; // ratio 16:9
+      const height = width * 9/16;
       const left = Math.random() * (vw - width);
       const top = Math.random() * (vh - height);
 
@@ -177,16 +179,17 @@
       }
       tries++;
     }
-    // fallback : place sans vérif
+
+    // Fallback si pas trouvé après essais
     return {left: 50, top: 50, width: baseMinSize, height: baseMinSize*9/16};
   }
 
-  // Création des vidéos flottantes
   function createFloatingVideos(){
     const existingRects = [];
     floatingVideos = [];
+    container.innerHTML = '';
 
-    for(let i=0; i < videoCount; i++){
+    for(let i=0; i < videosSrc.length; i++){
       const rect = generatePositionAndSize(existingRects);
       existingRects.push(rect);
 
@@ -216,15 +219,12 @@
         speedY: floatingSpeed * (0.5 + Math.random()),
       });
 
-      // Click pour agrandir la vidéo
       vid.addEventListener('click', () => selectVideo(vid));
     }
   }
 
-  // Afficher la vidéo sélectionnée en grand
   function selectVideo(selectedVideo){
-    // Créer overlay
-    if(document.querySelector('.selected-video-overlay')) return; // ignore si déjà ouverte
+    if(document.querySelector('.selected-video-overlay')) return;
 
     const overlay = document.createElement('div');
     overlay.classList.add('selected-video-overlay');
@@ -247,7 +247,6 @@
 
     document.body.appendChild(overlay);
 
-    // Mettre les autres vidéos en flou + opacité réduite + pointer-events none sauf celle sélectionnée
     floatingVideos.forEach(({video}) => {
       if(video === selectedVideo){
         video.style.filter = 'none';
@@ -260,15 +259,12 @@
       }
     });
 
-    // Bloquer interaction du container (mais pas de l’overlay)
     container.style.pointerEvents = 'none';
 
     closeBtn.addEventListener('click', () => {
-      // Supprimer overlay et bouton
       overlay.remove();
       closeBtn.remove();
 
-      // Rétablir vidéos flottantes
       floatingVideos.forEach(({video}) => {
         video.style.filter = 'blur(1.5px)';
         video.style.opacity = '0.75';
@@ -279,10 +275,9 @@
     });
   }
 
-  // Animation flottement
   function animate(time=0){
     floatingVideos.forEach(obj => {
-      const {video, baseLeft, baseTop, size, phaseX, phaseY, speedX, speedY} = obj;
+      const {video, baseLeft, baseTop, speedX, speedY, phaseX, phaseY} = obj;
       const dx = floatingRange * Math.sin(time * speedX + phaseX);
       const dy = floatingRange * Math.cos(time * speedY + phaseY);
 
@@ -291,16 +286,13 @@
     requestAnimationFrame(animate);
   }
 
-  // Initialisation
   createFloatingVideos();
   animate();
 
-  // Ajuster les vidéos au redimensionnement (pour éviter qu’elles ne sortent trop)
   window.addEventListener('resize', () => {
-    // Clear container and recreate to reposition videos
-    container.innerHTML = '';
     createFloatingVideos();
   });
+
 </script>
 
 </body>
