@@ -8,9 +8,9 @@
 <style>
   html, body {
     margin: 0; padding: 0; height: 100%;
-    overflow: hidden;
     font-family: 'Poppins', sans-serif;
-    background: #000;
+    overflow: hidden;
+    background: #fff;
   }
 
   #bg-video {
@@ -20,266 +20,265 @@
     height: 100vh;
     object-fit: cover;
     z-index: -10;
-    /* filtre enlevé */
   }
 
-  #logo {
+  header {
     position: fixed;
-    top: 50%;
+    top: 10px;
     left: 50%;
-    transform: translate(-50%, -50%);
-    width: 200px;  /* double taille */
-    height: auto;
-    z-index: 10000;
+    transform: translateX(-50%);
+    z-index: 1000;
+    pointer-events: none;
+  }
+  .logo {
+    width: 200px; /* double taille */
+    user-select: none;
     pointer-events: none;
   }
 
-  #video-container {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    pointer-events: none;
-    z-index: 5000;
+  #container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
   }
 
-  .floating-video {
+  .video-wrapper {
     position: absolute;
-    border-radius: 12px;
-    filter: blur(1.2px);
+    border-radius: 10px;
+    overflow: hidden;
+    filter: blur(2px);
     opacity: 0.75;
     cursor: pointer;
-    pointer-events: auto;
-    box-shadow: 0 0 15px rgba(0,0,0,0.5);
-    transition: filter 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
-    user-select: none;
-    will-change: transform, filter, opacity;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    transition: filter 0.3s ease, opacity 0.3s ease;
   }
 
-  .floating-video:hover {
+  .video-wrapper:hover {
     filter: blur(0);
     opacity: 1;
-    box-shadow: 0 0 25px rgba(255,255,255,0.8);
-    z-index: 9000;
+    box-shadow: 0 0 25px rgba(0,0,0,0.5);
+    z-index: 100;
   }
 
-  .selected-video-overlay {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80vw;
-    max-width: 1200px;
-    max-height: 80vh;
-    border-radius: 14px;
-    box-shadow: 0 0 30px rgba(0,0,0,0.9);
-    z-index: 15000;
-    background: #000;
-  }
-
-  .selected-video-overlay video {
+  .video-wrapper video {
+    display: block;
     width: 100%;
     height: 100%;
-    border-radius: 14px;
+    object-fit: cover;
+    pointer-events: none;
+  }
+
+  /* Grand mode vidéo */
+  #large-video-container {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70vw;
+    max-width: 960px;
+    max-height: 70vh;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 40px rgba(0,0,0,0.8);
+    background: black;
+    display: none;
+    z-index: 2000;
+  }
+  #large-video-container video {
+    width: 100%;
+    height: 100%;
     object-fit: contain;
   }
-
   #close-btn {
-    position: fixed;
-    top: 25px;
-    right: 25px;
-    background: rgba(255,255,255,0.9);
-    border: none;
-    border-radius: 30px;
-    width: 40px;
-    height: 40px;
-    font-size: 24px;
+    position: absolute;
+    top: 8px; right: 12px;
+    font-size: 30px;
+    color: white;
     cursor: pointer;
-    z-index: 16000;
-    box-shadow: 0 0 8px rgba(0,0,0,0.5);
-    transition: background 0.3s ease;
+    z-index: 2100;
+    user-select: none;
   }
 
-  #close-btn:hover {
-    background: rgba(255,255,255,1);
-  }
 </style>
 </head>
 <body>
 
-<video autoplay muted loop playsinline id="bg-video" preload="auto">
+<video autoplay muted loop playsinline id="bg-video">
   <source src="fond.mp4" type="video/mp4" />
   Votre navigateur ne supporte pas la vidéo HTML5.
 </video>
 
-<img src="logo1.png" id="logo" alt="Logo Nokuta" />
+<header>
+  <img src="logo1.png" alt="Logo Nokuta" class="logo" />
+</header>
 
-<div id="video-container"></div>
+<div id="container"></div>
+
+<div id="large-video-container">
+  <div id="close-btn">&times;</div>
+  <video controls muted></video>
+</div>
 
 <script>
-  const videosSrc = [
-    "video1.mp4",
-    "video2.mp4",
-    "video3.mp4",
-    "video4.mp4",
-    "video5.mp4",
-    "video6.mp4"
-  ];
+  const videos = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
+  const container = document.getElementById('container');
+  const largeVideoContainer = document.getElementById('large-video-container');
+  const largeVideo = largeVideoContainer.querySelector('video');
+  const closeBtn = document.getElementById('close-btn');
+  const logo = document.querySelector('header img.logo');
 
-  const container = document.getElementById('video-container');
-  const logo = document.getElementById('logo');
+  const minDistance = 20; // px minimal entre vidéos et logo
+  const floatAmplitude = 8; // amplitude du flottement en px
+  const floatSpeed = 0.002; // vitesse du flottement (plus petit = plus lent)
 
-  const minDistance = 25; // marge minimum
-  const floatingRange = 8; // flottement réduit
-  const floatingSpeed = 0.002; // vitesse flottement plus lente
-  const baseMinSize = 280;  // vidéos un peu plus grandes
-  const baseMaxSize = 340;
+  // Dimensions du logo (après chargement)
+  let logoRect;
 
-  let floatingVideos = [];
+  // Positions déjà prises pour éviter superposition
+  let placedPositions = [];
 
-  // Coordonnées fixes approximatives pour chaque vidéo autour du logo
-  // Positions un peu "irrégulières" pour éviter cercle parfait
-  // Les positions sont données en angles (deg) et distance au centre (px)
-  // Le logo est centré au milieu de la page
-  const centerX = window.innerWidth / 2;
-  const centerY = window.innerHeight / 2;
+  // Stocke les wrappers pour anim flottement
+  let videoWrappers = [];
 
-  // 6 vidéos avec angle +/- 60° écart et distance +/- avec variation
-  const videoPositionsPolar = [
-    {angleDeg: 0, distance: 280},
-    {angleDeg: 55, distance: 260},
-    {angleDeg: 120, distance: 300},
-    {angleDeg: 190, distance: 270},
-    {angleDeg: 240, distance: 320},
-    {angleDeg: 300, distance: 290}
-  ];
+  // Dimensions container
+  const containerWidth = window.innerWidth;
+  const containerHeight = window.innerHeight;
 
-  function polarToCartesian(angleDeg, distance) {
-    const rad = angleDeg * Math.PI / 180;
-    return {
-      x: centerX + Math.cos(rad) * distance,
-      y: centerY + Math.sin(rad) * distance
-    };
+  // Taille du logo (déjà en CSS, mais on récupère bounding pour éviter collisions)
+  function updateLogoRect() {
+    logoRect = logo.getBoundingClientRect();
   }
 
-  // Créer les vidéos positionnées autour du logo
-  function createFloatingVideos(){
-    floatingVideos = [];
-    container.innerHTML = '';
+  // Fonction pour vérifier si un rectangle touche un autre (avec marge minDistance)
+  function isOverlapping(r1, r2, margin = 20) {
+    return !(
+      r1.right + margin < r2.left ||
+      r1.left - margin > r2.right ||
+      r1.bottom + margin < r2.top ||
+      r1.top - margin > r2.bottom
+    );
+  }
 
-    for(let i=0; i < videosSrc.length; i++){
-      const pos = polarToCartesian(videoPositionsPolar[i].angleDeg, videoPositionsPolar[i].distance);
-      const width = baseMinSize + Math.random() * (baseMaxSize - baseMinSize);
+  // Vérifie que pos ne superpose pas avec d'autres vidéos ou logo
+  function canPlaceAt(x, y, width, height) {
+    const rect = {left:x, top:y, right:x+width, bottom:y+height};
+    // check logo
+    if (isOverlapping(rect, logoRect, minDistance)) return false;
+
+    // check les autres videos
+    for (const p of placedPositions) {
+      if (isOverlapping(rect, p, minDistance)) return false;
+    }
+    return true;
+  }
+
+  // Génère position aléatoire valide dans une zone autour du logo
+  // Ici on essaye de répartir autour du logo, pas un cercle parfait, zone +/- 300px du centre
+  function generatePosition(width, height) {
+    const maxAttempts = 1000;
+    const centerX = containerWidth/2;
+    const centerY = containerHeight/2;
+
+    for(let i=0; i<maxAttempts; i++) {
+      // Zone rectangle +/- 300px autour du centre
+      const x = centerX + (Math.random()*600 - 300) - width/2;
+      const y = centerY + (Math.random()*400 - 200) - height/2;
+
+      if (x < 0 || y < 0 || x + width > containerWidth || y + height > containerHeight) continue;
+
+      if (canPlaceAt(x, y, width, height)) return {x, y};
+    }
+    return null; // pas trouvé de place
+  }
+
+  // Création des vidéos
+  function createVideos() {
+    updateLogoRect();
+    placedPositions = [];
+    videoWrappers = [];
+
+    for(let i=0; i < videos.length; i++) {
+      // Taille variable plus grande (320-420px width)
+      const width = 320 + Math.random()*100;
       const height = width * 9/16;
 
-      // Calcule la position en haut-gauche à partir du centre de la vidéo
-      const left = pos.x - width / 2;
-      const top = pos.y - height / 2;
+      const pos = generatePosition(width, height);
+      if (!pos) {
+        console.warn('Impossible de placer la vidéo n°'+i);
+        continue;
+      }
+
+      placedPositions.push({
+        left: pos.x,
+        top: pos.y,
+        right: pos.x + width,
+        bottom: pos.y + height
+      });
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'video-wrapper';
+      wrapper.style.width = width + 'px';
+      wrapper.style.height = height + 'px';
+      wrapper.style.left = pos.x + 'px';
+      wrapper.style.top = pos.y + 'px';
 
       const vid = document.createElement('video');
-      vid.src = videosSrc[i];
-      vid.autoplay = true;
-      vid.loop = true;
+      vid.src = videos[i];
       vid.muted = true;
+      vid.loop = true;
+      vid.autoplay = true;
       vid.playsInline = true;
-      vid.preload = 'auto';
-      vid.classList.add('floating-video');
-      vid.style.width = width + 'px';
-      vid.style.height = height + 'px';
-      vid.style.left = left + 'px';
-      vid.style.top = top + 'px';
+      vid.setAttribute('preload', 'auto');
 
-      container.appendChild(vid);
+      wrapper.appendChild(vid);
+      container.appendChild(wrapper);
+      videoWrappers.push({wrapper, baseX: pos.x, baseY: pos.y, amplitude: floatAmplitude, speed: floatSpeed, phase: Math.random() * Math.PI*2, width, height, index: i});
 
-      floatingVideos.push({
-        video: vid,
-        baseLeft: left,
-        baseTop: top,
-        size: {width, height},
-        phaseX: Math.random() * 2 * Math.PI,
-        phaseY: Math.random() * 2 * Math.PI,
-        speedX: floatingSpeed * (0.5 + Math.random()),
-        speedY: floatingSpeed * (0.5 + Math.random()),
+      // Click ouvre en grand
+      wrapper.addEventListener('click', () => {
+        openLargeVideo(i);
       });
-
-      vid.addEventListener('click', () => selectVideo(vid));
     }
   }
 
-  function selectVideo(selectedVideo){
-    if(document.querySelector('.selected-video-overlay')) return;
-
-    const overlay = document.createElement('div');
-    overlay.classList.add('selected-video-overlay');
-
-    const bigVideo = document.createElement('video');
-    bigVideo.src = selectedVideo.src;
-    bigVideo.controls = true;
-    bigVideo.autoplay = true;
-    bigVideo.muted = false;
-    bigVideo.currentTime = 0;
-    bigVideo.volume = 0.35;
-    bigVideo.playsInline = true;
-    overlay.appendChild(bigVideo);
-
-    const closeBtn = document.createElement('button');
-    closeBtn.id = 'close-btn';
-    closeBtn.innerHTML = '&times;';
-    closeBtn.title = 'Fermer la vidéo';
-    document.body.appendChild(closeBtn);
-
-    document.body.appendChild(overlay);
-
-    floatingVideos.forEach(({video}) => {
-      if(video === selectedVideo){
-        video.style.filter = 'none';
-        video.style.opacity = '1';
-        video.style.pointerEvents = 'none';
-      } else {
-        video.style.filter = 'blur(3px)';
-        video.style.opacity = '0.3';
-        video.style.pointerEvents = 'none';
-      }
-    });
-
-    container.style.pointerEvents = 'none';
-
-    closeBtn.addEventListener('click', () => {
-      overlay.remove();
-      closeBtn.remove();
-
-      floatingVideos.forEach(({video}) => {
-        video.style.filter = 'blur(1.2px)';
-        video.style.opacity = '0.75';
-        video.style.pointerEvents = 'auto';
-      });
-
-      container.style.pointerEvents = 'auto';
-    });
-  }
-
-  function animate(time=0){
-    floatingVideos.forEach(obj => {
-      const {video, baseLeft, baseTop, speedX, speedY, phaseX, phaseY} = obj;
-      const dx = floatingRange * Math.sin(time * speedX + phaseX);
-      const dy = floatingRange * Math.cos(time * speedY + phaseY);
-
-      video.style.transform = `translate(${dx}px, ${dy}px)`;
-    });
-    requestAnimationFrame(animate);
-  }
-
-  createFloatingVideos();
-  animate();
-
-  window.addEventListener('resize', () => {
-    // Met à jour les positions centrées au resize
-    const newCenterX = window.innerWidth / 2;
-    const newCenterY = window.innerHeight / 2;
-    for(let i=0; i < videoPositionsPolar.length; i++){
-      videoPositionsPolar[i].cartesian = polarToCartesian(videoPositionsPolar[i].angleDeg, videoPositionsPolar[i].distance);
+  // Animation flottement lent
+  function animateFloating(timestamp=0) {
+    for (const v of videoWrappers) {
+      const dx = Math.sin(timestamp * v.speed + v.phase) * v.amplitude;
+      const dy = Math.cos(timestamp * v.speed + v.phase) * v.amplitude;
+      v.wrapper.style.transform = `translate(${dx}px, ${dy}px)`;
     }
-    createFloatingVideos();
+    requestAnimationFrame(animateFloating);
+  }
+
+  // Ouvre la vidéo en grand
+  function openLargeVideo(index) {
+    const src = videos[index];
+    largeVideo.src = src;
+    largeVideo.volume = 0.35;
+    largeVideo.currentTime = 0;
+    largeVideo.play();
+    largeVideoContainer.style.display = 'block';
+  }
+
+  // Fermer la vidéo grand écran
+  closeBtn.addEventListener('click', () => {
+    largeVideo.pause();
+    largeVideo.src = '';
+    largeVideoContainer.style.display = 'none';
   });
+
+  // Initialisation
+  window.addEventListener('load', () => {
+    createVideos();
+    animateFloating();
+  });
+
+  // Recalcul positions au resize
+  window.addEventListener('resize', () => {
+    container.innerHTML = '';
+    createVideos();
+  });
+
 </script>
 
 </body>
