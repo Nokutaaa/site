@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Nokuta - Carrousel vidéo</title>
+  <title>Nokuta</title>
   <link rel="icon" href="favicon.jpg" type="image/jpg" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
   <style>
@@ -29,17 +29,16 @@
 
     .carousel {
       position: relative;
-      max-width: 1100px;
+      max-width: 1300px;
       margin: 150px auto 20px;
-      height: 400px;
-      /* Conteneur pour positionner les vidéos absolument */
+      height: 520px;
     }
 
     .side-video {
       position: absolute;
       top: 50%;
       width: 350px;
-      height: 180px;
+      height: 200px;
       transform: translateY(-50%);
       filter: blur(4px) grayscale(50%);
       opacity: 0.7;
@@ -58,18 +57,18 @@
     }
 
     .side-video.left {
-      left: 5%;
+      left: 3%;
     }
 
     .side-video.right {
-      right: 5%;
+      right: 3%;
     }
 
     .main-video {
       position: relative;
       width: 900px;
-      height: 506px; /* garde ratio 16:9 */
-      border-radius: 2px;
+      height: 506px; /* ratio 16:9 */
+      border-radius: 8px;
       object-fit: cover;
       box-shadow: 0 0 20px rgba(0,0,0,0.5);
       z-index: 10;
@@ -79,9 +78,10 @@
       margin-top: 15px;
       display: flex;
       justify-content: center;
-      gap: 30px;
+      gap: 50px;
     }
 
+    /* Boutons flèches minimalistes sans rond ni contour */
     button {
       background: transparent;
       border: none;
@@ -124,9 +124,7 @@
     Votre navigateur ne supporte pas la vidéo HTML5.
   </video>
 
-  <div class="carousel" id="carousel">
-    <!-- vidéos injectées ici -->
-  </div>
+  <div class="carousel" id="carousel"></div>
 
   <div class="controls">
     <button id="prevBtn" aria-label="Vidéo précédente">◀</button>
@@ -158,20 +156,17 @@
       const leftIndex = (currentIndex - 1 + videos.length) % videos.length;
       const rightIndex = (currentIndex + 1) % videos.length;
 
-      // Vidéo gauche
       const leftVideo = createVideoElement(videos[leftIndex], 'side-video left');
       leftVideo.addEventListener('click', () => {
         currentIndex = leftIndex;
         renderCarousel();
       });
 
-      // Vidéo principale avec contrôles visibles
       const mainVideo = createVideoElement(videos[currentIndex], 'main-video', true, true);
       mainVideo.addEventListener('canplay', () => {
         mainVideo.play().catch(() => {});
       });
 
-      // Vidéo droite
       const rightVideo = createVideoElement(videos[rightIndex], 'side-video right');
       rightVideo.addEventListener('click', () => {
         currentIndex = rightIndex;
