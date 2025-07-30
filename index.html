@@ -18,8 +18,9 @@
     top: 0; left: 0;
     width: 100vw; height: 100vh;
     object-fit: cover;
-    z-index: -20;
-    filter: none; /* Pas de filtre */
+    z-index: -100; /* plus bas que tout */
+    filter: none;
+    pointer-events: none; /* pas cliquable */
   }
 
   .logo-container {
@@ -55,8 +56,8 @@
     pointer-events: auto;
     box-shadow: 0 0 10px rgba(0,0,0,0.3);
     transition: filter 0.3s ease, opacity 0.3s ease;
-    width: 300px;
-    height: 170px;
+    width: 360px;  /* +20% taille */
+    height: 204px; /* proportion 16:9 */
   }
   video.floating-video:hover {
     filter: blur(0);
@@ -130,23 +131,23 @@
   const videoElements = [];
   const positions = [];
 
-  // Taille videos fixes
-  const videoWidth = 300;
-  const videoHeight = 170;
-  const minDistance = 25; // espacement mini entre vidéos et logo
+  // Taille vidéos fixes agrandies
+  const videoWidth = 360;
+  const videoHeight = 204;
+  const minDistance = 50; // espacement mini augmenté
   const borderPadding = 80;
 
   // Dimensions container (ellipse plus large horizontalement)
   const centerX = container.clientWidth / 2;
   const centerY = container.clientHeight / 2;
-  const radiusX = centerX - videoWidth / 2 - borderPadding; // plus large
-  const radiusY = centerY - videoHeight / 2 - borderPadding; // moins haut
+  const radiusX = centerX - videoWidth / 2 - borderPadding; // largeur ellipse
+  const radiusY = centerY - videoHeight / 2 - borderPadding; // hauteur ellipse
 
-  // Flottement (plus subtil)
+  // Flottement subtil et lent
   const floatRange = 2.5;
-  const floatSpeed = 0.0004;  // plus lent
+  const floatSpeed = 0.00035;
 
-  // Création vidéos avec position angulaire régulière (autour du logo)
+  // Création vidéos avec position angulaire régulière + petit offset aléatoire
   videos.forEach((src, i) => {
     const video = document.createElement("video");
     video.src = src;
@@ -159,7 +160,6 @@
     container.appendChild(video);
     videoElements.push(video);
 
-    // Position angulaire + petit offset aléatoire
     const baseAngle = (i / videos.length) * 2 * Math.PI;
     const randomOffset = (Math.random() - 0.5) * 0.3;
     const angle = baseAngle + randomOffset;
@@ -170,9 +170,9 @@
     positions.push({ baseX: x, baseY: y, angleOffset: Math.random() * 2 * Math.PI });
   });
 
-  // Ajustement position: éviter chevauchement avec logo et autres vidéos
+  // Rejet chevauchement vidéos & logo & bords
   function repelPositions() {
-    const maxIter = 100;
+    const maxIter = 150;
     for(let iter = 0; iter < maxIter; iter++) {
       let moved = false;
       for(let i=0; i<videoElements.length; i++) {
@@ -180,11 +180,12 @@
         const r1x = videoWidth / 2;
         const r1y = videoHeight / 2;
 
-        // Rejet par rapport au logo
         const logoRect = logo.getBoundingClientRect();
         const containerRect = container.getBoundingClientRect();
         const logoCenterX = logoRect.left + logoRect.width/2 - containerRect.left;
         const logoCenterY = logoRect.top + logoRect.height/2 - containerRect.top;
+
+        // Rejet logo
         const dxLogo = p1.baseX - logoCenterX;
         const dyLogo = p1.baseY - logoCenterY;
         const distLogo = Math.sqrt(dxLogo*dxLogo + dyLogo*dyLogo);
@@ -196,7 +197,7 @@
           moved = true;
         }
 
-        // Rejet par rapport aux bords container
+        // Rejet bords
         if(p1.baseX - r1x < borderPadding) {
           p1.baseX = borderPadding + r1x;
           moved = true;
