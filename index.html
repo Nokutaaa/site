@@ -3,16 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <title>Nokuta</title>
-  <link rel="icon" href="favicon.jpg" type="image/jpg" />
   <style>
     html, body {
       margin: 0;
       padding: 0;
       overflow: hidden;
-      font-family: Arial, sans-serif;
       background: black;
-      height: 100vh;
-      width: 100vw;
+      font-family: sans-serif;
     }
 
     #background-video {
@@ -25,98 +22,66 @@
       z-index: -10;
     }
 
-    #logo {
+    .logo {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      height: 80px; /* ✅ Taille modifiée */
-      z-index: 10;
+      height: 80px;
+      z-index: 2;
       pointer-events: none;
-    }
-
-    #container {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%;
-      height: 100%;
     }
 
     .floating-video {
       position: absolute;
-      width: 240px;
-      height: 135px;
+      width: 220px;
+      height: 124px;
+      object-fit: cover;
       opacity: 0.75;
-      filter: blur(1.5px);
-      transition: filter 0.3s, opacity 0.3s;
+      filter: blur(2px);
       border-radius: 10px;
-      overflow: hidden;
-      z-index: 5;
+      transition: transform 0.3s ease, filter 0.3s ease;
+      z-index: 1;
     }
 
     .floating-video:hover {
-      filter: blur(0);
       opacity: 1;
-      z-index: 6;
+      filter: blur(0.5px);
+      z-index: 3;
     }
 
-    .floating-video video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      pointer-events: none;
-    }
-
-    #player-overlay {
+    .active-player {
       position: fixed;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
+      top: 50%;
+      left: 50%;
       width: 80vw;
-      max-width: 960px;
       height: 45vw;
+      max-width: 960px;
       max-height: 540px;
-      background: black;
-      z-index: 1000;
-      display: none;
-      border-radius: 12px;
-      overflow: hidden;
+      transform: translate(-50%, -50%);
+      z-index: 999;
       box-shadow: 0 0 30px rgba(0,0,0,0.8);
-    }
-
-    #player-overlay video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
-
-    #close-btn {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 28px;
-      color: white;
-      cursor: pointer;
-      z-index: 1001;
     }
   </style>
 </head>
 <body>
 
+  <!-- Vidéo de fond -->
   <video autoplay muted loop playsinline id="background-video">
     <source src="fond.mp4" type="video/mp4" />
+    Votre navigateur ne supporte pas la vidéo HTML5.
   </video>
 
-  <img src="logo1.png" id="logo" alt="Nokuta Logo" />
+  <!-- Logo centré -->
+  <img src="logo1.png" alt="Logo" class="logo" id="logo" />
 
-  <div id="container"></div>
-
-  <div id="player-overlay">
-    <div id="close-btn">&times;</div>
-    <video controls></video>
+  <!-- Lecteur actif (si clic) -->
+  <div id="video-player-container" style="display: none;">
+    <video id="video-player" controls class="active-player"></video>
   </div>
 
   <script>
-    const videoFiles = [
+    const videoSources = [
       "video1.mp4",
       "video2.mp4",
       "video3.mp4",
@@ -125,106 +90,115 @@
       "video6.mp4"
     ];
 
-    const container = document.getElementById("container");
-    const logo = document.getElementById("logo");
-    const playerOverlay = document.getElementById("player-overlay");
-    const playerVideo = playerOverlay.querySelector("video");
-    const closeBtn = document.getElementById("close-btn");
+    const logo = document.getElementById('logo');
+    const playerContainer = document.getElementById('video-player-container');
+    const player = document.getElementById('video-player');
 
-    const minDistance = 20;
-    const floatRange = 8;
-    const floatSpeed = 0.002;
-    const videoWidth = 240;
-    const videoHeight = 135;
+    const placedVideos = [];
 
-    const placed = [];
-
-    function rectsOverlap(r1, r2, buffer = minDistance) {
-      return !(
-        r1.right + buffer < r2.left ||
-        r1.left - buffer > r2.right ||
-        r1.bottom + buffer < r2.top ||
-        r1.top - buffer > r2.bottom
-      );
+    function distance(a, b) {
+      const dx = a.x - b.x;
+      const dy = a.y - b.y;
+      return Math.sqrt(dx * dx + dy * dy);
     }
 
-    function placeVideo(index, src) {
-      const wrapper = document.createElement("div");
-      wrapper.className = "floating-video";
-
-      const video = document.createElement("video");
-      video.src = src;
-      video.muted = true;
-      video.loop = true;
-      video.autoplay = true;
-      video.playsInline = true;
-      wrapper.appendChild(video);
-
-      const centerX = window.innerWidth / 2;
-      const centerY = window.innerHeight / 2;
+    function placeVideos() {
+      const screenW = window.innerWidth;
+      const screenH = window.innerHeight;
       const logoRect = logo.getBoundingClientRect();
 
-      let attempts = 0;
-      let x, y, rect;
-      do {
-        const angle = Math.random() * Math.PI * 2;
-        const radius = 250 + Math.random() * 150;
-        x = centerX + radius * Math.cos(angle) - videoWidth / 2;
-        y = centerY + radius * Math.sin(angle) - videoHeight / 2;
-        rect = { left: x, top: y, right: x + videoWidth, bottom: y + videoHeight };
-        attempts++;
-        if (attempts > 500) break;
-      } while (
-        rectsOverlap(rect, logoRect) ||
-        placed.some(r => rectsOverlap(rect, r))
-      );
+      const minDistance = 20;
+      const videoW = 220;
+      const videoH = 124;
 
-      placed.push(rect);
+      videoSources.forEach(src => {
+        let attempts = 0;
+        let x, y, valid;
 
-      wrapper.style.left = `${x}px`;
-      wrapper.style.top = `${y}px`;
+        do {
+          x = Math.random() * (screenW - videoW);
+          y = Math.random() * (screenH - videoH);
+          const center = { x: x + videoW / 2, y: y + videoH / 2 };
 
-      wrapper.dataset.floatX = Math.random() * Math.PI * 2;
-      wrapper.dataset.floatY = Math.random() * Math.PI * 2;
+          // Check distance with logo
+          const logoCenter = {
+            x: logoRect.left + logoRect.width / 2,
+            y: logoRect.top + logoRect.height / 2
+          };
+          valid = distance(center, logoCenter) > (videoW / 2 + logoRect.width / 2 + minDistance);
 
-      wrapper.addEventListener("click", () => {
-        playerOverlay.style.display = "block";
-        playerVideo.src = src;
-        playerVideo.currentTime = 0;
-        playerVideo.volume = 0.35;
-        playerVideo.play();
+          // Check other videos
+          if (valid) {
+            for (const v of placedVideos) {
+              const otherCenter = { x: v.x + videoW / 2, y: v.y + videoH / 2 };
+              if (distance(center, otherCenter) < videoW + minDistance) {
+                valid = false;
+                break;
+              }
+            }
+          }
+
+          attempts++;
+          if (attempts > 1000) {
+            valid = true; // force break if can't place after many tries
+          }
+
+        } while (!valid);
+
+        placedVideos.push({ x, y });
+
+        const vid = document.createElement('video');
+        vid.src = src;
+        vid.className = 'floating-video';
+        vid.autoplay = true;
+        vid.muted = true;
+        vid.loop = true;
+        vid.playsInline = true;
+        vid.style.left = `${x}px`;
+        vid.style.top = `${y}px`;
+
+        // Flottement aléatoire
+        const floatX = Math.random() * 8 + 4;
+        const floatY = Math.random() * 8 + 4;
+        let directionX = Math.random() < 0.5 ? -1 : 1;
+        let directionY = Math.random() < 0.5 ? -1 : 1;
+
+        setInterval(() => {
+          const currentX = parseFloat(vid.style.left);
+          const currentY = parseFloat(vid.style.top);
+          let newX = currentX + directionX * 0.3;
+          let newY = currentY + directionY * 0.3;
+
+          // Stay in bounds
+          if (newX < 0 || newX > screenW - videoW) directionX *= -1;
+          if (newY < 0 || newY > screenH - videoH) directionY *= -1;
+
+          vid.style.left = `${newX}px`;
+          vid.style.top = `${newY}px`;
+        }, 30);
+
+        // Clic pour lire en grand
+        vid.addEventListener('click', () => {
+          player.src = src;
+          player.currentTime = 0;
+          player.volume = 0.35;
+          player.play();
+          playerContainer.style.display = 'block';
+        });
+
+        document.body.appendChild(vid);
       });
-
-      container.appendChild(wrapper);
     }
 
-    function floatVideos(timestamp) {
-      const wrappers = document.querySelectorAll(".floating-video");
-      wrappers.forEach(wrapper => {
-        const phaseX = parseFloat(wrapper.dataset.floatX);
-        const phaseY = parseFloat(wrapper.dataset.floatY);
-        const dx = Math.sin(timestamp * floatSpeed + phaseX) * floatRange;
-        const dy = Math.cos(timestamp * floatSpeed + phaseY) * floatRange;
-        wrapper.style.transform = `translate(${dx}px, ${dy}px)`;
-      });
-      requestAnimationFrame(floatVideos);
-    }
-
-    closeBtn.addEventListener("click", () => {
-      playerOverlay.style.display = "none";
-      playerVideo.pause();
-      playerVideo.src = "";
+    // Fermer lecteur si clic dehors
+    document.addEventListener('click', (e) => {
+      if (!player.contains(e.target) && e.target.tagName !== "VIDEO") {
+        player.pause();
+        playerContainer.style.display = 'none';
+      }
     });
 
-    window.onload = () => {
-      videoFiles.forEach((src, i) => placeVideo(i, src));
-      requestAnimationFrame(floatVideos);
-    };
-
-    window.onresize = () => {
-      location.reload();
-    };
+    window.addEventListener('load', placeVideos);
   </script>
-
 </body>
 </html>
