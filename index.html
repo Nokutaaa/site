@@ -2,18 +2,25 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title>Nokuta</title>
+<title>Nokuta - Carrousel Hexagonal 3D</title>
 <link rel="icon" href="favicon.jpg" type="image/jpg" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 <style>
-  body {
-    background-color: white;
-    color: black;
-    font-family: 'Poppins', sans-serif;
+  html, body {
+    height: 100%;
     margin: 0; padding: 0;
-    text-align: center;
+    font-family: 'Poppins', sans-serif;
+    background: white;
+    color: black;
     overflow-x: hidden;
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     perspective: 1500px; /* perspective 3D */
+    height: 100vh;
   }
 
   #bg-video {
@@ -27,16 +34,15 @@
 
   .carousel-container {
     position: relative;
-    width: 900px;
-    height: 300px;
-    margin: 150px auto 20px;
+    width: 1100px;
+    height: 400px;
     transform-style: preserve-3d;
   }
 
   .carousel {
     position: relative;
-    width: 900px;
-    height: 300px;
+    width: 1100px;
+    height: 400px;
     margin: 0 auto;
     transform-style: preserve-3d;
     transition: transform 1s ease;
@@ -44,45 +50,45 @@
 
   video {
     position: absolute;
-    width: 320px;
-    height: 180px;
+    width: 420px;
+    height: 240px;
     border-radius: 8px;
     object-fit: cover;
     cursor: pointer;
-    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
     transition: filter 0.5s ease, opacity 0.5s ease, transform 0.5s ease;
     user-select: none;
   }
 
-  .video-hidden {
-    opacity: 0;
-    pointer-events: none;
-  }
-
   .video-center {
-    filter: none;
-    opacity: 1;
-    transform: translateZ(200px) scale(1.1);
-    z-index: 10;
+    filter: none !important;
+    opacity: 1 !important;
+    transform: translateZ(200px) scale(1.2) !important;
+    z-index: 100 !important;
     cursor: default;
   }
 
   .video-side {
     filter: blur(3px) grayscale(50%);
     opacity: 0.6;
+    z-index: 1;
   }
 
   .video-side:hover {
     filter: blur(1px) grayscale(20%);
     opacity: 0.9;
-    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  }
+
+  .logo-container {
+    position: absolute; top: 60px; left: 60px; z-index: 1000;
   }
 
 </style>
 </head>
 <body>
 
-<div class="logo-container" style="position:absolute;top:60px;left:60px;z-index:1000;">
+<div class="logo-container">
   <img src="logo1.png" alt="Logo" style="height:50px;" />
 </div>
 
@@ -101,11 +107,10 @@
   const total = videos.length;
   let currentIndex = 0;
 
-  // Angle entre chaque vidéo sur l'hexagone (360°/6 = 60°)
-  const angleStep = 360 / total;
-  const radius = 350; // Distance de la rotation (plus grand = plus éloigné)
+  // Angle réduit à 10°
+  const angleStep = 10;
+  const radius = 600; // plus large pour étaler le carrousel
 
-  // Pour forcer vidéo 3 et 5 à démarrer à 1s
   function startAtOneSecond(videoElem) {
     function seekAndPlay() {
       if (videoElem.currentTime < 1) {
@@ -134,27 +139,24 @@
       video.autoplay = true;
       video.playsInline = true;
       video.setAttribute('preload', 'auto');
-      video.controls = (i === 0); // Controls only on the front video
+      video.controls = (i === 0);
 
-      // Calcul rotation
+      // Calcul rotation avec angle réduit
       const rotateY = i * angleStep;
 
       // Position 3D circulaire
       video.style.transform = `rotateY(${rotateY}deg) translateZ(${radius}px)`;
 
-      // Classes pour style
       if(i === 0) {
         video.classList.add('video-center');
       } else {
         video.classList.add('video-side');
       }
 
-      // Forcer start à 1s pour vidéos 3 et 5 (indices 2 et 4)
       if(videos[vidIdx] === "video3.mp4" || videos[vidIdx] === "video5.mp4") {
         startAtOneSecond(video);
       }
 
-      // Clic pour mettre la vidéo au centre
       video.addEventListener('click', () => {
         currentIndex = vidIdx;
         render();
@@ -163,13 +165,10 @@
       carousel.appendChild(video);
     }
 
-    // Rotation globale pour centrer la vidéo courante
-    // On inverse l'angle pour que la vidéo centrale soit face à l'utilisateur
     carousel.style.transform = `translateZ(-${radius}px) rotateY(-${currentIndex * angleStep}deg)`;
   }
 
-  // Navigation au clavier
-  window.addEventListener('keydown', (e) => {
+  window.addEventListener('keydown', e => {
     if(e.key === 'ArrowRight') {
       currentIndex = (currentIndex + 1) % total;
       render();
