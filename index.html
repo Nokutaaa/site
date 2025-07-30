@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Nokuta - Carrousel vidéo</title>
+  <link rel="icon" href="favicon.jpg" type="image/jpg" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
   <style>
     body {
@@ -12,42 +13,68 @@
       margin: 0;
       padding: 0;
       text-align: center;
+      overflow-x: hidden;
+    }
+
+    #bg-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -10;
+      filter: brightness(0.5);
     }
 
     .carousel {
       position: relative;
-      max-width: 1200px;
+      max-width: 1100px;
       margin: 150px auto 20px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 20px;
+      height: 400px;
+      /* Conteneur pour positionner les vidéos absolument */
     }
 
-    video {
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      object-fit: cover;
-      background: black;
-    }
-
-    /* Vidéo principale : plus grande, nette */
-    .main-video {
-      width: 700px;
-      filter: none;
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
-    }
-
-    /* Vidéos latérales : plus petites et floues */
     .side-video {
+      position: absolute;
+      top: 50%;
       width: 250px;
+      height: 140px;
+      transform: translateY(-50%);
       filter: blur(4px) grayscale(50%);
       opacity: 0.7;
-      pointer-events: auto; /* cliquables */
+      cursor: pointer;
+      border-radius: 8px;
+      object-fit: cover;
+      box-shadow: 0 0 8px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+      z-index: 1;
     }
 
-    /* Boutons */
+    .side-video:hover {
+      opacity: 1;
+      filter: blur(2px) grayscale(30%);
+      box-shadow: 0 0 12px rgba(0,0,0,0.4);
+    }
+
+    .side-video.left {
+      left: 5%;
+    }
+
+    .side-video.right {
+      right: 5%;
+    }
+
+    .main-video {
+      position: relative;
+      width: 700px;
+      height: 394px; /* garde ratio 16:9 */
+      border-radius: 8px;
+      object-fit: cover;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      z-index: 10;
+    }
+
     .controls {
       margin-top: 15px;
       display: flex;
@@ -98,8 +125,13 @@
     <img src="logo1.png" alt="Logo" class="logo" />
   </div>
 
+  <video autoplay muted loop playsinline id="bg-video">
+    <source src="fond.mp4" type="video/mp4" />
+    Votre navigateur ne supporte pas la vidéo HTML5.
+  </video>
+
   <div class="carousel" id="carousel">
-    <!-- Vidéos seront insérées ici -->
+    <!-- vidéos injectées ici -->
   </div>
 
   <div class="controls">
@@ -113,7 +145,6 @@
 
     const carousel = document.getElementById('carousel');
 
-    // Fonction pour créer un élément vidéo configuré
     function createVideoElement(src, className, muted = true, controls = false) {
       const video = document.createElement('video');
       video.src = src;
@@ -133,23 +164,21 @@
       const leftIndex = (currentIndex - 1 + videos.length) % videos.length;
       const rightIndex = (currentIndex + 1) % videos.length;
 
-      // Vidéo gauche (latérale)
-      const leftVideo = createVideoElement(videos[leftIndex], 'side-video');
+      // Vidéo gauche
+      const leftVideo = createVideoElement(videos[leftIndex], 'side-video left');
       leftVideo.addEventListener('click', () => {
         currentIndex = leftIndex;
         renderCarousel();
       });
 
-      // Vidéo principale
+      // Vidéo principale avec contrôles visibles
       const mainVideo = createVideoElement(videos[currentIndex], 'main-video', true, true);
-
-      // Quand la vidéo principale est prête, on joue
       mainVideo.addEventListener('canplay', () => {
-        mainVideo.play().catch(() => {}); // Pour éviter les erreurs autoplay bloqué
+        mainVideo.play().catch(() => {});
       });
 
-      // Vidéo droite (latérale)
-      const rightVideo = createVideoElement(videos[rightIndex], 'side-video');
+      // Vidéo droite
+      const rightVideo = createVideoElement(videos[rightIndex], 'side-video right');
       rightVideo.addEventListener('click', () => {
         currentIndex = rightIndex;
         renderCarousel();
@@ -160,7 +189,6 @@
       carousel.appendChild(rightVideo);
     }
 
-    // Gestion des boutons
     document.getElementById('prevBtn').addEventListener('click', () => {
       currentIndex = (currentIndex - 1 + videos.length) % videos.length;
       renderCarousel();
@@ -171,7 +199,6 @@
       renderCarousel();
     });
 
-    // Affichage initial
     renderCarousel();
   </script>
 </body>
