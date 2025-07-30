@@ -14,6 +14,30 @@
       padding: 0;
       text-align: center;
     }
+     .carousel {
+      position: relative;
+      width: 90%;
+      max-width: 800px;
+      margin-top: 50px;
+    }
+
+    video {
+      width: 100%;
+      border-radius: 10px;
+    }
+
+    .controls {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      width: 200px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
     
 .logo-container {
   position: absolute;
@@ -26,22 +50,44 @@
   height: 50px; 
     }
  
-    video {
-      width: 90%;
-      max-width: 900px;
-       margin-top: 150px;     /* marge en haut */
-  margin-bottom: 50px;   /* marge en bas */
-  margin-left: auto;
-  margin-right: auto;
-      display: block;
-      border: 0px solid white;
-      border-radius: 0px;
+  <div class="carousel">
+    <video id="videoPlayer" controls autoplay loop muted>
+      <source src="video1.mp4" type="video/mp4">
+      Votre navigateur ne supporte pas la vidéo HTML5.
+    </video>
+
+    <div class="controls">
+      <button onclick="prevVideo()">◀ Précédent</button>
+      <button onclick="nextVideo()">Suivant ▶</button>
+    </div>
+  </div>
+
+  <script>
+    const videos = ["video1.mp4", "video2.mp4", "video3.mp4"];
+    let current = 0;
+    const videoPlayer = document.getElementById("videoPlayer");
+
+    function updateVideo() {
+      videoPlayer.src = videos[current];
+      videoPlayer.load();
+      videoPlayer.play();
     }
+
+    function nextVideo() {
+      current = (current + 1) % videos.length;
+      updateVideo();
+    }
+
+    function prevVideo() {
+      current = (current - 1 + videos.length) % videos.length;
+      updateVideo();
+    }
+  </script>
 
     .content {
       margin-top: 10px;
       font-size: 0.5rem;
-      text-align: right;      /* aligne le texte à droite */
+      text-align: right;
       padding-right: 80px; 
     }
   </style>
@@ -51,13 +97,11 @@
   <img src="logo.png" alt="Logo" class="logo">
  </div>
 
-  <!-- Vidéo visible normalement -->
   <video autoplay loop muted playsinline>
     <source src="video.mp4" type="video/mp4">
     Votre navigateur ne supporte pas la vidéo HTML5.
   </video>
 
-  <!-- Texte visible sous la vidéo -->
   <div class="content">
     <h1>Site en travaux...</h1>
   </div>
