@@ -2,25 +2,19 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title>Nokuta - Carrousel Hexagonal 3D</title>
+<title>Nokuta - Carrousel 3D</title>
 <link rel="icon" href="favicon.jpg" type="image/jpg" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 <style>
   html, body {
-    height: 100%;
-    margin: 0; padding: 0;
+    margin: 0; padding: 0; height: 100%;
     font-family: 'Poppins', sans-serif;
     background: white;
-    color: black;
-    overflow-x: hidden;
-  }
-
-  body {
     display: flex;
     justify-content: center;
     align-items: center;
-    perspective: 1500px; /* perspective 3D */
-    height: 100vh;
+    perspective: 1600px;
+    overflow-x: hidden;
   }
 
   #bg-video {
@@ -33,44 +27,47 @@
   }
 
   .carousel-container {
+    width: 1300px;      /* Carrousel plus large */
+    height: 500px;      /* Hauteur augmentée */
     position: relative;
-    width: 1100px;
-    height: 400px;
     transform-style: preserve-3d;
   }
 
   .carousel {
+    width: 1300px;
+    height: 500px;
     position: relative;
-    width: 1100px;
-    height: 400px;
-    margin: 0 auto;
     transform-style: preserve-3d;
     transition: transform 1s ease;
   }
 
   video {
     position: absolute;
-    width: 420px;
-    height: 240px;
+    width: 450px;       /* Plus grande taille vidéo */
+    height: 270px;
     border-radius: 8px;
     object-fit: cover;
     cursor: pointer;
     box-shadow: 0 0 15px rgba(0,0,0,0.3);
     transition: filter 0.5s ease, opacity 0.5s ease, transform 0.5s ease;
     user-select: none;
+    background: black;
   }
 
+  /* Vidéo centrale (active) */
   .video-center {
     filter: none !important;
     opacity: 1 !important;
-    transform: translateZ(200px) scale(1.2) !important;
-    z-index: 100 !important;
+    transform: translateZ(300px) scale(1.3) !important;
+    z-index: 10 !important;
     cursor: default;
+    box-shadow: 0 0 30px rgba(0,0,0,0.7);
   }
 
+  /* Vidéos latérales */
   .video-side {
-    filter: blur(3px) grayscale(50%);
-    opacity: 0.6;
+    filter: blur(3px) grayscale(40%);
+    opacity: 0.5;
     z-index: 1;
   }
 
@@ -83,7 +80,6 @@
   .logo-container {
     position: absolute; top: 60px; left: 60px; z-index: 1000;
   }
-
 </style>
 </head>
 <body>
@@ -107,19 +103,19 @@
   const total = videos.length;
   let currentIndex = 0;
 
-  // Angle réduit à 10°
-  const angleStep = 10;
-  const radius = 600; // plus large pour étaler le carrousel
+  const angleStep = 10; // Espacement en degrés
+  const radius = 650;   // Rayon cercle pour bien espacer
 
+  // Fonction pour démarrer une vidéo à 1 seconde (utile pour video3 et video5)
   function startAtOneSecond(videoElem) {
     function seekAndPlay() {
-      if (videoElem.currentTime < 1) {
+      if(videoElem.currentTime < 1) {
         videoElem.currentTime = 1;
       }
       videoElem.play().catch(() => {});
       videoElem.removeEventListener('loadedmetadata', seekAndPlay);
     }
-    if (videoElem.readyState >= 1) {
+    if(videoElem.readyState >= 1) {
       seekAndPlay();
     } else {
       videoElem.addEventListener('loadedmetadata', seekAndPlay);
@@ -141,10 +137,10 @@
       video.setAttribute('preload', 'auto');
       video.controls = (i === 0);
 
-      // Calcul rotation avec angle réduit
+      // Positionnement circulaire en 3D autour du Y axis
+      // La vidéo principale sera à 0°, les autres espacées tous les 10°
       const rotateY = i * angleStep;
 
-      // Position 3D circulaire
       video.style.transform = `rotateY(${rotateY}deg) translateZ(${radius}px)`;
 
       if(i === 0) {
@@ -153,6 +149,7 @@
         video.classList.add('video-side');
       }
 
+      // Vidéos 3 et 5 démarrent à 1 seconde
       if(videos[vidIdx] === "video3.mp4" || videos[vidIdx] === "video5.mp4") {
         startAtOneSecond(video);
       }
@@ -165,9 +162,11 @@
       carousel.appendChild(video);
     }
 
+    // Faire pivoter le carousel pour que la vidéo sélectionnée soit face à l'utilisateur
     carousel.style.transform = `translateZ(-${radius}px) rotateY(-${currentIndex * angleStep}deg)`;
   }
 
+  // Navigation au clavier
   window.addEventListener('keydown', e => {
     if(e.key === 'ArrowRight') {
       currentIndex = (currentIndex + 1) % total;
