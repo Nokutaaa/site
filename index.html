@@ -154,26 +154,21 @@
   const minDistance = 80; 
   const borderPadding = 80;
 
-  // After DOM loaded and images loaded, setup positions and animation
   window.onload = () => {
 
-    // Container dimensions
     const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight;
 
-    // Logo center relative to container
     const logoRect = logo.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
     const logoCenterX = logoRect.left + logoRect.width/2 - containerRect.left;
     const logoCenterY = logoRect.top + logoRect.height/2 - containerRect.top;
 
-    // Define ellipse params (horizontal ellipse)
     const ellipseRadiusX = containerWidth/2 - videoWidth/2 - borderPadding;
     const ellipseRadiusY = containerHeight/3 - videoHeight/2 - borderPadding;
 
-    // Place 6 fixed points evenly on ellipse
     for(let i=0; i<6; i++) {
-      const angle = (i / 6) * 2 * Math.PI; // perfect spacing for symmetry
+      const angle = (i / 6) * 2 * Math.PI;
       const x = logoCenterX + ellipseRadiusX * Math.cos(angle);
       const y = logoCenterY + ellipseRadiusY * Math.sin(angle);
       positions.push({
@@ -183,44 +178,17 @@
       });
     }
 
-    // Create video elements, place them initially at base positions
-    positions.forEach((pos, i) => {
-      const video = document.createElement("video");
-      video.src = videos[i];
-      video.muted = true;
-      video.loop = true;
-      video.autoplay = true;
-      video.playsInline = true;
-      video.classList.add("floating-video");
-
-      container.appendChild(video);
-      videoElements.push(video);
-
-      video.style.left = (pos.baseX - videoWidth/2) + "px";
-      video.style.top = (pos.baseY - videoHeight/2) + "px";
-    });
-
-    // Repel videos from logo, borders and each other to ensure minDistance
+    // Initial repulsion loop with better collision detection and correction
     function repelPositions() {
-      const maxIter = 200;
-      for(let iter = 0; iter < maxIter; iter++) {
-        let moved = false;
+      let moved;
+      let iterations = 0;
+      do {
+        moved = false;
+        // Rejet bordures & logo & entre vidéos
         for(let i=0; i<positions.length; i++) {
           const p1 = positions[i];
 
-          // Rejet logo
-          const dxLogo = p1.baseX - logoCenterX;
-          const dyLogo = p1.baseY - logoCenterY;
-          const distLogo = Math.sqrt(dxLogo*dxLogo + dyLogo*dyLogo);
-          const minDistLogo = Math.max(videoWidth, videoHeight)/2 + logoRect.width/2 + minDistance;
-          if(distLogo < minDistLogo) {
-            const diff = minDistLogo - distLogo;
-            p1.baseX += (dxLogo / distLogo) * diff;
-            p1.baseY += (dyLogo / distLogo) * diff;
-            moved = true;
-          }
-
-          // Rejet bords container
+          // Bordures container
           if(p1.baseX - videoWidth/2 < borderPadding) {
             p1.baseX = borderPadding + videoWidth/2;
             moved = true;
@@ -238,47 +206,71 @@
             moved = true;
           }
 
-          // Rejet entre vidéos
+          // Logo rejection
+          const dxLogo = p1.baseX - logoCenterX;
+          const dyLogo = p1.baseY - logoCenterY;
+          const distLogo = Math.sqrt(dxLogo*dxLogo + dyLogo*dyLogo);
+          const minDistLogo = (Math.max(videoWidth, videoHeight)/2 + logoRect.width/2) + minDistance;
+          if(distLogo < minDistLogo && distLogo > 0) {
+            const diff = minDistLogo - distLogo;
+            p1.baseX += (dxLogo / distLogo) * diff;
+            p1.baseY += (dyLogo / distLogo) * diff;
+            moved = true;
+          }
+
+          // Between videos
           for(let j=0; j<positions.length; j++) {
             if(i === j) continue;
             const p2 = positions[j];
 
             const dx = p1.baseX - p2.baseX;
             const dy = p1.baseY - p2.baseY;
-            const distX = Math.abs(dx);
-            const distY = Math.abs(dy);
-            const minDistX = videoWidth + minDistance;
-            const minDistY = videoHeight + minDistance;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const minDist = Math.sqrt(videoWidth*videoWidth + videoHeight*videoHeight)/2 + minDistance;
 
-            if(distX < minDistX && distY < minDistY) {
-              const overlapX = minDistX - distX;
-              if(dx !== 0) {
-                p1.baseX += (dx / distX) * (overlapX/2);
-                p2.baseX -= (dx / distX) * (overlapX/2);
-              } else {
-                p1.baseX += overlapX/2;
-                p2.baseX -= overlapX/2;
-              }
-              const overlapY = minDistY - distY;
-              if(dy !== 0) {
-                p1.baseY += (dy / distY) * (overlapY/2);
-                p2.baseY -= (dy / distY) * (overlapY/2);
-              } else {
-                p1.baseY += overlapY/2;
-                p2.baseY -= overlapY/2;
-              }
+            if(dist < minDist && dist > 0) {
+              const diff = minDist - dist;
+              const moveX = (dx / dist) * (diff/2);
+              const moveY = (dy / dist) * (diff/2);
+
+              p1.baseX += moveX;
+              p1.baseY += moveY;
+              p2.baseX -= moveX;
+              p2.baseY -= moveY;
               moved = true;
             }
           }
         }
-        if(!moved) break;
-      }
+        iterations++;
+        if(iterations > 1000) {
+          console.warn("Too many repel iterations");
+          break;
+        }
+      } while(moved);
     }
+
     repelPositions();
 
+    // Create video elements at their corrected positions
+    positions.forEach((pos, i) => {
+      const video = document.createElement("video");
+      video.src = videos[i];
+      video.muted = true;
+      video.loop = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      video.classList.add("floating-video");
+
+      container.appendChild(video);
+      videoElements.push(video);
+
+      video.style.left = (pos.baseX - videoWidth/2) + "px";
+      video.style.top = (pos.baseY - videoHeight/2) + "px";
+    });
+
     // Animate subtle floating around base positions
-    const floatAmplitude = 8; // px, subtil
-    const floatSpeed = 0.002; // lent
+    const floatAmplitude = 5;
+    const floatSpeed = 0.0015;
 
     let lastTime = performance.now();
 
@@ -288,9 +280,8 @@
 
       positions.forEach((pos, i) => {
         const angle = pos.angleOffset + time * floatSpeed;
-        // ellipse for floating (subtil)
         const floatX = floatAmplitude * Math.cos(angle + i);
-        const floatY = floatAmplitude * 0.6 * Math.sin(angle + i);
+        const floatY = floatAmplitude * 0.5 * Math.sin(angle + i);
         const x = pos.baseX + floatX;
         const y = pos.baseY + floatY;
 
@@ -303,7 +294,7 @@
     }
     animate();
 
-    // Fullscreen video on click with reset start and volume 35%
+    // Fullscreen video handling
     const overlay = document.getElementById("overlay");
     const fullscreenVideo = document.getElementById("fullscreenVideo");
 
