@@ -18,7 +18,7 @@
     .carousel {
       position: relative;
       width: 100%;
-      max-width: 900px;
+      max-width: 1100px;
       margin: 150px auto 20px auto;
     }
 
@@ -46,26 +46,22 @@
   z-index: -1;    
 }
     
- button {
-      background: rgba(255, 255, 255, 0.15);
-      border: 2px solid rgba(255, 255, 255, 0.4);
-      color: white;
-      font-size: 2rem;
-      padding: 10px 15px;
-      border-radius: 50%;
-      cursor: pointer;
-      transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-      user-select: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+button {
+  background: #e0e0e0;
+  border-radius: 20px;
+  box-shadow: 8px 8px 15px #bebebe, -8px -8px 15px #ffffff;
+  color: #555;
+  padding: 12px 20px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease;
+}
 
-    button:hover {
-      background: rgba(255, 255, 255, 0.4);
-      border-color: rgba(255, 255, 255, 0.8);
-      color: black;
-    }
+button:hover {
+  box-shadow: inset 5px 5px 10px #bebebe, inset -5px -5px 10px #ffffff;
+  color: #222;
+}
 
     button:active {
       background: rgba(255, 255, 255, 0.6);
