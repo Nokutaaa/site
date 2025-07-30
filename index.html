@@ -2,19 +2,20 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title>Nokuta - Carrousel 3D</title>
+<title>Nokuta - Carrousel Hexagonal 3D</title>
 <link rel="icon" href="favicon.jpg" type="image/jpg" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 <style>
   html, body {
     margin: 0; padding: 0; height: 100%;
+    background-color: white;
+    color: black;
     font-family: 'Poppins', sans-serif;
-    background: white;
+    overflow-x: hidden;
+    perspective: 1500px;
     display: flex;
     justify-content: center;
     align-items: center;
-    perspective: 1600px;
-    overflow-x: hidden;
   }
 
   #bg-video {
@@ -27,24 +28,25 @@
   }
 
   .carousel-container {
-    width: 1300px;      /* Carrousel plus large */
-    height: 500px;      /* Hauteur augmentée */
     position: relative;
+    width: 1100px;     /* Agrandi */
+    height: 400px;     /* Agrandi */
     transform-style: preserve-3d;
   }
 
   .carousel {
-    width: 1300px;
-    height: 500px;
     position: relative;
+    width: 1100px;
+    height: 400px;
+    margin: 0 auto;
     transform-style: preserve-3d;
     transition: transform 1s ease;
   }
 
   video {
     position: absolute;
-    width: 450px;       /* Plus grande taille vidéo */
-    height: 270px;
+    width: 380px;      /* Vidéos plus grandes */
+    height: 215px;
     border-radius: 8px;
     object-fit: cover;
     cursor: pointer;
@@ -54,131 +56,7 @@
     background: black;
   }
 
-  /* Vidéo centrale (active) */
   .video-center {
     filter: none !important;
     opacity: 1 !important;
-    transform: translateZ(300px) scale(1.3) !important;
-    z-index: 10 !important;
-    cursor: default;
-    box-shadow: 0 0 30px rgba(0,0,0,0.7);
-  }
-
-  /* Vidéos latérales */
-  .video-side {
-    filter: blur(3px) grayscale(40%);
-    opacity: 0.5;
-    z-index: 1;
-  }
-
-  .video-side:hover {
-    filter: blur(1px) grayscale(20%);
-    opacity: 0.9;
-    box-shadow: 0 0 20px rgba(0,0,0,0.5);
-  }
-
-  .logo-container {
-    position: absolute; top: 60px; left: 60px; z-index: 1000;
-  }
-</style>
-</head>
-<body>
-
-<div class="logo-container">
-  <img src="logo1.png" alt="Logo" style="height:50px;" />
-</div>
-
-<video autoplay muted loop playsinline id="bg-video">
-  <source src="fond.mp4" type="video/mp4" />
-  Votre navigateur ne supporte pas la vidéo HTML5.
-</video>
-
-<div class="carousel-container">
-  <div class="carousel" id="carousel"></div>
-</div>
-
-<script>
-  const videos = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
-  const carousel = document.getElementById('carousel');
-  const total = videos.length;
-  let currentIndex = 0;
-
-  const angleStep = 10; // Espacement en degrés
-  const radius = 650;   // Rayon cercle pour bien espacer
-
-  // Fonction pour démarrer une vidéo à 1 seconde (utile pour video3 et video5)
-  function startAtOneSecond(videoElem) {
-    function seekAndPlay() {
-      if(videoElem.currentTime < 1) {
-        videoElem.currentTime = 1;
-      }
-      videoElem.play().catch(() => {});
-      videoElem.removeEventListener('loadedmetadata', seekAndPlay);
-    }
-    if(videoElem.readyState >= 1) {
-      seekAndPlay();
-    } else {
-      videoElem.addEventListener('loadedmetadata', seekAndPlay);
-    }
-  }
-
-  function render() {
-    carousel.innerHTML = '';
-
-    for(let i = 0; i < total; i++) {
-      const vidIdx = (currentIndex + i) % total;
-      const video = document.createElement('video');
-
-      video.src = videos[vidIdx];
-      video.muted = true;
-      video.loop = true;
-      video.autoplay = true;
-      video.playsInline = true;
-      video.setAttribute('preload', 'auto');
-      video.controls = (i === 0);
-
-      // Positionnement circulaire en 3D autour du Y axis
-      // La vidéo principale sera à 0°, les autres espacées tous les 10°
-      const rotateY = i * angleStep;
-
-      video.style.transform = `rotateY(${rotateY}deg) translateZ(${radius}px)`;
-
-      if(i === 0) {
-        video.classList.add('video-center');
-      } else {
-        video.classList.add('video-side');
-      }
-
-      // Vidéos 3 et 5 démarrent à 1 seconde
-      if(videos[vidIdx] === "video3.mp4" || videos[vidIdx] === "video5.mp4") {
-        startAtOneSecond(video);
-      }
-
-      video.addEventListener('click', () => {
-        currentIndex = vidIdx;
-        render();
-      });
-
-      carousel.appendChild(video);
-    }
-
-    // Faire pivoter le carousel pour que la vidéo sélectionnée soit face à l'utilisateur
-    carousel.style.transform = `translateZ(-${radius}px) rotateY(-${currentIndex * angleStep}deg)`;
-  }
-
-  // Navigation au clavier
-  window.addEventListener('keydown', e => {
-    if(e.key === 'ArrowRight') {
-      currentIndex = (currentIndex + 1) % total;
-      render();
-    } else if(e.key === 'ArrowLeft') {
-      currentIndex = (currentIndex - 1 + total) % total;
-      render();
-    }
-  });
-
-  render();
-</script>
-
-</body>
-</html>
+    transform: translateZ(300px) scale(1.15) !
