@@ -1,285 +1,231 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<title>Nokuta</title>
-<link rel="icon" href="favicon.jpg" type="image/jpg" />
-<link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
-<style>
-  html, body {
-    margin: 0; padding: 0; height: 100%;
-    font-family: 'Poppins', sans-serif;
-    overflow: hidden;
-    background: #fff;
-  }
+  <meta charset="UTF-8" />
+  <title>Nokuta</title>
+  <link rel="icon" href="favicon.jpg" type="image/jpg" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background: black;
+      height: 100vh;
+      width: 100vw;
+    }
 
-  #bg-video {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw;
-    height: 100vh;
-    object-fit: cover;
-    z-index: -10;
-  }
+    #background-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      min-width: 100%;
+      min-height: 100%;
+      object-fit: cover;
+      z-index: -10;
+    }
 
-  header {
-    position: fixed;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1000;
-    pointer-events: none;
-  }
-  .logo {
-    width: 200px; /* double taille */
-    user-select: none;
-    pointer-events: none;
-  }
+    #logo {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      height: 200px;
+      z-index: 10;
+      pointer-events: none;
+    }
 
-  #container {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-  }
+    #container {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+    }
 
-  .video-wrapper {
-    position: absolute;
-    border-radius: 10px;
-    overflow: hidden;
-    filter: blur(2px);
-    opacity: 0.75;
-    cursor: pointer;
-    box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    transition: filter 0.3s ease, opacity 0.3s ease;
-  }
+    .floating-video {
+      position: absolute;
+      width: 240px;
+      height: 135px;
+      opacity: 0.75;
+      filter: blur(1.5px);
+      transition: filter 0.3s, opacity 0.3s;
+      border-radius: 10px;
+      overflow: hidden;
+      z-index: 5;
+    }
 
-  .video-wrapper:hover {
-    filter: blur(0);
-    opacity: 1;
-    box-shadow: 0 0 25px rgba(0,0,0,0.5);
-    z-index: 100;
-  }
+    .floating-video:hover {
+      filter: blur(0);
+      opacity: 1;
+      z-index: 6;
+    }
 
-  .video-wrapper video {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    pointer-events: none;
-  }
+    .floating-video video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
 
-  /* Grand mode vidéo */
-  #large-video-container {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 70vw;
-    max-width: 960px;
-    max-height: 70vh;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 0 40px rgba(0,0,0,0.8);
-    background: black;
-    display: none;
-    z-index: 2000;
-  }
-  #large-video-container video {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-  #close-btn {
-    position: absolute;
-    top: 8px; right: 12px;
-    font-size: 30px;
-    color: white;
-    cursor: pointer;
-    z-index: 2100;
-    user-select: none;
-  }
+    #player-overlay {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80vw;
+      max-width: 960px;
+      height: 45vw;
+      max-height: 540px;
+      background: black;
+      z-index: 1000;
+      display: none;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 30px rgba(0,0,0,0.8);
+    }
 
-</style>
+    #player-overlay video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    #close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 28px;
+      color: white;
+      cursor: pointer;
+      z-index: 1001;
+    }
+  </style>
 </head>
 <body>
 
-<video autoplay muted loop playsinline id="bg-video">
-  <source src="fond.mp4" type="video/mp4" />
-  Votre navigateur ne supporte pas la vidéo HTML5.
-</video>
+  <video autoplay muted loop playsinline id="background-video">
+    <source src="fond.mp4" type="video/mp4" />
+  </video>
 
-<header>
-  <img src="logo1.png" alt="Logo Nokuta" class="logo" />
-</header>
+  <img src="logo1.png" id="logo" alt="Nokuta Logo" />
 
-<div id="container"></div>
+  <div id="container"></div>
 
-<div id="large-video-container">
-  <div id="close-btn">&times;</div>
-  <video controls muted></video>
-</div>
+  <div id="player-overlay">
+    <div id="close-btn">&times;</div>
+    <video controls></video>
+  </div>
 
-<script>
-  const videos = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
-  const container = document.getElementById('container');
-  const largeVideoContainer = document.getElementById('large-video-container');
-  const largeVideo = largeVideoContainer.querySelector('video');
-  const closeBtn = document.getElementById('close-btn');
-  const logo = document.querySelector('header img.logo');
+  <script>
+    const videoFiles = [
+      "video1.mp4",
+      "video2.mp4",
+      "video3.mp4",
+      "video4.mp4",
+      "video5.mp4",
+      "video6.mp4"
+    ];
 
-  const minDistance = 20; // px minimal entre vidéos et logo
-  const floatAmplitude = 8; // amplitude du flottement en px
-  const floatSpeed = 0.002; // vitesse du flottement (plus petit = plus lent)
+    const container = document.getElementById("container");
+    const logo = document.getElementById("logo");
+    const playerOverlay = document.getElementById("player-overlay");
+    const playerVideo = playerOverlay.querySelector("video");
+    const closeBtn = document.getElementById("close-btn");
 
-  // Dimensions du logo (après chargement)
-  let logoRect;
+    const minDistance = 20;
+    const floatRange = 8;
+    const floatSpeed = 0.002;
+    const videoWidth = 240;
+    const videoHeight = 135;
 
-  // Positions déjà prises pour éviter superposition
-  let placedPositions = [];
+    const placed = [];
 
-  // Stocke les wrappers pour anim flottement
-  let videoWrappers = [];
-
-  // Dimensions container
-  const containerWidth = window.innerWidth;
-  const containerHeight = window.innerHeight;
-
-  // Taille du logo (déjà en CSS, mais on récupère bounding pour éviter collisions)
-  function updateLogoRect() {
-    logoRect = logo.getBoundingClientRect();
-  }
-
-  // Fonction pour vérifier si un rectangle touche un autre (avec marge minDistance)
-  function isOverlapping(r1, r2, margin = 20) {
-    return !(
-      r1.right + margin < r2.left ||
-      r1.left - margin > r2.right ||
-      r1.bottom + margin < r2.top ||
-      r1.top - margin > r2.bottom
-    );
-  }
-
-  // Vérifie que pos ne superpose pas avec d'autres vidéos ou logo
-  function canPlaceAt(x, y, width, height) {
-    const rect = {left:x, top:y, right:x+width, bottom:y+height};
-    // check logo
-    if (isOverlapping(rect, logoRect, minDistance)) return false;
-
-    // check les autres videos
-    for (const p of placedPositions) {
-      if (isOverlapping(rect, p, minDistance)) return false;
+    function rectsOverlap(r1, r2, buffer = minDistance) {
+      return !(
+        r1.right + buffer < r2.left ||
+        r1.left - buffer > r2.right ||
+        r1.bottom + buffer < r2.top ||
+        r1.top - buffer > r2.bottom
+      );
     }
-    return true;
-  }
 
-  // Génère position aléatoire valide dans une zone autour du logo
-  // Ici on essaye de répartir autour du logo, pas un cercle parfait, zone +/- 300px du centre
-  function generatePosition(width, height) {
-    const maxAttempts = 1000;
-    const centerX = containerWidth/2;
-    const centerY = containerHeight/2;
+    function placeVideo(index, src) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "floating-video";
 
-    for(let i=0; i<maxAttempts; i++) {
-      // Zone rectangle +/- 300px autour du centre
-      const x = centerX + (Math.random()*600 - 300) - width/2;
-      const y = centerY + (Math.random()*400 - 200) - height/2;
+      const video = document.createElement("video");
+      video.src = src;
+      video.muted = true;
+      video.loop = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      wrapper.appendChild(video);
 
-      if (x < 0 || y < 0 || x + width > containerWidth || y + height > containerHeight) continue;
+      const centerX = window.innerWidth / 2;
+      const centerY = window.innerHeight / 2;
+      const logoRect = logo.getBoundingClientRect();
 
-      if (canPlaceAt(x, y, width, height)) return {x, y};
-    }
-    return null; // pas trouvé de place
-  }
+      let attempts = 0;
+      let x, y, rect;
+      do {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 250 + Math.random() * 150;
+        x = centerX + radius * Math.cos(angle) - videoWidth / 2;
+        y = centerY + radius * Math.sin(angle) - videoHeight / 2;
+        rect = { left: x, top: y, right: x + videoWidth, bottom: y + videoHeight };
+        attempts++;
+        if (attempts > 500) break;
+      } while (
+        rectsOverlap(rect, logoRect) ||
+        placed.some(r => rectsOverlap(rect, r))
+      );
 
-  // Création des vidéos
-  function createVideos() {
-    updateLogoRect();
-    placedPositions = [];
-    videoWrappers = [];
+      placed.push(rect);
 
-    for(let i=0; i < videos.length; i++) {
-      // Taille variable plus grande (320-420px width)
-      const width = 320 + Math.random()*100;
-      const height = width * 9/16;
+      wrapper.style.left = `${x}px`;
+      wrapper.style.top = `${y}px`;
 
-      const pos = generatePosition(width, height);
-      if (!pos) {
-        console.warn('Impossible de placer la vidéo n°'+i);
-        continue;
-      }
+      wrapper.dataset.floatX = Math.random() * Math.PI * 2;
+      wrapper.dataset.floatY = Math.random() * Math.PI * 2;
 
-      placedPositions.push({
-        left: pos.x,
-        top: pos.y,
-        right: pos.x + width,
-        bottom: pos.y + height
+      wrapper.addEventListener("click", () => {
+        playerOverlay.style.display = "block";
+        playerVideo.src = src;
+        playerVideo.currentTime = 0;
+        playerVideo.volume = 0.35;
+        playerVideo.play();
       });
 
-      const wrapper = document.createElement('div');
-      wrapper.className = 'video-wrapper';
-      wrapper.style.width = width + 'px';
-      wrapper.style.height = height + 'px';
-      wrapper.style.left = pos.x + 'px';
-      wrapper.style.top = pos.y + 'px';
-
-      const vid = document.createElement('video');
-      vid.src = videos[i];
-      vid.muted = true;
-      vid.loop = true;
-      vid.autoplay = true;
-      vid.playsInline = true;
-      vid.setAttribute('preload', 'auto');
-
-      wrapper.appendChild(vid);
       container.appendChild(wrapper);
-      videoWrappers.push({wrapper, baseX: pos.x, baseY: pos.y, amplitude: floatAmplitude, speed: floatSpeed, phase: Math.random() * Math.PI*2, width, height, index: i});
+    }
 
-      // Click ouvre en grand
-      wrapper.addEventListener('click', () => {
-        openLargeVideo(i);
+    function floatVideos(timestamp) {
+      const wrappers = document.querySelectorAll(".floating-video");
+      wrappers.forEach(wrapper => {
+        const phaseX = parseFloat(wrapper.dataset.floatX);
+        const phaseY = parseFloat(wrapper.dataset.floatY);
+        const dx = Math.sin(timestamp * floatSpeed + phaseX) * floatRange;
+        const dy = Math.cos(timestamp * floatSpeed + phaseY) * floatRange;
+        wrapper.style.transform = `translate(${dx}px, ${dy}px)`;
       });
+      requestAnimationFrame(floatVideos);
     }
-  }
 
-  // Animation flottement lent
-  function animateFloating(timestamp=0) {
-    for (const v of videoWrappers) {
-      const dx = Math.sin(timestamp * v.speed + v.phase) * v.amplitude;
-      const dy = Math.cos(timestamp * v.speed + v.phase) * v.amplitude;
-      v.wrapper.style.transform = `translate(${dx}px, ${dy}px)`;
-    }
-    requestAnimationFrame(animateFloating);
-  }
+    closeBtn.addEventListener("click", () => {
+      playerOverlay.style.display = "none";
+      playerVideo.pause();
+      playerVideo.src = "";
+    });
 
-  // Ouvre la vidéo en grand
-  function openLargeVideo(index) {
-    const src = videos[index];
-    largeVideo.src = src;
-    largeVideo.volume = 0.35;
-    largeVideo.currentTime = 0;
-    largeVideo.play();
-    largeVideoContainer.style.display = 'block';
-  }
+    window.onload = () => {
+      videoFiles.forEach((src, i) => placeVideo(i, src));
+      requestAnimationFrame(floatVideos);
+    };
 
-  // Fermer la vidéo grand écran
-  closeBtn.addEventListener('click', () => {
-    largeVideo.pause();
-    largeVideo.src = '';
-    largeVideoContainer.style.display = 'none';
-  });
-
-  // Initialisation
-  window.addEventListener('load', () => {
-    createVideos();
-    animateFloating();
-  });
-
-  // Recalcul positions au resize
-  window.addEventListener('resize', () => {
-    container.innerHTML = '';
-    createVideos();
-  });
-
-</script>
+    window.onresize = () => {
+      // Optional: reset positions on resize
+      location.reload();
+    };
+  </script>
 
 </body>
 </html>
