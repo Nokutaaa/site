@@ -5,6 +5,10 @@
   <title>Nokuta</title>
   <link rel="icon" href="favicon.jpg" type="image/jpg" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+  
+  <!-- Plyr CSS -->
+  <link rel="stylesheet" href="https://cdn.plyr.io/4.1.10/plyr.css" />
+
   <style>
     body {
       background-color: white;
@@ -13,6 +17,7 @@
       margin: 0;
       padding: 0;
       text-align: center;
+      overflow-x: hidden;
     }
 
     .carousel {
@@ -20,58 +25,53 @@
       width: 100%;
       max-width: 900px;
       margin: 150px auto 20px auto;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      border-radius: 10px;
+      overflow: hidden;
+      background: #000;
     }
 
-    video {
-      width: 100%;
-      border-radius: 0px;
+    /* Plyr video styles */
+    #videoPlayer {
+      border-radius: 10px;
     }
 
     .controls {
-      margin-top: 10px;
+      margin-top: 15px;
       display: flex;
-      justify-content: space-between;
-      width: 200px;
-      margin-left: auto;
-      margin-right: auto;
+      justify-content: center;
+      gap: 30px;
     }
 
-    #bg-video {
-  position: fixed;    
-  top: 0;
-  left: 0;
-  width: 100vw;    
-  height: 100vh;    
-  object-fit: cover;  
-  z-index: -1;    
-}
-    
- button {
-      background: rgba(255, 255, 255, 0.15);
-      border: 2px solid rgba(255, 255, 255, 0.4);
+    button {
+      background: rgba(0, 0, 0, 0.4);
+      border: 2px solid rgba(255, 255, 255, 0.7);
       color: white;
       font-size: 2rem;
-      padding: 10px 15px;
+      padding: 12px 18px;
       border-radius: 50%;
       cursor: pointer;
-      transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+      transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
       user-select: none;
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
     }
 
     button:hover {
-      background: rgba(255, 255, 255, 0.4);
-      border-color: rgba(255, 255, 255, 0.8);
+      background: rgba(255, 255, 255, 0.85);
+      border-color: rgba(0, 0, 0, 0.85);
       color: black;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
     }
 
     button:active {
-      background: rgba(255, 255, 255, 0.6);
-      border-color: rgba(255, 255, 255, 1);
+      background: rgba(255, 255, 255, 1);
+      border-color: rgba(0, 0, 0, 1);
       color: black;
       transform: scale(0.95);
+      box-shadow: 0 0 20px rgba(255, 255, 255, 1);
     }
 
     .logo-container {
@@ -83,6 +83,8 @@
 
     .logo {
       height: 50px;
+      user-select: none;
+      pointer-events: none;
     }
 
     .content {
@@ -91,6 +93,17 @@
       text-align: right;
       padding-right: 80px;
     }
+
+    #bg-video {
+      position: fixed;    
+      top: 0;
+      left: 0;
+      width: 100vw;    
+      height: 100vh;    
+      object-fit: cover;  
+      z-index: -1;
+      filter: grayscale(100%) brightness(0.7);
+    }
   </style>
 </head>
 <body>
@@ -98,44 +111,75 @@
     <img src="logo1.png" alt="Logo" class="logo" />
   </div>
 
-  <!-- Carrousel de vidéos -->
+  <!-- Carrousel de vidéos avec Plyr -->
   <div class="carousel">
-    <video id="videoPlayer" controls autoplay loop muted>
+    <video
+      id="videoPlayer"
+      controls
+      crossorigin
+      playsinline
+      muted
+      autoplay
+      loop
+    >
       <source src="video1.mp4" type="video/mp4" />
       Votre navigateur ne supporte pas la vidéo HTML5.
     </video>
 
     <div class="controls">
-      <button onclick="prevVideo()">◀</button>
-      <button onclick="nextVideo()">▶</button>
+      <button id="prevBtn" aria-label="Vidéo précédente">◀</button>
+      <button id="nextBtn" aria-label="Vidéo suivante">▶</button>
     </div>
   </div>
-  
-<video autoplay muted loop playsinline id="bg-video">
-  <source src="fond.mp4" type="video/mp4" />
-  Votre navigateur ne supporte pas la vidéo HTML5.
-</video>
+
+  <!-- Vidéo de fond -->
+  <video autoplay muted loop playsinline id="bg-video" tabindex="-1" aria-hidden="true">
+    <source src="fond.mp4" type="video/mp4" />
+    Votre navigateur ne supporte pas la vidéo HTML5.
+  </video>
+
+  <!-- Plyr JS -->
+  <script src="https://cdn.plyr.io/4.1.10/plyr.polyfilled.js"></script>
 
   <script>
     const videos = ["video1.mp4", "video2.mp4", "video3.mp4"];
     let current = 0;
-    const videoPlayer = document.getElementById("videoPlayer");
 
-    function updateVideo() {
-      videoPlayer.src = videos[current];
-      videoPlayer.load();
-      videoPlayer.play();
+    const player = new Plyr('#videoPlayer', {
+      autoplay: true,
+      muted: true,
+      loop: { active: true },
+      controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'fullscreen']
+    });
+
+    // Charge la vidéo courante dans Plyr
+    function loadVideo(index) {
+      current = index;
+      player.source = {
+        type: 'video',
+        sources: [
+          {
+            src: videos[current],
+            type: 'video/mp4',
+          },
+        ],
+      };
+      player.play();
     }
 
-    function nextVideo() {
-      current = (current + 1) % videos.length;
-      updateVideo();
-    }
+    // Boutons navigation
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      let nextIndex = (current + 1) % videos.length;
+      loadVideo(nextIndex);
+    });
 
-    function prevVideo() {
-      current = (current - 1 + videos.length) % videos.length;
-      updateVideo();
-    }
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      let prevIndex = (current - 1 + videos.length) % videos.length;
+      loadVideo(prevIndex);
+    });
+
+    // Initialisation avec la première vidéo
+    loadVideo(current);
   </script>
 </body>
 </html>
