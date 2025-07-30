@@ -38,8 +38,8 @@
     .side-video {
       position: absolute;
       top: 50%;
-      width: 250px;
-      height: 140px;
+      width: 350px;
+      height: 180px;
       transform: translateY(-50%);
       filter: blur(4px) grayscale(50%);
       opacity: 0.7;
@@ -67,9 +67,9 @@
 
     .main-video {
       position: relative;
-      width: 700px;
-      height: 394px; /* garde ratio 16:9 */
-      border-radius: 8px;
+      width: 900px;
+      height: 506px; /* garde ratio 16:9 */
+      border-radius: 2px;
       object-fit: cover;
       box-shadow: 0 0 20px rgba(0,0,0,0.5);
       z-index: 10;
@@ -83,29 +83,23 @@
     }
 
     button {
-      background: #e0e0e0;
-      border-radius: 20px;
-      box-shadow: 8px 8px 15px #bebebe, -8px -8px 15px #ffffff;
-      color: #555;
-      padding: 12px 20px;
-      font-weight: 700;
+      background: transparent;
       border: none;
+      color: black;
+      font-size: 3rem;
       cursor: pointer;
-      transition: box-shadow 0.3s ease;
-      font-size: 1.5rem;
       user-select: none;
+      padding: 0 10px;
+      transition: color 0.3s ease;
     }
 
     button:hover {
-      box-shadow: inset 5px 5px 10px #bebebe, inset -5px -5px 10px #ffffff;
-      color: #222;
+      color: #555;
     }
 
     button:active {
-      background: rgba(255, 255, 255, 0.6);
-      border-color: rgba(255, 255, 255, 1);
-      color: black;
-      transform: scale(0.95);
+      color: #222;
+      transform: scale(0.9);
     }
 
     .logo-container {
