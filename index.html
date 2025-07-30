@@ -8,197 +8,157 @@
       margin: 0;
       padding: 0;
       overflow: hidden;
+      height: 100%;
+      width: 100%;
       background: black;
       font-family: sans-serif;
     }
 
-    #background-video {
+    /* Vidéo de fond */
+    #bg-video {
       position: fixed;
-      top: 0;
-      left: 0;
-      min-width: 100%;
-      min-height: 100%;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
       z-index: -10;
     }
 
-    .logo {
+    /* Logo centré */
+    #logo {
       position: absolute;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%);
       height: 80px;
-      z-index: 2;
-      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      animation: logoFadeIn 1.5s ease-out forwards;
+      opacity: 0;
+    }
+
+    @keyframes logoFadeIn {
+      0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+      100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
     }
 
     .floating-video {
       position: absolute;
       width: 220px;
-      height: 124px;
+      height: 130px;
       object-fit: cover;
       opacity: 0.75;
       filter: blur(2px);
       border-radius: 10px;
-      transition: transform 0.3s ease, filter 0.3s ease;
-      z-index: 1;
+      pointer-events: auto;
+      transition: transform 0.3s ease, opacity 0.3s ease, filter 0.3s ease;
     }
 
     .floating-video:hover {
       opacity: 1;
-      filter: blur(0.5px);
-      z-index: 3;
+      filter: blur(0);
+      transform: scale(1.05);
+      z-index: 20;
     }
 
-    .active-player {
+    .fullscreen-video {
       position: fixed;
       top: 50%;
       left: 50%;
       width: 80vw;
-      height: 45vw;
-      max-width: 960px;
-      max-height: 540px;
+      height: auto;
+      max-height: 80vh;
       transform: translate(-50%, -50%);
-      z-index: 999;
-      box-shadow: 0 0 30px rgba(0,0,0,0.8);
+      z-index: 100;
+      box-shadow: 0 0 20px rgba(0,0,0,0.7);
+      border-radius: 12px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Vidéo de fond -->
-  <video autoplay muted loop playsinline id="background-video">
+  <video autoplay muted loop playsinline id="bg-video">
     <source src="fond.mp4" type="video/mp4" />
     Votre navigateur ne supporte pas la vidéo HTML5.
   </video>
 
-  <!-- Logo centré -->
-  <img src="logo1.png" alt="Logo" class="logo" id="logo" />
-
-  <!-- Lecteur actif (si clic) -->
-  <div id="video-player-container" style="display: none;">
-    <video id="video-player" controls class="active-player"></video>
-  </div>
+  <img src="logo1.png" alt="Logo" id="logo" />
 
   <script>
-    const videoSources = [
-      "video1.mp4",
-      "video2.mp4",
-      "video3.mp4",
-      "video4.mp4",
-      "video5.mp4",
-      "video6.mp4"
-    ];
+    const videos = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    const a = window.innerWidth / 2.5; // horizontal radius
+    const b = window.innerHeight / 3.5; // vertical radius
+    const minDistanceFromEdges = 80;
 
-    const logo = document.getElementById('logo');
-    const playerContainer = document.getElementById('video-player-container');
-    const player = document.getElementById('video-player');
+    let angles = [];
+    const videoElements = [];
 
-    const placedVideos = [];
+    // Crée les vidéos sur l'ellipse
+    for (let i = 0; i < videos.length; i++) {
+      const angle = (i / videos.length) * 2 * Math.PI;
+      angles.push(angle);
 
-    function distance(a, b) {
-      const dx = a.x - b.x;
-      const dy = a.y - b.y;
-      return Math.sqrt(dx * dx + dy * dy);
-    }
+      const video = document.createElement("video");
+      video.src = videos[i];
+      video.className = "floating-video";
+      video.autoplay = true;
+      video.muted = true;
+      video.loop = true;
+      video.playsInline = true;
 
-    function placeVideos() {
-      const screenW = window.innerWidth;
-      const screenH = window.innerHeight;
-      const logoRect = logo.getBoundingClientRect();
+      positionVideo(video, angle);
+      document.body.appendChild(video);
+      videoElements.push(video);
 
-      const minDistance = 20;
-      const videoW = 220;
-      const videoH = 124;
-
-      videoSources.forEach(src => {
-        let attempts = 0;
-        let x, y, valid;
-
-        do {
-          x = Math.random() * (screenW - videoW);
-          y = Math.random() * (screenH - videoH);
-          const center = { x: x + videoW / 2, y: y + videoH / 2 };
-
-          // Check distance with logo
-          const logoCenter = {
-            x: logoRect.left + logoRect.width / 2,
-            y: logoRect.top + logoRect.height / 2
-          };
-          valid = distance(center, logoCenter) > (videoW / 2 + logoRect.width / 2 + minDistance);
-
-          // Check other videos
-          if (valid) {
-            for (const v of placedVideos) {
-              const otherCenter = { x: v.x + videoW / 2, y: v.y + videoH / 2 };
-              if (distance(center, otherCenter) < videoW + minDistance) {
-                valid = false;
-                break;
-              }
-            }
-          }
-
-          attempts++;
-          if (attempts > 1000) {
-            valid = true; // force break if can't place after many tries
-          }
-
-        } while (!valid);
-
-        placedVideos.push({ x, y });
-
-        const vid = document.createElement('video');
-        vid.src = src;
-        vid.className = 'floating-video';
-        vid.autoplay = true;
-        vid.muted = true;
-        vid.loop = true;
-        vid.playsInline = true;
-        vid.style.left = `${x}px`;
-        vid.style.top = `${y}px`;
-
-        // Flottement aléatoire
-        const floatX = Math.random() * 8 + 4;
-        const floatY = Math.random() * 8 + 4;
-        let directionX = Math.random() < 0.5 ? -1 : 1;
-        let directionY = Math.random() < 0.5 ? -1 : 1;
-
-        setInterval(() => {
-          const currentX = parseFloat(vid.style.left);
-          const currentY = parseFloat(vid.style.top);
-          let newX = currentX + directionX * 0.3;
-          let newY = currentY + directionY * 0.3;
-
-          // Stay in bounds
-          if (newX < 0 || newX > screenW - videoW) directionX *= -1;
-          if (newY < 0 || newY > screenH - videoH) directionY *= -1;
-
-          vid.style.left = `${newX}px`;
-          vid.style.top = `${newY}px`;
-        }, 30);
-
-        // Clic pour lire en grand
-        vid.addEventListener('click', () => {
-          player.src = src;
-          player.currentTime = 0;
-          player.volume = 0.35;
-          player.play();
-          playerContainer.style.display = 'block';
-        });
-
-        document.body.appendChild(vid);
+      video.addEventListener("click", () => {
+        showFullscreen(video.src);
       });
     }
 
-    // Fermer lecteur si clic dehors
-    document.addEventListener('click', (e) => {
-      if (!player.contains(e.target) && e.target.tagName !== "VIDEO") {
-        player.pause();
-        playerContainer.style.display = 'none';
-      }
-    });
+    function positionVideo(video, angle) {
+      const x = centerX + a * Math.cos(angle);
+      const y = centerY + b * Math.sin(angle);
 
-    window.addEventListener('load', placeVideos);
+      video.style.left = `${x - video.offsetWidth / 2}px`;
+      video.style.top = `${y - video.offsetHeight / 2}px`;
+    }
+
+    // Animation de flottement circulaire
+    function animate() {
+      for (let i = 0; i < videoElements.length; i++) {
+        angles[i] += 0.0015; // vitesse lente
+        positionVideo(videoElements[i], angles[i]);
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    // Plein écran
+    function showFullscreen(src) {
+      const fullVideo = document.createElement("video");
+      fullVideo.src = src;
+      fullVideo.className = "fullscreen-video";
+      fullVideo.controls = true;
+      fullVideo.volume = 0.35;
+      fullVideo.autoplay = true;
+
+      document.body.appendChild(fullVideo);
+
+      fullVideo.addEventListener("ended", () => {
+        fullVideo.remove();
+      });
+
+      fullVideo.addEventListener("click", () => {
+        fullVideo.remove();
+      });
+    }
+
+    // Redimensionnement
+    window.addEventListener("resize", () => {
+      location.reload(); // recalcul des positions
+    });
   </script>
+
 </body>
 </html>
