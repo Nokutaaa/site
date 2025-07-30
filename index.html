@@ -31,9 +31,13 @@
       background: #000;
     }
 
-    /* Plyr video styles */
+    /* Plyr container taille fixe */
     #videoPlayer {
       border-radius: 10px;
+      width: 100% !important;
+      height: 500px; /* Hauteur fixe pour garder une bonne taille */
+      max-height: 80vh;
+      object-fit: cover;
     }
 
     .controls {
@@ -149,10 +153,10 @@
       autoplay: true,
       muted: true,
       loop: { active: true },
-      controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'fullscreen']
+      controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'fullscreen'],
+      clickToPlay: true,
     });
 
-    // Charge la vidéo courante dans Plyr
     function loadVideo(index) {
       current = index;
       player.source = {
@@ -164,21 +168,23 @@
           },
         ],
       };
-      player.play();
+      // Jouer après que Plyr ait chargé la source
+      player.once('ready', () => {
+        player.play();
+      });
     }
 
-    // Boutons navigation
     document.getElementById('nextBtn').addEventListener('click', () => {
-      let nextIndex = (current + 1) % videos.length;
+      const nextIndex = (current + 1) % videos.length;
       loadVideo(nextIndex);
     });
 
     document.getElementById('prevBtn').addEventListener('click', () => {
-      let prevIndex = (current - 1 + videos.length) % videos.length;
+      const prevIndex = (current - 1 + videos.length) % videos.length;
       loadVideo(prevIndex);
     });
 
-    // Initialisation avec la première vidéo
+    // Charge la première vidéo au démarrage
     loadVideo(current);
   </script>
 </body>
