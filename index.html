@@ -2,8 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Nokuta</title>
-  <link rel="icon" href="favicon.jpg" type="image/jpg" />
+  <title>Nokuta - Carrousel vidéo</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
   <style>
     body {
@@ -17,35 +16,42 @@
 
     .carousel {
       position: relative;
-      width: 100%;
-      max-width: 1200px; /* agrandi */
-      margin: 150px auto 20px auto;
+      max-width: 1200px;
+      margin: 150px auto 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
     }
 
     video {
-      width: 100%;
-      border-radius: 0px;
-      outline: none;
-      display: block;
-    }
-
-    .controls {
-      margin-top: 10px;
-      display: flex;
-      justify-content: space-between;
-      width: 200px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    #bg-video {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
       object-fit: cover;
-      z-index: -1;
+    }
+
+    /* Vidéo principale : taille plus grande, nette */
+    .main-video {
+      width: 700px;
+      filter: none;
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    }
+
+    /* Vidéos latérales : plus petites et floues */
+    .side-video {
+      width: 250px;
+      filter: blur(4px) grayscale(50%);
+      opacity: 0.7;
+      pointer-events: auto; /* pour pouvoir cliquer dessus */
+    }
+
+    /* Boutons */
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      justify-content: center;
+      gap: 30px;
     }
 
     button {
@@ -58,6 +64,8 @@
       border: none;
       cursor: pointer;
       transition: box-shadow 0.3s ease;
+      font-size: 1.5rem;
+      user-select: none;
     }
 
     button:hover {
@@ -82,13 +90,6 @@
     .logo {
       height: 50px;
     }
-
-    .content {
-      margin-top: 10px;
-      font-size: 0.5rem;
-      text-align: right;
-      padding-right: 80px;
-    }
   </style>
 </head>
 <body>
@@ -96,57 +97,52 @@
     <img src="logo1.png" alt="Logo" class="logo" />
   </div>
 
-  <!-- Carrousel de vidéos -->
-  <div class="carousel">
-    <video id="videoPlayer" autoplay loop muted playsinline>
-      <source src="video1.mp4" type="video/mp4" />
-      Votre navigateur ne supporte pas la vidéo HTML5.
-    </video>
-
-    <div class="controls">
-      <button onclick="prevVideo()">◀</button>
-      <button onclick="nextVideo()">▶</button>
-    </div>
+  <div class="carousel" id="carousel">
+    <!-- Vidéos ajoutées via JS -->
   </div>
 
-  <video autoplay muted loop playsinline id="bg-video">
-    <source src="fond.mp4" type="video/mp4" />
-    Votre navigateur ne supporte pas la vidéo HTML5.
-  </video>
+  <div class="controls">
+    <button id="prevBtn">◀</button>
+    <button id="nextBtn">▶</button>
+  </div>
 
-<script>
-  const videos = ["video3.mp4", "video2.mp4", "video1.mp4"];
-  let current = 0;
-  const videoPlayer = document.getElementById("videoPlayer");
+  <script>
+    const videos = ["video3.mp4", "video2.mp4", "video1.mp4"];
+    let currentIndex = 0;
 
-  function startVideoAtThreeSeconds() {
-    if(videos[current] === "video3.mp4") {
-      videoPlayer.currentTime = 3;
-    } else {
-      videoPlayer.currentTime = 0;
-    }
-  }
+    const carousel = document.getElementById('carousel');
 
-  function updateVideo() {
-    videoPlayer.src = videos[current];
-    videoPlayer.load();
-    videoPlayer.play();
-    startVideoAtThreeSeconds();
-    videoPlayer.controls = true;
-  }
+    // Crée les éléments vidéo dans le DOM
+    function renderCarousel() {
+      carousel.innerHTML = '';
 
-  function nextVideo() {
-    current = (current + 1) % videos.length;
-    updateVideo();
-  }
+      // Index des vidéos à afficher : côté gauche, centre, côté droit
+      // On fait modulo pour boucler
+      const leftIndex = (currentIndex - 1 + videos.length) % videos.length;
+      const rightIndex = (currentIndex + 1) % videos.length;
 
-  function prevVideo() {
-    current = (current - 1 + videos.length) % videos.length;
-    updateVideo();
-  }
+      // Vidéo côté gauche
+      const leftVideo = document.createElement('video');
+      leftVideo.src = videos[leftIndex];
+      leftVideo.classList.add('side-video');
+      leftVideo.muted = true;
+      leftVideo.loop = true;
+      leftVideo.autoplay = true;
+      leftVideo.playsInline = true;
+      leftVideo.addEventListener('click', () => {
+        currentIndex = leftIndex;
+        renderCarousel();
+      });
+      leftVideo.load();
+      leftVideo.play();
 
-  // Initialisation
-  videoPlayer.controls = true;
-</script>
-</body>
-</html>
+      // Vidéo centrale
+      const mainVideo = document.createElement('video');
+      mainVideo.src = videos[currentIndex];
+      mainVideo.classList.add('main-video');
+      mainVideo.muted = true;
+      mainVideo.loop = true;
+      mainVideo.autoplay = true;
+      mainVideo.playsInline = true;
+      mainVideo.controls = true;  // Contrôles visibles uniquement pour la vidéo principale
+      mainVideo
