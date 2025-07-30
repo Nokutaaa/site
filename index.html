@@ -2,27 +2,25 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title>Vidéos flottantes avec logo central & background</title>
+<title>Nokuta - Vidéos flottantes</title>
+<link rel="icon" href="favicon.jpg" type="image/jpg" />
+<link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 <style>
   html, body {
-    margin: 0; padding: 0;
-    height: 100%;
+    margin: 0; padding: 0; height: 100%;
     overflow: hidden;
-    background: #111;
-    font-family: Arial, sans-serif;
-  }
-  body {
-    position: relative;
+    font-family: 'Poppins', sans-serif;
+    background: #000;
   }
 
-  /* Vidéo de fond en full screen, derrière tout */
   #bg-video {
     position: fixed;
     top: 0; left: 0;
-    width: 100vw; height: 100vh;
+    width: 100vw;
+    height: 100vh;
     object-fit: cover;
+    z-index: -10;
     filter: brightness(0.5);
-    z-index: -1000;
   }
 
   #logo {
@@ -30,222 +28,280 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
+    width: 200px;  /* double taille */
+    height: auto;
     z-index: 10000;
     pointer-events: none;
-    user-select: none;
-    width: 300px;
-    height: 300px;
-    background: url('logo1.png') no-repeat center center;
-    background-size: contain;
+  }
+
+  #video-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    pointer-events: none; /* pour que flottantes soient cliquables */
+    z-index: 5000;
   }
 
   .floating-video {
     position: absolute;
-    border-radius: 10px;
-    filter: blur(1.3px);
+    border-radius: 12px;
+    filter: blur(1.5px);
     opacity: 0.75;
     cursor: pointer;
-    object-fit: cover;
-    transition: filter 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    z-index: 1;
+    pointer-events: auto;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    transition: filter 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+    user-select: none;
+    will-change: transform, filter, opacity;
   }
 
   .floating-video:hover {
-    filter: none;
+    filter: blur(0);
     opacity: 1;
-    box-shadow: 0 0 25px rgba(255,255,255,0.9);
-    z-index: 1000;
+    box-shadow: 0 0 25px rgba(255,255,255,0.8);
+    z-index: 9000;
   }
 
-  .floating-video.selected {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: 80vw !important;
-    height: auto !important;
-    max-height: 80vh !important;
-    opacity: 1 !important;
-    filter: none !important;
-    box-shadow: 0 0 35px rgba(255,255,255,1) !important;
-    z-index: 10001 !important;
-    cursor: default !important;
+  .selected-video-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80vw;
+    max-width: 1200px;
+    max-height: 80vh;
+    border-radius: 14px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.9);
+    z-index: 15000;
+    background: #000;
+  }
+
+  .selected-video-overlay video {
+    width: 100%;
+    height: 100%;
+    border-radius: 14px;
+    object-fit: contain;
+  }
+
+  /* Bouton fermer */
+  #close-btn {
+    position: fixed;
+    top: 25px;
+    right: 25px;
+    background: rgba(255,255,255,0.9);
+    border: none;
+    border-radius: 30px;
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 16000;
+    box-shadow: 0 0 8px rgba(0,0,0,0.5);
+    transition: background 0.3s ease;
+  }
+
+  #close-btn:hover {
+    background: rgba(255,255,255,1);
   }
 </style>
 </head>
 <body>
 
-<video id="bg-video" autoplay muted loop playsinline>
+<video autoplay muted loop playsinline id="bg-video" preload="auto">
   <source src="fond.mp4" type="video/mp4" />
   Votre navigateur ne supporte pas la vidéo HTML5.
 </video>
 
-<div id="logo"></div>
+<img src="logo1.png" id="logo" alt="Logo Nokuta" />
+
+<div id="video-container"></div>
 
 <script>
   const videosSrc = [
-    'video1.mp4',
-    'video2.mp4',
-    'video3.mp4',
-    'video4.mp4',
-    'video5.mp4',
-    'video6.mp4'
+    "video1.mp4",
+    "video2.mp4",
+    "video3.mp4",
+    "video4.mp4",
+    "video5.mp4",
+    "video6.mp4"
   ];
 
-  const floatingVideos = [];
-  const containerWidth = window.innerWidth;
-  const containerHeight = window.innerHeight;
-
+  const container = document.getElementById('video-container');
   const logo = document.getElementById('logo');
-  let logoRect;
 
-  function updateLogoRect() {
-    logoRect = logo.getBoundingClientRect();
+  // Paramètres
+  const videoCount = videosSrc.length;
+  const minDistance = 25; // px minimal entre vidéos et logo
+  const floatingRange = 15; // px de déplacement flottant max
+  const floatingSpeed = 0.0035; // vitesse flottement
+  const baseMinSize = 220; // min width
+  const baseMaxSize = 320; // max width
+
+  let floatingVideos = [];
+
+  // Fonction pour calculer distance entre deux rectangles (simplifié à distance centre)
+  function distance(rect1, rect2){
+    const x1 = rect1.left + rect1.width/2;
+    const y1 = rect1.top + rect1.height/2;
+    const x2 = rect2.left + rect2.width/2;
+    const y2 = rect2.top + rect2.height/2;
+    return Math.hypot(x1 - x2, y1 - y2);
   }
-  updateLogoRect();
-  window.addEventListener('resize', () => {
-    updateLogoRect();
-  });
 
-  function isOverlap(rect1, rect2) {
-    return !(rect1.right < rect2.left ||
-             rect1.left > rect2.right ||
-             rect1.bottom < rect2.top ||
-             rect1.top > rect2.bottom);
-  }
-
-  function canPlace(x, y, width, height) {
-    const newRect = {
-      left: x,
-      top: y,
-      right: x + width,
-      bottom: y + height
-    };
-    // Check logo
-    if (isOverlap(newRect, logoRect)) return false;
-
-    // Check already placed videos
-    for(const v of floatingVideos) {
-      const r = v.rect;
-      if (isOverlap(newRect, r)) return false;
+  // Fonction pour vérifier recouvrement (distance plus que minDistance)
+  function isTooClose(newRect, others){
+    for(const other of others){
+      if(distance(newRect, other) < minDistance) return true;
     }
-    return true;
+    // Vérif avec logo aussi
+    const logoRect = logo.getBoundingClientRect();
+    if(distance(newRect, logoRect) < minDistance) return true;
+    return false;
   }
 
-  // Positionne les vidéos aléatoirement dans une zone plus large, pour bien couvrir l’écran
-  // on tente un placement avec 1500 essais max pour éviter boucle infinie
-  function findPosition(width, height) {
-    const maxAttempts = 1500;
-    for(let i=0; i<maxAttempts; i++) {
-      // Zone un peu réduite par rapport au viewport pour éviter que vidéos soient collées au bord
-      const x = Math.random() * (containerWidth - width - 40) + 20;
-      const y = Math.random() * (containerHeight - height - 40) + 20;
-      if(canPlace(x, y, width, height)) return {x, y};
-    }
-    // fallback si placement impossible
-    return {x: 20, y: 20};
-  }
+  // Générer position aléatoire et taille pour une vidéo, en évitant recouvrement
+  function generatePositionAndSize(existingRects) {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
 
-  function createFloatingVideo(src) {
-    const video = document.createElement('video');
-    video.src = src;
-    video.muted = true;
-    video.loop = true;
-    video.autoplay = true;
-    video.playsInline = true;
-    video.preload = 'auto';
-    video.classList.add('floating-video');
+    let tries = 0;
+    while(tries < 1000){
+      const width = baseMinSize + Math.random() * (baseMaxSize - baseMinSize);
+      const height = width * 9/16; // ratio 16:9
+      const left = Math.random() * (vw - width);
+      const top = Math.random() * (vh - height);
 
-    // Largeur entre 200 et 350 px, ratio 16:9
-    const width = 200 + Math.random() * 150;
-    const height = width * 9 / 16;
-    video.style.width = width + 'px';
-    video.style.height = height + 'px';
-
-    const pos = findPosition(width, height);
-    video.style.left = pos.x + 'px';
-    video.style.top = pos.y + 'px';
-
-    floatingVideos.push({
-      video,
-      rect: {left: pos.x, top: pos.y, right: pos.x + width, bottom: pos.y + height},
-      baseLeft: pos.x,
-      baseTop: pos.y,
-      width,
-      height
-    });
-
-    video.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if(video.classList.contains('selected')) {
-        deselectAll();
-      } else {
-        selectVideo(video);
+      const rect = {left, top, width, height};
+      if(!isTooClose(rect, existingRects)){
+        return rect;
       }
-    });
-
-    document.body.appendChild(video);
+      tries++;
+    }
+    // fallback : place sans vérif
+    return {left: 50, top: 50, width: baseMinSize, height: baseMinSize*9/16};
   }
 
-  function selectVideo(selectedVideo) {
+  // Création des vidéos flottantes
+  function createFloatingVideos(){
+    const existingRects = [];
+    floatingVideos = [];
+
+    for(let i=0; i < videoCount; i++){
+      const rect = generatePositionAndSize(existingRects);
+      existingRects.push(rect);
+
+      const vid = document.createElement('video');
+      vid.src = videosSrc[i];
+      vid.autoplay = true;
+      vid.loop = true;
+      vid.muted = true;
+      vid.playsInline = true;
+      vid.preload = 'auto';
+      vid.classList.add('floating-video');
+      vid.style.width = rect.width + 'px';
+      vid.style.height = rect.height + 'px';
+      vid.style.left = rect.left + 'px';
+      vid.style.top = rect.top + 'px';
+
+      container.appendChild(vid);
+
+      floatingVideos.push({
+        video: vid,
+        baseLeft: rect.left,
+        baseTop: rect.top,
+        size: {width: rect.width, height: rect.height},
+        phaseX: Math.random() * 2 * Math.PI,
+        phaseY: Math.random() * 2 * Math.PI,
+        speedX: floatingSpeed * (0.5 + Math.random()),
+        speedY: floatingSpeed * (0.5 + Math.random()),
+      });
+
+      // Click pour agrandir la vidéo
+      vid.addEventListener('click', () => selectVideo(vid));
+    }
+  }
+
+  // Afficher la vidéo sélectionnée en grand
+  function selectVideo(selectedVideo){
+    // Créer overlay
+    if(document.querySelector('.selected-video-overlay')) return; // ignore si déjà ouverte
+
+    const overlay = document.createElement('div');
+    overlay.classList.add('selected-video-overlay');
+
+    const bigVideo = document.createElement('video');
+    bigVideo.src = selectedVideo.src;
+    bigVideo.controls = true;
+    bigVideo.autoplay = true;
+    bigVideo.muted = false;
+    bigVideo.currentTime = 0;
+    bigVideo.volume = 0.35;
+    bigVideo.playsInline = true;
+    overlay.appendChild(bigVideo);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.id = 'close-btn';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.title = 'Fermer la vidéo';
+    document.body.appendChild(closeBtn);
+
+    document.body.appendChild(overlay);
+
+    // Mettre les autres vidéos en flou + opacité réduite + pointer-events none sauf celle sélectionnée
     floatingVideos.forEach(({video}) => {
       if(video === selectedVideo){
-        video.classList.add('selected');
-        video.controls = true;
-        video.muted = false;
-        video.play();
-        video.style.zIndex = '10001';
-      } else {
-        video.style.filter = 'blur(2px)';
-        video.style.opacity = '0.5';
+        video.style.filter = 'none';
+        video.style.opacity = '1';
         video.style.pointerEvents = 'none';
-        video.controls = false;
+      } else {
+        video.style.filter = 'blur(3px)';
+        video.style.opacity = '0.3';
+        video.style.pointerEvents = 'none';
       }
+    });
+
+    // Bloquer interaction du container (mais pas de l’overlay)
+    container.style.pointerEvents = 'none';
+
+    closeBtn.addEventListener('click', () => {
+      // Supprimer overlay et bouton
+      overlay.remove();
+      closeBtn.remove();
+
+      // Rétablir vidéos flottantes
+      floatingVideos.forEach(({video}) => {
+        video.style.filter = 'blur(1.5px)';
+        video.style.opacity = '0.75';
+        video.style.pointerEvents = 'auto';
+      });
+
+      container.style.pointerEvents = 'auto';
     });
   }
 
-  function deselectAll() {
-    floatingVideos.forEach(({video}) => {
-      video.classList.remove('selected');
-      video.style.filter = 'blur(1.3px)';
-      video.style.opacity = '0.75';
-      video.style.pointerEvents = 'auto';
-      video.controls = false;
-      video.muted = true;
-      video.play();
-      video.style.zIndex = '1';
-    });
-  }
+  // Animation flottement
+  function animate(time=0){
+    floatingVideos.forEach(obj => {
+      const {video, baseLeft, baseTop, size, phaseX, phaseY, speedX, speedY} = obj;
+      const dx = floatingRange * Math.sin(time * speedX + phaseX);
+      const dy = floatingRange * Math.cos(time * speedY + phaseY);
 
-  // Création des 6 vidéos uniquement
-  videosSrc.forEach(src => createFloatingVideo(src));
-
-  // Flottement plus ample et fluide
-  function animate(time=0) {
-    floatingVideos.forEach(({video, baseLeft, baseTop}, i) => {
-      if(!video.classList.contains('selected')) {
-        // Oscillation plus grande, sans lag
-        const offsetX = 10 * Math.sin(time / 900 + i * 1.3);
-        const offsetY = 7 * Math.cos(time / 1100 + i * 1.7);
-        video.style.left = (baseLeft + offsetX) + 'px';
-        video.style.top = (baseTop + offsetY) + 'px';
-      }
+      video.style.transform = `translate(${dx}px, ${dy}px)`;
     });
     requestAnimationFrame(animate);
   }
+
+  // Initialisation
+  createFloatingVideos();
   animate();
 
-  document.body.addEventListener('click', () => {
-    deselectAll();
-  });
-
-  // Au resize on reload pour recalculer positions (évite chevauchements)
+  // Ajuster les vidéos au redimensionnement (pour éviter qu’elles ne sortent trop)
   window.addEventListener('resize', () => {
-    location.reload();
+    // Clear container and recreate to reposition videos
+    container.innerHTML = '';
+    createFloatingVideos();
   });
 </script>
 
 </body>
 </html>
-
