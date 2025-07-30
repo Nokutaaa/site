@@ -2,153 +2,184 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Nokuta - Fond Vidéo Dynamique</title>
+  <title>Nokuta - Flux de vidéos</title>
   <link rel="icon" href="favicon.jpg" type="image/jpg" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
   <style>
-    body {
+    * {
+      box-sizing: border-box;
       margin: 0;
       padding: 0;
-      overflow: hidden;
+    }
+
+    body {
+      background-color: black;
       font-family: 'Poppins', sans-serif;
-      background: black;
+      overflow: hidden;
+    }
+
+    header {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+    }
+
+    .logo {
+      height: 60px;
+    }
+
+    /* Vidéo de fond */
+    #bg-video {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      z-index: -10;
+      filter: brightness(0.4) grayscale(30%);
+    }
+
+    .video-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      z-index: 1;
     }
 
     .floating-video {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 200px;
-      height: 120px;
-      object-fit: cover;
-      filter: blur(3px) brightness(0.7);
-      opacity: 0.4;
+      opacity: 0.2;
+      filter: blur(4px);
       pointer-events: auto;
-      transition: transform 1s ease;
-      animation: float 10s infinite ease-in-out alternate;
+      border-radius: 8px;
+      animation-name: floatHorizontal;
+      animation-iteration-count: infinite;
+      animation-timing-function: linear;
     }
 
-    @keyframes float {
-      0% { transform: translateY(0px); }
-      100% { transform: translateY(20px); }
+    @keyframes floatHorizontal {
+      from {
+        transform: translateX(-300px);
+      }
+      to {
+        transform: translateX(110vw);
+      }
     }
 
-    .active-video {
+    .floating-video.paused {
+      animation-play-state: paused;
+      opacity: 0.1;
+      filter: blur(6px);
+    }
+
+    .main-video-wrapper {
       position: fixed;
       top: 50%;
       left: 50%;
-      transform: translate(-50%, -50%) scale(1);
-      width: 80vw;
-      height: 45vw;
-      z-index: 10;
-      filter: none;
-      opacity: 1;
-      pointer-events: auto;
-      border-radius: 10px;
-      box-shadow: 0 0 30px rgba(0,0,0,0.7);
+      transform: translate(-50%, -50%);
+      z-index: 5;
+      display: none;
     }
 
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 9;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
+    .main-video-wrapper.active {
+      display: block;
     }
+
+    .main-video-wrapper video {
+      width: 70vw;
+      max-width: 900px;
+      border-radius: 12px;
+      box-shadow: 0 0 40px rgba(0,0,0,0.7);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: -30px;
+      right: -30px;
+      background: white;
+      border: none;
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
   </style>
 </head>
 <body>
 
-<div id="video-container"></div>
-<div id="overlay" class="overlay" style="display:none;"></div>
+  <!-- Vidéo de fond -->
+  <video autoplay muted loop playsinline id="bg-video">
+    <source src="fond.mp4" type="video/mp4" />
+    Votre navigateur ne supporte pas la vidéo HTML5.
+  </video>
 
-<script>
-  const container = document.getElementById('video-container');
-  const overlay = document.getElementById('overlay');
-  const videoSources = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
+  <!-- Logo fixe en haut -->
+  <header>
+    <img src="logo1.png" alt="Logo" class="logo" />
+  </header>
 
-  function random(min, max) {
-    return Math.random() * (max - min) + min;
-  }
+  <!-- Conteneur des vidéos flottantes -->
+  <div class="video-container" id="videoContainer"></div>
 
-  function createFloatingVideo(src) {
-    const video = document.createElement('video');
-    video.src = src;
-    video.autoplay = true;
-    video.muted = true;
-    video.loop = true;
-    video.playsInline = true;
-    video.className = 'floating-video';
-    resetPosition(video);
-    container.appendChild(video);
+  <!-- Vidéo sélectionnée -->
+  <div class="main-video-wrapper" id="mainVideoWrapper">
+    <button class="close-btn" onclick="closeMainVideo()">×</button>
+    <video id="mainVideo" controls autoplay></video>
+  </div>
 
-    const duration = random(15, 30);
-    animate(video, duration);
+  <script>
+    const videoSources = [
+      "video1.mp4", "video2.mp4", "video3.mp4",
+      "video4.mp4", "video5.mp4", "video6.mp4"
+    ];
 
-    video.addEventListener('click', () => {
-      document.querySelectorAll('.floating-video').forEach(v => {
-        v.style.animationPlayState = 'paused';
-        v.muted = true;
-      });
-      overlay.style.display = 'block';
+    const videoContainer = document.getElementById('videoContainer');
+    const mainVideoWrapper = document.getElementById('mainVideoWrapper');
+    const mainVideo = document.getElementById('mainVideo');
 
-      const activeVideo = video.cloneNode(true);
-      activeVideo.className = 'active-video';
-      activeVideo.controls = true;
-      activeVideo.muted = false;
-      activeVideo.currentTime = 0;
-      activeVideo.play();
-      container.appendChild(activeVideo);
+    const NUM_INSTANCES = 12;
 
-      overlay.addEventListener('click', () => {
-        activeVideo.remove();
-        overlay.style.display = 'none';
-        document.querySelectorAll('.floating-video').forEach(v => {
-          v.style.animationPlayState = 'running';
-        });
-      }, { once: true });
-    });
-  }
+    function spawnFloatingVideos() {
+      for (let i = 0; i < NUM_INSTANCES; i++) {
+        const video = document.createElement('video');
+        video.src = videoSources[i % videoSources.length];
+        video.className = 'floating-video';
+        video.autoplay = true;
+        video.loop = true;
+        video.muted = true;
+        video.playsInline = true;
 
-  function resetPosition(video) {
-    video.style.top = random(0, window.innerHeight - 120) + 'px';
-    video.style.left = -random(200, 400) + 'px';
-    video.style.width = random(160, 320) + 'px';
-    video.style.height = (parseInt(video.style.width) * 0.5625) + 'px';
-    video.style.opacity = random(0.2, 0.5);
-    video.style.filter = `blur(${random(2, 4)}px) brightness(0.7)`;
-  }
+        const top = 5 + Math.random() * 85; // espace vertical
+        const size = 200 + Math.random() * 150;
+        const duration = 60 + Math.random() * 60; // plus lent
+        video.style.top = `${top}vh`;
+        video.style.width = `${size}px`;
+        video.style.animationDuration = `${duration}s`;
 
-  function animate(video, duration) {
-    const distance = window.innerWidth + 400;
-    const startTime = performance.now();
-
-    function move(timestamp) {
-      const elapsed = (timestamp - startTime) / 1000;
-      const progress = elapsed / duration;
-      const left = parseFloat(video.style.left) + distance * progress;
-      video.style.left = left + 'px';
-
-      if (progress < 1) {
-        requestAnimationFrame(move);
-      } else {
-        resetPosition(video);
-        animate(video, random(15, 30));
+        video.addEventListener('click', () => selectMainVideo(video.src));
+        videoContainer.appendChild(video);
       }
     }
 
-    requestAnimationFrame(move);
-  }
+    function selectMainVideo(src) {
+      mainVideo.src = src;
+      mainVideoWrapper.classList.add('active');
+      document.querySelectorAll('.floating-video').forEach(v => v.classList.add('paused'));
+    }
 
-  // Lancer plusieurs vidéos flottantes
-  for (let i = 0; i < 12; i++) {
-    const src = videoSources[i % videoSources.length];
-    createFloatingVideo(src);
-  }
-</script>
+    function closeMainVideo() {
+      mainVideo.pause();
+      mainVideoWrapper.classList.remove('active');
+      mainVideo.src = '';
+      document.querySelectorAll('.floating-video').forEach(v => v.classList.remove('paused'));
+    }
 
+    spawnFloatingVideos();
+  </script>
 </body>
 </html>
