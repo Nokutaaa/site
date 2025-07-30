@@ -19,6 +19,7 @@
     width: 100vw; height: 100vh;
     object-fit: cover;
     z-index: -20;
+    filter: none; /* Pas de filtre */
   }
 
   .logo-container {
@@ -132,7 +133,7 @@
   // Taille videos fixes
   const videoWidth = 300;
   const videoHeight = 170;
-  const minDistance = 20; // espacement mini entre vidéos et logo
+  const minDistance = 25; // espacement mini entre vidéos et logo
   const borderPadding = 80;
 
   // Dimensions container (ellipse plus large horizontalement)
@@ -141,9 +142,9 @@
   const radiusX = centerX - videoWidth / 2 - borderPadding; // plus large
   const radiusY = centerY - videoHeight / 2 - borderPadding; // moins haut
 
-  // Flottement
-  const floatRange = 5;
-  const floatSpeed = 0.0007;  // plus lent
+  // Flottement (plus subtil)
+  const floatRange = 2.5;
+  const floatSpeed = 0.0004;  // plus lent
 
   // Création vidéos avec position angulaire régulière (autour du logo)
   videos.forEach((src, i) => {
@@ -175,7 +176,6 @@
     for(let iter = 0; iter < maxIter; iter++) {
       let moved = false;
       for(let i=0; i<videoElements.length; i++) {
-        const v1 = videoElements[i];
         const p1 = positions[i];
         const r1x = videoWidth / 2;
         const r1y = videoHeight / 2;
@@ -217,12 +217,10 @@
         // Rejet entre vidéos
         for(let j=0; j<videoElements.length; j++) {
           if(i === j) continue;
-          const v2 = videoElements[j];
           const p2 = positions[j];
           const r2x = videoWidth / 2;
           const r2y = videoHeight / 2;
 
-          // Distance centrée en X et Y (ellipse)
           const dx = p1.baseX - p2.baseX;
           const dy = p1.baseY - p2.baseY;
           const distX = Math.abs(dx);
@@ -231,7 +229,6 @@
           const minDistY = r1y + r2y + minDistance;
 
           if(distX < minDistX && distY < minDistY) {
-            // Pousser sur X
             const overlapX = minDistX - distX;
             if(dx !== 0) {
               p1.baseX += (dx / distX) * (overlapX/2);
@@ -240,7 +237,6 @@
               p1.baseX += overlapX/2;
               p2.baseX -= overlapX/2;
             }
-            // Pousser sur Y
             const overlapY = minDistY - distY;
             if(dy !== 0) {
               p1.baseY += (dy / distY) * (overlapY/2);
