@@ -46,7 +46,7 @@
     border-radius: 8px;
     object-fit: cover;
     cursor: pointer;
-    transition: opacity 0.3s ease, filter 0.3s ease, box-shadow 0.3s ease;
+    transition: opacity 0.3s ease, filter 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
     pointer-events: auto;
     will-change: transform;
     z-index: 1;
@@ -96,7 +96,7 @@
 
   // Trouver une position verticale sans superposition
   function findFreeTop(height) {
-    const step = 40; // minimum spacing
+    const step = 40; // minimum spacing vertical
     for (let top = 60; top < containerHeight - height - 60; top += step) {
       let conflict = false;
       for (const used of usedTops) {
@@ -110,11 +110,11 @@
         return top;
       }
     }
-    // fallback
+    // fallback si plein
     return Math.random() * (containerHeight - height - 100) + 50;
   }
 
-  // Générer une position horizontale initiale aléatoire dans la fenêtre (pour effet boucle déjà commencée)
+  // Position horizontale initiale aléatoire (pour effet boucle déjà commencée)
   function getRandomStartX(width) {
     return Math.random() * (containerWidth + 400) - width - 200;
   }
@@ -140,16 +140,15 @@
     const top = findFreeTop(height);
     video.style.top = `${top}px`;
 
-    // Position horizontale aléatoire pour démarrer sur toute la largeur + marge hors écran
     video.style.left = `${getRandomStartX(width)}px`;
 
-    // Stocke les infos de vitesse et position pour animation manuelle
-    const speed = 20 + Math.random() * 20; // pixels / seconde
+    // Stocke les infos pour animation
+    const speed = 30 + Math.random() * 30; // pixels / seconde
 
     floatingVideos.push({video, top, width, height, speed, x: parseFloat(video.style.left)});
 
     video.addEventListener('click', (e) => {
-      e.stopPropagation(); // éviter que le clic remonte au body
+      e.stopPropagation();
       if(video.classList.contains('selected')) {
         deselectVideo();
       } else {
@@ -160,93 +159,8 @@
     document.body.appendChild(video);
   }
 
-  // Sélection vidéo au centre
-  function selectVideo(video) {
-    // Bloquer animation autres vidéos (garder léger flottement)
-    floatingVideos.forEach(({video: v}) => {
-      if (v !== video) {
-        v.style.opacity = '0.3';
-        v.style.filter = 'blur(1px)';
-        v.style.pointerEvents = 'none'; // désactive clic sur les autres
-      } else {
-        v.style.pointerEvents = 'auto';
-      }
-    });
-
-    // Styles vidéo sélectionnée
-    video.classList.add('selected');
-  }
-
-  // Désélection vidéo, reprise animation
-  function deselectVideo() {
-    floatingVideos.forEach(({video}) => {
-      video.style.opacity = '0.6';
-      video.style.filter = 'blur(1.8px)';
-      video.style.pointerEvents = 'auto';
-      video.classList.remove('selected');
-      video.style.position = 'absolute';
-      video.style.transform = 'none';
-      video.style.zIndex = '1';
-    });
-  }
-
-  // Créer les vidéos initiales (maxVideosOnScreen)
-  for(let i=0; i < maxVideosOnScreen; i++) {
-    createFloatingVideo(videosSrc[i % videosSrc.length]);
-  }
-
-  let lastTimestamp = null;
   let selected = false;
 
-  // Animation JS pour contrôle précis (évite superposition horizontale)
-  function animate(timestamp) {
-    if (!lastTimestamp) lastTimestamp = timestamp;
-    const delta = (timestamp - lastTimestamp) / 1000; // en secondes
-    lastTimestamp = timestamp;
-
-    if (!selected) {
-      // On déplace les vidéos si aucune sélection
-      floatingVideos.forEach(obj => {
-        obj.x -= obj.speed * delta;
-
-        // Si complètement hors écran à gauche, remettre à droite (loop)
-        if (obj.x + obj.width < -100) {
-          obj.x = containerWidth + Math.random() * 300;
-          // Reposition verticale pour éviter superpositions sur loop
-          const newTop = findFreeTop(obj.height);
-          obj.top = newTop;
-          obj.video.style.top = `${newTop}px`;
-        }
-        obj.video.style.left = `${obj.x}px`;
-      });
-    } else {
-      // Si sélectionnée, on fait juste un petit flottement sur les autres
-      floatingVideos.forEach(({video, x, speed}, i) => {
-        if (!video.classList.contains('selected')) {
-          const floatX = 5 * Math.sin(timestamp / 500 + i);
-          const floatY = 3 * Math.cos(timestamp / 400 + i);
-          video.style.transform = `translate(${floatX}px, ${floatY}px)`;
-        } else {
-          video.style.transform = 'translate(0,0)';
-        }
-      });
-    }
-
-    requestAnimationFrame(animate);
-  }
-
-  // Démarrer animation
-  animate();
-
-  // Gestion sélection / désélection vidéo par clic
-  document.body.addEventListener('click', () => {
-    if(selected) {
-      selected = false;
-      deselectVideo();
-    }
-  });
-
-  // Gestion sélection flag mise à jour dans les fonctions de sélection
   function selectVideo(video) {
     selected = true;
     floatingVideos.forEach(({video: v}) => {
@@ -274,7 +188,63 @@
     });
   }
 
-  // Resize update
+  // Créer les vidéos initiales
+  for(let i=0; i < maxVideosOnScreen; i++) {
+    createFloatingVideo(videosSrc[i % videosSrc.length]);
+  }
+
+  let lastTimestamp = null;
+
+  // Animation avec contrôle de la position pour éviter superposition horizontale
+  function animate(timestamp) {
+    if (!lastTimestamp) lastTimestamp = timestamp;
+    const delta = (timestamp - lastTimestamp) / 1000;
+    lastTimestamp = timestamp;
+
+    if (!selected) {
+      // Déplacement continu
+      floatingVideos.forEach(obj => {
+        obj.x -= obj.speed * delta;
+
+        // Si sortie à gauche, reposition à droite avec nouvelle top
+        if (obj.x + obj.width < -100) {
+          obj.x = containerWidth + Math.random() * 300;
+          // Recalcule position verticale sans superposition
+          usedTops.length = 0; // reset tops
+          floatingVideos.forEach(({height, top}, idx) => {
+            if (idx !== floatingVideos.indexOf(obj)) usedTops.push(top);
+          });
+          const newTop = findFreeTop(obj.height);
+          obj.top = newTop;
+          obj.video.style.top = `${newTop}px`;
+        }
+        obj.video.style.left = `${obj.x}px`;
+      });
+    } else {
+      // Légère oscillation sur les vidéos non sélectionnées
+      floatingVideos.forEach(({video}, i) => {
+        if (!video.classList.contains('selected')) {
+          const floatX = 5 * Math.sin(timestamp / 500 + i);
+          const floatY = 3 * Math.cos(timestamp / 400 + i);
+          video.style.transform = `translate(${floatX}px, ${floatY}px)`;
+        } else {
+          video.style.transform = 'translate(0,0)';
+        }
+      });
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+
+  // Clic hors vidéo désélectionne
+  document.body.addEventListener('click', () => {
+    if(selected) {
+      deselectVideo();
+    }
+  });
+
   window.addEventListener('resize', () => {
     usedTops.length = 0;
   });
