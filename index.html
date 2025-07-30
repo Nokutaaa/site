@@ -49,6 +49,7 @@
     transition: opacity 0.3s ease, filter 0.3s ease, box-shadow 0.3s ease;
     pointer-events: auto;
     will-change: transform;
+    z-index: 1;
   }
 
   .floating-video:hover {
@@ -58,7 +59,18 @@
     z-index: 10001;
   }
 
-  /* Animation moved to JS for better control */
+  .floating-video.selected {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) scale(1.5) !important;
+    opacity: 1 !important;
+    filter: none !important;
+    box-shadow: 0 0 30px rgba(255, 255, 255, 1) !important;
+    z-index: 10002 !important;
+    pointer-events: auto !important;
+  }
+
 </style>
 </head>
 <body>
@@ -132,11 +144,12 @@
     video.style.left = `${getRandomStartX(width)}px`;
 
     // Stocke les infos de vitesse et position pour animation manuelle
-    const speed = 10 + Math.random() * 15; // pixels / seconde
+    const speed = 20 + Math.random() * 20; // pixels / seconde
 
     floatingVideos.push({video, top, width, height, speed, x: parseFloat(video.style.left)});
 
-    video.addEventListener('click', () => {
+    video.addEventListener('click', (e) => {
+      e.stopPropagation(); // éviter que le clic remonte au body
       if(video.classList.contains('selected')) {
         deselectVideo();
       } else {
@@ -154,29 +167,26 @@
       if (v !== video) {
         v.style.opacity = '0.3';
         v.style.filter = 'blur(1px)';
+        v.style.pointerEvents = 'none'; // désactive clic sur les autres
+      } else {
+        v.style.pointerEvents = 'auto';
       }
     });
 
     // Styles vidéo sélectionnée
     video.classList.add('selected');
-    video.style.position = 'fixed';
-    video.style.top = '50%';
-    video.style.left = '50%';
-    video.style.transform = 'translate(-50%, -50%) scale(1.5)';
-    video.style.zIndex = '10000';
-    video.style.opacity = '1';
-    video.style.filter = 'none';
   }
 
   // Désélection vidéo, reprise animation
   function deselectVideo() {
     floatingVideos.forEach(({video}) => {
-      video.style.position = 'absolute';
-      video.style.transform = 'none';
-      video.style.zIndex = '';
       video.style.opacity = '0.6';
       video.style.filter = 'blur(1.8px)';
+      video.style.pointerEvents = 'auto';
       video.classList.remove('selected');
+      video.style.position = 'absolute';
+      video.style.transform = 'none';
+      video.style.zIndex = '1';
     });
   }
 
@@ -209,6 +219,17 @@
         }
         obj.video.style.left = `${obj.x}px`;
       });
+    } else {
+      // Si sélectionnée, on fait juste un petit flottement sur les autres
+      floatingVideos.forEach(({video, x, speed}, i) => {
+        if (!video.classList.contains('selected')) {
+          const floatX = 5 * Math.sin(timestamp / 500 + i);
+          const floatY = 3 * Math.cos(timestamp / 400 + i);
+          video.style.transform = `translate(${floatX}px, ${floatY}px)`;
+        } else {
+          video.style.transform = 'translate(0,0)';
+        }
+      });
     }
 
     requestAnimationFrame(animate);
@@ -218,23 +239,42 @@
   animate();
 
   // Gestion sélection / désélection vidéo par clic
-  document.body.addEventListener('click', e => {
-    if (e.target.classList.contains('floating-video')) {
-      if (e.target.classList.contains('selected')) {
-        selected = false;
-        deselectVideo();
-      } else {
-        selected = true;
-        selectVideo(e.target);
-      }
-    } else if (selected) {
-      // Si clic hors vidéo sélectionnée, désélectionner
+  document.body.addEventListener('click', () => {
+    if(selected) {
       selected = false;
       deselectVideo();
     }
   });
 
-  // Met à jour la taille des conteneurs si resize
+  // Gestion sélection flag mise à jour dans les fonctions de sélection
+  function selectVideo(video) {
+    selected = true;
+    floatingVideos.forEach(({video: v}) => {
+      if (v !== video) {
+        v.style.opacity = '0.3';
+        v.style.filter = 'blur(1px)';
+        v.style.pointerEvents = 'none';
+      } else {
+        v.style.pointerEvents = 'auto';
+      }
+    });
+    video.classList.add('selected');
+  }
+
+  function deselectVideo() {
+    selected = false;
+    floatingVideos.forEach(({video}) => {
+      video.style.opacity = '0.6';
+      video.style.filter = 'blur(1.8px)';
+      video.style.pointerEvents = 'auto';
+      video.classList.remove('selected');
+      video.style.position = 'absolute';
+      video.style.transform = 'none';
+      video.style.zIndex = '1';
+    });
+  }
+
+  // Resize update
   window.addEventListener('resize', () => {
     usedTops.length = 0;
   });
