@@ -2,187 +2,153 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Nokuta - Carrousel Hexagonal 3D</title>
+  <title>Nokuta - Fond Vidéo Dynamique</title>
   <link rel="icon" href="favicon.jpg" type="image/jpg" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
   <style>
     body {
       margin: 0;
       padding: 0;
-      font-family: 'Poppins', sans-serif;
-      background-color: white;
       overflow: hidden;
-      perspective: 1200px;
+      font-family: 'Poppins', sans-serif;
+      background: black;
     }
 
-    #bg-video {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw;
-      height: 100vh;
+    .floating-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 200px;
+      height: 120px;
       object-fit: cover;
-      z-index: -1;
-      filter: brightness(0.5);
+      filter: blur(3px) brightness(0.7);
+      opacity: 0.4;
+      pointer-events: auto;
+      transition: transform 1s ease;
+      animation: float 10s infinite ease-in-out alternate;
     }
 
-    .logo-container {
-      position: absolute;
-      top: 30px;
-      left: 30px;
-      z-index: 1000;
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      100% { transform: translateY(20px); }
     }
 
-    .logo-container img {
-      height: 50px;
-    }
-
-    .carousel-wrapper {
-      position: absolute;
+    .active-video {
+      position: fixed;
       top: 50%;
       left: 50%;
-      width: 1000px;
-      height: 400px;
-      transform: translate(-50%, -50%);
-      transform-style: preserve-3d;
-    }
-
-    .carousel {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      transform-style: preserve-3d;
-      transition: transform 1s ease;
-    }
-
-    .carousel video {
-      position: absolute;
-      width: 320px;
-      height: 180px;
-      object-fit: cover;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.4);
-      transition: transform 0.5s ease, opacity 0.5s ease, filter 0.5s ease;
-      cursor: pointer;
-    }
-
-    .video-center {
-      transform: scale(1.2) translateZ(100px);
+      transform: translate(-50%, -50%) scale(1);
+      width: 80vw;
+      height: 45vw;
       z-index: 10;
       filter: none;
       opacity: 1;
+      pointer-events: auto;
+      border-radius: 10px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.7);
     }
 
-    .video-side {
-      filter: blur(3px) grayscale(60%);
-      opacity: 0.6;
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 9;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
     }
-
-    .video-side:hover {
-      filter: blur(1px) grayscale(20%);
-      opacity: 0.9;
-    }
-
   </style>
 </head>
 <body>
 
-  <div class="logo-container">
-    <img src="logo1.png" alt="Logo" />
-  </div>
+<div id="video-container"></div>
+<div id="overlay" class="overlay" style="display:none;"></div>
 
-  <video autoplay muted loop playsinline id="bg-video">
-    <source src="fond.mp4" type="video/mp4" />
-    Votre navigateur ne supporte pas la vidéo HTML5.
-  </video>
+<script>
+  const container = document.getElementById('video-container');
+  const overlay = document.getElementById('overlay');
+  const videoSources = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
 
-  <div class="carousel-wrapper">
-    <div class="carousel" id="carousel"></div>
-  </div>
+  function random(min, max) {
+    return Math.random() * (max - min) + min;
+  }
 
-  <script>
-    const videos = [
-      "video1.mp4",
-      "video2.mp4",
-      "video3.mp4",
-      "video4.mp4",
-      "video5.mp4",
-      "video6.mp4"
-    ];
-    const carousel = document.getElementById("carousel");
-    const radius = 600;
-    const total = videos.length;
-    let currentIndex = 0;
+  function createFloatingVideo(src) {
+    const video = document.createElement('video');
+    video.src = src;
+    video.autoplay = true;
+    video.muted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.className = 'floating-video';
+    resetPosition(video);
+    container.appendChild(video);
 
-    function startAtOneSecond(videoElem) {
-      function seekAndPlay() {
-        if (videoElem.currentTime < 1) {
-          videoElem.currentTime = 1;
-        }
-        videoElem.play().catch(() => {});
-        videoElem.removeEventListener("loadedmetadata", seekAndPlay);
-      }
+    const duration = random(15, 30);
+    animate(video, duration);
 
-      if (videoElem.readyState >= 1) {
-        seekAndPlay();
-      } else {
-        videoElem.addEventListener("loadedmetadata", seekAndPlay);
-      }
-    }
+    video.addEventListener('click', () => {
+      document.querySelectorAll('.floating-video').forEach(v => {
+        v.style.animationPlayState = 'paused';
+        v.muted = true;
+      });
+      overlay.style.display = 'block';
 
-    function renderCarousel() {
-      carousel.innerHTML = "";
+      const activeVideo = video.cloneNode(true);
+      activeVideo.className = 'active-video';
+      activeVideo.controls = true;
+      activeVideo.muted = false;
+      activeVideo.currentTime = 0;
+      activeVideo.play();
+      container.appendChild(activeVideo);
 
-      for (let i = 0; i < total; i++) {
-        const video = document.createElement("video");
-        const videoIndex = (i + currentIndex) % total;
-        const angle = i * (360 / total);
-        const rotateAngle = ((videoIndex - currentIndex + total) % total) * (360 / total);
-
-        video.src = videos[videoIndex];
-        video.muted = true;
-        video.loop = true;
-        video.autoplay = true;
-        video.playsInline = true;
-        video.setAttribute("preload", "auto");
-        video.controls = (i === 0);
-
-        const isCenter = (i === 0);
-        video.classList.add(isCenter ? "video-center" : "video-side");
-
-        const rad = (rotateAngle * Math.PI) / 180;
-        const x = Math.sin(rad) * radius;
-        const z = Math.cos(rad) * radius;
-
-        video.style.transform = `translateX(${x}px) translateZ(${z}px) rotateY(${rotateAngle}deg)`;
-
-        if (video.src.includes("video3.mp4") || video.src.includes("video5.mp4")) {
-          startAtOneSecond(video);
-        }
-
-        video.addEventListener("click", () => {
-          currentIndex = videoIndex;
-          renderCarousel();
+      overlay.addEventListener('click', () => {
+        activeVideo.remove();
+        overlay.style.display = 'none';
+        document.querySelectorAll('.floating-video').forEach(v => {
+          v.style.animationPlayState = 'running';
         });
+      }, { once: true });
+    });
+  }
 
-        carousel.appendChild(video);
+  function resetPosition(video) {
+    video.style.top = random(0, window.innerHeight - 120) + 'px';
+    video.style.left = -random(200, 400) + 'px';
+    video.style.width = random(160, 320) + 'px';
+    video.style.height = (parseInt(video.style.width) * 0.5625) + 'px';
+    video.style.opacity = random(0.2, 0.5);
+    video.style.filter = `blur(${random(2, 4)}px) brightness(0.7)`;
+  }
+
+  function animate(video, duration) {
+    const distance = window.innerWidth + 400;
+    const startTime = performance.now();
+
+    function move(timestamp) {
+      const elapsed = (timestamp - startTime) / 1000;
+      const progress = elapsed / duration;
+      const left = parseFloat(video.style.left) + distance * progress;
+      video.style.left = left + 'px';
+
+      if (progress < 1) {
+        requestAnimationFrame(move);
+      } else {
+        resetPosition(video);
+        animate(video, random(15, 30));
       }
-
-      // Rotate the carousel container to bring current video forward
-      carousel.style.transform = `rotateY(${-currentIndex * (360 / total)}deg)`;
     }
 
-    // Navigation clavier
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowRight") {
-        currentIndex = (currentIndex + 1) % total;
-        renderCarousel();
-      } else if (e.key === "ArrowLeft") {
-        currentIndex = (currentIndex - 1 + total) % total;
-        renderCarousel();
-      }
-    });
+    requestAnimationFrame(move);
+  }
 
-    renderCarousel();
-  </script>
+  // Lancer plusieurs vidéos flottantes
+  for (let i = 0; i < 12; i++) {
+    const src = videoSources[i % videoSources.length];
+    createFloatingVideo(src);
+  }
+</script>
+
 </body>
 </html>
