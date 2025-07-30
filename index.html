@@ -189,7 +189,7 @@
         const dxLogo = p1.baseX - logoCenterX;
         const dyLogo = p1.baseY - logoCenterY;
         const distLogo = Math.sqrt(dxLogo*dxLogo + dyLogo*dyLogo);
-        const minDistLogo = Math.max(r1x, r1y) + logoRect.width/2 + minDistance;
+        const minDistLogo = Math.max(r1x, r1y) + logoRect.width/2 + 150;
         if(distLogo < minDistLogo) {
           const diff = minDistLogo - distLogo;
           p1.baseX += (dxLogo / distLogo) * diff;
