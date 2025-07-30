@@ -2,124 +2,140 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<title>Nokuta - Vidéos défilantes</title>
-<link rel="icon" href="favicon.jpg" type="image/jpg" />
-<link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+<title>Vidéos flottantes avec logo central</title>
 <style>
   html, body {
     margin: 0; padding: 0;
     height: 100%;
-    overflow-x: hidden;
-    font-family: 'Poppins', sans-serif;
-    background: black;
+    overflow: hidden;
+    background: #111;
+    font-family: Arial, sans-serif;
+  }
+  body {
     position: relative;
   }
 
-  #bg-video {
+  #logo {
     position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    object-fit: cover;
-    z-index: -10;
-    filter: brightness(0.5);
-  }
-
-  header {
-    position: fixed;
-    top: 20px;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     z-index: 10000;
-    width: 100%;
-    text-align: center;
-  }
-
-  .logo {
-    height: 60px;
+    pointer-events: none; /* pour ne pas gêner le clic sur vidéos */
     user-select: none;
+    width: 150px;
+    height: 150px;
+    background: url('logo1.png') no-repeat center center;
+    background-size: contain;
   }
 
   .floating-video {
     position: absolute;
-    opacity: 0.6;
-    filter: blur(1.8px);
-    border-radius: 8px;
-    object-fit: cover;
+    border-radius: 10px;
+    filter: blur(1.5px);
+    opacity: 0.75;
     cursor: pointer;
-    transition: opacity 0.3s ease, filter 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
-    pointer-events: auto;
-    will-change: transform;
+    object-fit: cover;
+    transition: filter 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 0 8px rgba(0,0,0,0.5);
     z-index: 1;
   }
 
   .floating-video:hover {
-    opacity: 0.95;
-    filter: blur(0.5px);
-    box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-    z-index: 10001;
+    filter: none;
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(255,255,255,0.8);
+    z-index: 1000;
   }
 
   .floating-video.selected {
     position: fixed !important;
     top: 50% !important;
     left: 50% !important;
-    transform: translate(-50%, -50%) scale(1.5) !important;
+    transform: translate(-50%, -50%) !important;
+    width: 80vw !important;
+    height: auto !important;
+    max-height: 80vh !important;
     opacity: 1 !important;
     filter: none !important;
-    box-shadow: 0 0 30px rgba(255, 255, 255, 1) !important;
-    z-index: 10002 !important;
-    pointer-events: auto !important;
+    box-shadow: 0 0 30px rgba(255,255,255,1) !important;
+    z-index: 10001 !important;
+    cursor: default !important;
   }
-
 </style>
 </head>
 <body>
 
-<header>
-  <img src="logo1.png" alt="Logo" class="logo" />
-</header>
-
-<video autoplay muted loop playsinline id="bg-video">
-  <source src="fond.mp4" type="video/mp4" />
-  Votre navigateur ne supporte pas la vidéo HTML5.
-</video>
+<div id="logo"></div>
 
 <script>
-  const videosSrc = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
-  const maxVideosOnScreen = 10;
+  const videosSrc = [
+    'video1.mp4',
+    'video2.mp4',
+    'video3.mp4',
+    'video4.mp4',
+    'video5.mp4',
+    'video6.mp4'
+  ];
 
-  const containerHeight = window.innerHeight;
-  const containerWidth = window.innerWidth;
-
-  const usedTops = [];
+  const videoCount = 8; // nombre de vidéos flottantes à afficher
   const floatingVideos = [];
+  const containerWidth = window.innerWidth;
+  const containerHeight = window.innerHeight;
 
-  // Trouver une position verticale sans superposition
-  function findFreeTop(height) {
-    const step = 40; // minimum spacing vertical
-    for (let top = 60; top < containerHeight - height - 60; top += step) {
-      let conflict = false;
-      for (const used of usedTops) {
-        if (Math.abs(used - top) < step) {
-          conflict = true;
-          break;
-        }
-      }
-      if (!conflict) {
-        usedTops.push(top);
-        return top;
-      }
+  const logo = document.getElementById('logo');
+  // On récupère la zone du logo pour éviter que vidéos passent dessus
+  let logoRect;
+
+  // Recalcul du rect du logo (fixe, mais au resize on peut recalculer)
+  function updateLogoRect() {
+    logoRect = logo.getBoundingClientRect();
+  }
+  updateLogoRect();
+  window.addEventListener('resize', () => {
+    updateLogoRect();
+  });
+
+  // Vérifie si deux rectangles se chevauchent
+  function isOverlap(rect1, rect2) {
+    return !(rect1.right < rect2.left ||
+             rect1.left > rect2.right ||
+             rect1.bottom < rect2.top ||
+             rect1.top > rect2.bottom);
+  }
+
+  // Vérifie si une zone donnée chevauche une autre zone ou le logo
+  function canPlace(x, y, width, height) {
+    const newRect = {
+      left: x,
+      top: y,
+      right: x + width,
+      bottom: y + height
+    };
+    // Check logo
+    if (isOverlap(newRect, logoRect)) return false;
+
+    // Check déjà placées
+    for(const v of floatingVideos) {
+      const r = v.rect;
+      if (isOverlap(newRect, r)) return false;
     }
-    // fallback si plein
-    return Math.random() * (containerHeight - height - 100) + 50;
+    return true;
   }
 
-  // Position horizontale initiale aléatoire (pour effet boucle déjà commencée)
-  function getRandomStartX(width) {
-    return Math.random() * (containerWidth + 400) - width - 200;
+  // Cherche une position aléatoire pour une vidéo sans superposition
+  function findPosition(width, height) {
+    const maxAttempts = 1000;
+    for(let i=0; i<maxAttempts; i++) {
+      const x = Math.random() * (containerWidth - width);
+      const y = Math.random() * (containerHeight - height);
+      if(canPlace(x, y, width, height)) return {x, y};
+    }
+    // fallback (rare)
+    return {x: 0, y: 0};
   }
 
-  // Création d'une vidéo flottante
+  // Crée et place une vidéo flottante sur la page
   function createFloatingVideo(src) {
     const video = document.createElement('video');
     video.src = src;
@@ -128,29 +144,33 @@
     video.autoplay = true;
     video.playsInline = true;
     video.preload = 'auto';
-    video.className = 'floating-video';
+    video.classList.add('floating-video');
 
-    // taille aléatoire 150-300 px largeur, ratio 16:9
-    const width = 150 + Math.random() * 150;
+    // taille aléatoire entre 120 et 250px de largeur, ratio 16:9
+    const width = 120 + Math.random() * 130;
     const height = width * 9 / 16;
+    video.style.width = width + 'px';
+    video.style.height = height + 'px';
 
-    video.style.width = `${width}px`;
-    video.style.height = `${height}px`;
+    const pos = findPosition(width, height);
+    video.style.left = pos.x + 'px';
+    video.style.top = pos.y + 'px';
 
-    const top = findFreeTop(height);
-    video.style.top = `${top}px`;
+    // Sauvegarde la zone pour les prochaines vérifs
+    floatingVideos.push({
+      video,
+      rect: {left: pos.x, top: pos.y, right: pos.x + width, bottom: pos.y + height},
+      baseLeft: pos.x,
+      baseTop: pos.y,
+      width,
+      height
+    });
 
-    video.style.left = `${getRandomStartX(width)}px`;
-
-    // Stocke les infos pour animation
-    const speed = 30 + Math.random() * 30; // pixels / seconde
-
-    floatingVideos.push({video, top, width, height, speed, x: parseFloat(video.style.left)});
-
+    // Click sur la vidéo = afficher en grand
     video.addEventListener('click', (e) => {
       e.stopPropagation();
       if(video.classList.contains('selected')) {
-        deselectVideo();
+        deselectAll();
       } else {
         selectVideo(video);
       }
@@ -159,95 +179,75 @@
     document.body.appendChild(video);
   }
 
-  let selected = false;
-
-  function selectVideo(video) {
-    selected = true;
-    floatingVideos.forEach(({video: v}) => {
-      if (v !== video) {
-        v.style.opacity = '0.3';
-        v.style.filter = 'blur(1px)';
-        v.style.pointerEvents = 'none';
+  // Affiche une vidéo en grand, désactive interaction des autres
+  function selectVideo(selectedVideo) {
+    floatingVideos.forEach(({video}) => {
+      if(video === selectedVideo){
+        video.classList.add('selected');
+        video.controls = true;
+        video.muted = false;
+        video.play();
+        video.style.zIndex = '10001';
       } else {
-        v.style.pointerEvents = 'auto';
+        video.style.filter = 'blur(2px)';
+        video.style.opacity = '0.5';
+        video.style.pointerEvents = 'none';
+        video.controls = false;
       }
     });
-    video.classList.add('selected');
   }
 
-  function deselectVideo() {
-    selected = false;
+  // Désélectionne toutes les vidéos
+  function deselectAll() {
     floatingVideos.forEach(({video}) => {
-      video.style.opacity = '0.6';
-      video.style.filter = 'blur(1.8px)';
-      video.style.pointerEvents = 'auto';
       video.classList.remove('selected');
-      video.style.position = 'absolute';
-      video.style.transform = 'none';
+      video.style.filter = 'blur(1.5px)';
+      video.style.opacity = '0.75';
+      video.style.pointerEvents = 'auto';
+      video.controls = false;
+      video.muted = true;
+      video.play();
       video.style.zIndex = '1';
     });
   }
 
-  // Créer les vidéos initiales
-  for(let i=0; i < maxVideosOnScreen; i++) {
+  // Crée toutes les vidéos
+  for(let i=0; i<videoCount; i++) {
     createFloatingVideo(videosSrc[i % videosSrc.length]);
   }
 
-  let lastTimestamp = null;
-
-  // Animation avec contrôle de la position pour éviter superposition horizontale
-  function animate(timestamp) {
-    if (!lastTimestamp) lastTimestamp = timestamp;
-    const delta = (timestamp - lastTimestamp) / 1000;
-    lastTimestamp = timestamp;
-
-    if (!selected) {
-      // Déplacement continu
-      floatingVideos.forEach(obj => {
-        obj.x -= obj.speed * delta;
-
-        // Si sortie à gauche, reposition à droite avec nouvelle top
-        if (obj.x + obj.width < -100) {
-          obj.x = containerWidth + Math.random() * 300;
-          // Recalcule position verticale sans superposition
-          usedTops.length = 0; // reset tops
-          floatingVideos.forEach(({height, top}, idx) => {
-            if (idx !== floatingVideos.indexOf(obj)) usedTops.push(top);
-          });
-          const newTop = findFreeTop(obj.height);
-          obj.top = newTop;
-          obj.video.style.top = `${newTop}px`;
-        }
-        obj.video.style.left = `${obj.x}px`;
-      });
-    } else {
-      // Légère oscillation sur les vidéos non sélectionnées
-      floatingVideos.forEach(({video}, i) => {
-        if (!video.classList.contains('selected')) {
-          const floatX = 5 * Math.sin(timestamp / 500 + i);
-          const floatY = 3 * Math.cos(timestamp / 400 + i);
-          video.style.transform = `translate(${floatX}px, ${floatY}px)`;
-        } else {
-          video.style.transform = 'translate(0,0)';
-        }
-      });
-    }
-
+  // Effet de flottement (oscillation) sur les vidéos non sélectionnées
+  function animate(time=0) {
+    floatingVideos.forEach(({video, baseLeft, baseTop, width, height}, i) => {
+      if(!video.classList.contains('selected')) {
+        // oscillation horizontale et verticale
+        const offsetX = 5 * Math.sin(time / 1000 + i);
+        const offsetY = 3 * Math.cos(time / 800 + i);
+        video.style.left = (baseLeft + offsetX) + 'px';
+        video.style.top = (baseTop + offsetY) + 'px';
+      }
+    });
     requestAnimationFrame(animate);
   }
-
   animate();
 
-  // Clic hors vidéo désélectionne
+  // Clic hors vidéo désélectionne la vidéo en grand
   document.body.addEventListener('click', () => {
-    if(selected) {
-      deselectVideo();
+    deselectAll();
+  });
+
+  // Ajuste la taille du container / repositionne les vidéos au resize
+  window.addEventListener('resize', () => {
+    // Met à jour les dimensions
+    const newWidth = window.innerWidth;
+    const newHeight = window.innerHeight;
+    if(newWidth !== containerWidth || newHeight !== containerHeight){
+      // Pas simple de repositionner sans recalcule complet, 
+      // ici on recharge la page, pour garder simplicité et éviter chevauchement
+      location.reload();
     }
   });
 
-  window.addEventListener('resize', () => {
-    usedTops.length = 0;
-  });
 </script>
 
 </body>
