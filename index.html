@@ -30,7 +30,6 @@
       height: 60px;
     }
 
-    /* Vidéo de fond */
     #bg-video {
       position: fixed;
       top: 0; left: 0;
@@ -51,13 +50,13 @@
 
     .floating-video {
       position: absolute;
-      opacity: 0.2;
+      opacity: 0.5;
       filter: blur(4px);
       pointer-events: auto;
       border-radius: 8px;
       animation-name: floatHorizontal;
-      animation-iteration-count: infinite;
       animation-timing-function: linear;
+      animation-fill-mode: forwards;
     }
 
     @keyframes floatHorizontal {
@@ -71,7 +70,7 @@
 
     .floating-video.paused {
       animation-play-state: paused;
-      opacity: 0.1;
+      opacity: 0.2;
       filter: blur(6px);
     }
 
@@ -107,7 +106,6 @@
       cursor: pointer;
       font-weight: bold;
     }
-
   </style>
 </head>
 <body>
@@ -118,12 +116,12 @@
     Votre navigateur ne supporte pas la vidéo HTML5.
   </video>
 
-  <!-- Logo fixe en haut -->
+  <!-- Logo -->
   <header>
     <img src="logo1.png" alt="Logo" class="logo" />
   </header>
 
-  <!-- Conteneur des vidéos flottantes -->
+  <!-- Conteneur -->
   <div class="video-container" id="videoContainer"></div>
 
   <!-- Vidéo sélectionnée -->
@@ -142,28 +140,48 @@
     const mainVideoWrapper = document.getElementById('mainVideoWrapper');
     const mainVideo = document.getElementById('mainVideo');
 
-    const NUM_INSTANCES = 12;
+    const MAX_VIDEOS = 10;
+    const usedPositions = new Set();
 
-    function spawnFloatingVideos() {
-      for (let i = 0; i < NUM_INSTANCES; i++) {
-        const video = document.createElement('video');
-        video.src = videoSources[i % videoSources.length];
-        video.className = 'floating-video';
-        video.autoplay = true;
-        video.loop = true;
-        video.muted = true;
-        video.playsInline = true;
+    function getRandomNonOverlappingTop() {
+      let top;
+      let attempts = 0;
+      do {
+        top = Math.floor(Math.random() * 10) * 10; // 0%, 10%, ..., 90%
+        attempts++;
+      } while (usedPositions.has(top) && attempts < 20);
+      usedPositions.add(top);
+      return top;
+    }
 
-        const top = 5 + Math.random() * 85; // espace vertical
-        const size = 200 + Math.random() * 150;
-        const duration = 60 + Math.random() * 60; // plus lent
-        video.style.top = `${top}vh`;
-        video.style.width = `${size}px`;
-        video.style.animationDuration = `${duration}s`;
+    function spawnFloatingVideo() {
+      if (videoContainer.children.length >= MAX_VIDEOS) return;
 
-        video.addEventListener('click', () => selectMainVideo(video.src));
-        videoContainer.appendChild(video);
-      }
+      const video = document.createElement('video');
+      const src = videoSources[Math.floor(Math.random() * videoSources.length)];
+      video.src = src;
+      video.className = 'floating-video';
+      video.autoplay = true;
+      video.loop = true;
+      video.muted = true;
+      video.playsInline = true;
+
+      const top = getRandomNonOverlappingTop();
+      const size = 180 + Math.random() * 100;
+      const duration = 40 + Math.random() * 40;
+
+      video.style.top = `${top}vh`;
+      video.style.width = `${size}px`;
+      video.style.animationDuration = `${duration}s`;
+
+      video.addEventListener('animationend', () => {
+        usedPositions.delete(top);
+        video.remove();
+        spawnFloatingVideo();
+      });
+
+      video.addEventListener('click', () => selectMainVideo(video.src));
+      videoContainer.appendChild(video);
     }
 
     function selectMainVideo(src) {
@@ -179,7 +197,17 @@
       document.querySelectorAll('.floating-video').forEach(v => v.classList.remove('paused'));
     }
 
-    spawnFloatingVideos();
+    // Lancer le flux initial
+    for (let i = 0; i < MAX_VIDEOS; i++) {
+      spawnFloatingVideo();
+    }
+
+    // Boucle continue : vérifie toutes les 5 secondes si des vidéos ont disparu
+    setInterval(() => {
+      if (videoContainer.children.length < MAX_VIDEOS) {
+        spawnFloatingVideo();
+      }
+    }, 5000);
   </script>
 </body>
 </html>
