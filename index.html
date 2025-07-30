@@ -17,14 +17,14 @@
 
     .carousel {
       position: relative;
-      width: 90%;
-      max-width: 800px;
-      margin: 100px auto 20px auto;
+      width: 100%;
+      max-width: 900px;
+      margin: 150px auto 20px auto;
     }
 
     video {
       width: 100%;
-      border-radius: 10px;
+      border-radius: 0px;
     }
 
     .controls {
@@ -36,28 +36,43 @@
       margin-right: auto;
     }
 
+    #bg-video {
+  position: fixed;    
+  top: 0;
+  left: 0;
+  width: 100vw;    
+  height: 100vh;    
+  object-fit: cover;  
+  z-index: -1;    
+}
+    
  button {
-  padding: 10px 25px;
-  font-size: 1rem;
-  cursor: pointer;
-  border: none;
-  border-radius: 30px;
-  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-  color: white;
-  box-shadow: 0 4px 8px rgba(37, 117, 252, 0.4);
-  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
-}
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      color: white;
+      font-size: 2rem;
+      padding: 10px 15px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-button:hover {
-  background: linear-gradient(135deg, #2575fc 0%, #6a11cb 100%);
-  box-shadow: 0 6px 12px rgba(37, 117, 252, 0.6);
-  transform: translateY(-3px);
-}
+    button:hover {
+      background: rgba(255, 255, 255, 0.4);
+      border-color: rgba(255, 255, 255, 0.8);
+      color: black;
+    }
 
-button:active {
-  transform: translateY(1px);
-  box-shadow: 0 2px 6px rgba(37, 117, 252, 0.3);
-}
+    button:active {
+      background: rgba(255, 255, 255, 0.6);
+      border-color: rgba(255, 255, 255, 1);
+      color: black;
+      transform: scale(0.95);
+    }
 
     .logo-container {
       position: absolute;
@@ -80,7 +95,7 @@ button:active {
 </head>
 <body>
   <div class="logo-container">
-    <img src="logo.png" alt="Logo" class="logo" />
+    <img src="logo1.png" alt="Logo" class="logo" />
   </div>
 
   <!-- Carrousel de vidéos -->
@@ -91,14 +106,15 @@ button:active {
     </video>
 
     <div class="controls">
-      <button onclick="prevVideo()">◀ Précédent</button>
-      <button onclick="nextVideo()">Suivant ▶</button>
+      <button onclick="prevVideo()">◀</button>
+      <button onclick="nextVideo()">▶</button>
     </div>
   </div>
-
-  <div class="content">
-    <h1>Site en travaux...</h1>
-  </div>
+  
+<video autoplay muted loop playsinline id="bg-video">
+  <source src="fond.mp4" type="video/mp4" />
+  Votre navigateur ne supporte pas la vidéo HTML5.
+</video>
 
   <script>
     const videos = ["video1.mp4", "video2.mp4", "video3.mp4"];
