@@ -1,181 +1,190 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Nokuta - Carrousel vidéo</title>
-  <link rel="icon" href="favicon.jpg" type="image/jpg" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
-  <style>
-    body {
-      background-color: white;
-      color: black;
-      font-family: 'Poppins', sans-serif;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-      overflow-x: hidden;
-    }
+<meta charset="UTF-8" />
+<title>Nokuta - Carrousel Hexagonal</title>
+<link rel="icon" href="favicon.jpg" type="image/jpg" />
+<link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+<style>
+  body {
+    background-color: white;
+    color: black;
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    overflow-x: hidden;
+  }
 
-    #bg-video {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      z-index: -10;
-      filter: brightness(0.5);
-    }
+  #bg-video {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    z-index: -10;
+    filter: brightness(0.5);
+  }
 
-    .carousel {
-      position: relative;
-      max-width: 1300px;
-      margin: 150px auto 20px;
-      height: 520px;
-    }
+  .carousel {
+    position: relative;
+    width: 1000px;
+    height: 800px;
+    margin: 150px auto 20px;
+    user-select: none;
+  }
 
-    .background-video {
-      position: absolute;
-      top: 50%;
-      width: 280px;
-      height: 160px;
-      transform: translateY(-50%);
-      filter: blur(8px) grayscale(70%);
-      opacity: 0.4;
-      border-radius: 8px;
-      object-fit: cover;
-      box-shadow: 0 0 6px rgba(0,0,0,0.1);
-      pointer-events: none;
-      transition: filter 0.3s ease, opacity 0.3s ease;
-      z-index: 0;
-    }
+  video {
+    border-radius: 8px;
+    object-fit: cover;
+    position: absolute;
+    cursor: pointer;
+    transition: all 0.5s ease;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  }
 
-    .side-video {
-      position: absolute;
-      top: 50%;
-      width: 350px;
-      height: 200px;
-      transform: translateY(-50%);
-      filter: blur(4px) grayscale(50%);
-      opacity: 0.7;
-      cursor: pointer;
-      border-radius: 8px;
-      object-fit: cover;
-      box-shadow: 0 0 8px rgba(0,0,0,0.2);
-      transition: all 0.3s ease;
-      z-index: 1;
-    }
+  .main-video {
+    width: 420px;
+    height: 236px; /* 16:9 */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1);
+    z-index: 10;
+    filter: none;
+    cursor: default;
+    box-shadow: 0 0 30px rgba(0,0,0,0.6);
+  }
 
-    .side-video:hover {
-      opacity: 1;
-      filter: blur(2px) grayscale(30%);
-      box-shadow: 0 0 12px rgba(0,0,0,0.4);
-    }
+  .side-video {
+    width: 200px;
+    height: 113px; /* 16:9 */
+    filter: blur(4px) grayscale(50%);
+    opacity: 0.6;
+    z-index: 5;
+  }
 
-    .side-video.left {
-      left: 3%;
-    }
-
-    .side-video.right {
-      right: 3%;
-    }
-
-    .main-video {
-      position: relative;
-      width: 900px;
-      height: 506px;
-      border-radius: 8px;
-      object-fit: cover;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-      z-index: 10;
-    }
-
-    .logo-container {
-      position: absolute;
-      top: 60px;
-      left: 60px;
-      z-index: 1000;
-    }
-
-    .logo {
-      height: 50px;
-    }
-  </style>
+  .side-video:hover {
+    filter: blur(1px) grayscale(20%);
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+  }
+</style>
 </head>
 <body>
-  <div class="logo-container">
-    <img src="logo1.png" alt="Logo" class="logo" />
-  </div>
 
-  <video autoplay muted loop playsinline id="bg-video">
-    <source src="fond.mp4" type="video/mp4" />
-    Votre navigateur ne supporte pas la vidéo HTML5.
-  </video>
+<div class="logo-container" style="position:absolute;top:60px;left:60px;z-index:1000;">
+  <img src="logo1.png" alt="Logo" style="height:50px;" />
+</div>
 
-  <div class="carousel" id="carousel"></div>
+<video autoplay muted loop playsinline id="bg-video">
+  <source src="fond.mp4" type="video/mp4" />
+  Votre navigateur ne supporte pas la vidéo HTML5.
+</video>
 
-  <script>
-    const videos = ["video3.mp4", "video2.mp4", "video1.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
-    let currentIndex = 0;
+<div class="carousel" id="carousel"></div>
 
-    const carousel = document.getElementById('carousel');
+<script>
+  const videos = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
+  const carousel = document.getElementById('carousel');
+  let currentIndex = 0;
 
-    function createVideoElement(src, className, muted = true, controls = false) {
-      const video = document.createElement('video');
-      video.src = src;
-      video.className = className;
-      video.muted = muted;
-      video.loop = true;
-      video.autoplay = true;
-      video.playsInline = true;
-      video.controls = controls;
-      video.setAttribute('preload', 'auto');
-      return video;
+  // Positions des 6 vidéos autour du centre (hexagone) en px par rapport au centre (500,400)
+  // Rayon du cercle = 350px environ
+  const radius = 350;
+  // Angle = 60 degrés = PI/3 radians
+  const centerX = 500;
+  const centerY = 400;
+
+  // calcule position hexagonale pour un index donné (0 à 5)
+  function getHexPosition(i, rotationOffset = 0) {
+    // i de 0 à 5 : angle = (i * 60°) + rotationOffset en degrés
+    const angleDeg = i * 60 + rotationOffset;
+    const angleRad = angleDeg * Math.PI / 180;
+    return {
+      x: centerX + radius * Math.cos(angleRad),
+      y: centerY + radius * Math.sin(angleRad)
+    };
+  }
+
+  // Affiche toutes les vidéos
+  // la vidéo au currentIndex sera au centre, les autres placées hexagonalement autour,
+  // on fait tourner le ring avec rotationOffset (en degrés) pour l'animation
+  let rotationOffset = 0;
+
+  function renderCarousel() {
+    carousel.innerHTML = '';
+    const len = videos.length;
+
+    // On met la vidéo centrale
+    const mainVideo = document.createElement('video');
+    mainVideo.src = videos[currentIndex];
+    mainVideo.className = 'main-video';
+    mainVideo.muted = true;
+    mainVideo.loop = true;
+    mainVideo.autoplay = true;
+    mainVideo.controls = true;
+    mainVideo.playsInline = true;
+    mainVideo.setAttribute('preload', 'auto');
+    mainVideo.addEventListener('canplay', () => mainVideo.play().catch(() => {}));
+    carousel.appendChild(mainVideo);
+
+    // Les 5 autres vidéos autour (ring)
+    // Les indices des autres vidéos selon currentIndex
+    let otherIndices = [];
+    for(let i=1; i<len; i++) {
+      otherIndices.push( (currentIndex + i) % len );
     }
 
-    function renderCarousel() {
-      carousel.innerHTML = '';
+    otherIndices.forEach((vidIdx, posIdx) => {
+      const vid = document.createElement('video');
+      vid.src = videos[vidIdx];
+      vid.className = 'side-video';
+      vid.muted = true;
+      vid.loop = true;
+      vid.autoplay = true;
+      vid.playsInline = true;
+      vid.setAttribute('preload', 'auto');
 
-      const len = videos.length;
+      // Position hexagonale autour
+      const pos = getHexPosition(posIdx, rotationOffset);
+      vid.style.left = (pos.x - 100) + 'px';  // 100 = largeur/2
+      vid.style.top = (pos.y - 56.5) + 'px';  // 56.5 = hauteur/2
 
-      const leftIndex = (currentIndex - 1 + len) % len;
-      const rightIndex = (currentIndex + 1) % len;
-
-      for(let i = 0; i < len; i++) {
-        if(i !== leftIndex && i !== currentIndex && i !== rightIndex) {
-          const bgVid = createVideoElement(videos[i], 'background-video');
-          const spacing = 100;
-          let posIndex = i < currentIndex ? i - currentIndex + len : i - currentIndex;
-          const centerOffset = (len - 3) / 2;
-          const leftPosPercent = 30 + (posIndex + centerOffset) * spacing;
-          bgVid.style.left = leftPosPercent + 'px';
-          carousel.appendChild(bgVid);
-        }
-      }
-
-      const leftVideo = createVideoElement(videos[leftIndex], 'side-video left');
-      leftVideo.addEventListener('click', () => {
-        currentIndex = leftIndex;
+      vid.addEventListener('click', () => {
+        currentIndex = vidIdx;
+        rotationOffset = 0;
         renderCarousel();
       });
 
-      const rightVideo = createVideoElement(videos[rightIndex], 'side-video right');
-      rightVideo.addEventListener('click', () => {
-        currentIndex = rightIndex;
-        renderCarousel();
-      });
+      carousel.appendChild(vid);
+    });
+  }
 
-      const mainVideo = createVideoElement(videos[currentIndex], 'main-video', true, true);
-      mainVideo.addEventListener('canplay', () => {
-        mainVideo.play().catch(() => {});
-      });
-
-      carousel.appendChild(leftVideo);
-      carousel.appendChild(mainVideo);
-      carousel.appendChild(rightVideo);
+  // Navigation avec clavier (flèches gauche/droite)
+  window.addEventListener('keydown', (e) => {
+    if(e.key === "ArrowRight") {
+      currentIndex = (currentIndex + 1) % videos.length;
+      renderCarousel();
+    } else if(e.key === "ArrowLeft") {
+      currentIndex = (currentIndex - 1 + videos.length) % videos.length;
+      renderCarousel();
     }
+  });
 
-    renderCarousel();
-  </script>
+  // Optional: rotation animation (décommenter pour tourner doucement)
+//   setInterval(() => {
+//     rotationOffset = (rotationOffset + 1) % 360;
+//     // Ne fait que tourner les vidéos autour (pas la principale)
+//     const sideVideos = document.querySelectorAll('.side-video');
+//     sideVideos.forEach((vid, i) => {
+//       const pos = getHexPosition(i, rotationOffset);
+//       vid.style.left = (pos.x - 100) + 'px';
+//       vid.style.top = (pos.y - 56.5) + 'px';
+//     });
+//   }, 40);
+
+  renderCarousel();
+</script>
 </body>
 </html>
