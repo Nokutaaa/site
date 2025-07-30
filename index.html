@@ -6,13 +6,12 @@
 <link rel="icon" href="favicon.jpg" type="image/jpg" />
 <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
 <style>
-  body {
-    background-color: black;
-    color: white;
-    font-family: 'Poppins', sans-serif;
+  html, body {
     margin: 0; padding: 0;
+    height: 100%;
     overflow-x: hidden;
-    height: 100vh;
+    font-family: 'Poppins', sans-serif;
+    background: black;
     position: relative;
   }
 
@@ -27,7 +26,7 @@
 
   header {
     position: fixed;
-    top: 20px; /* un peu plus bas */
+    top: 20px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 10000;
@@ -43,31 +42,23 @@
   .floating-video {
     position: absolute;
     opacity: 0.6;
-    filter: blur(2px);
-    pointer-events: auto;
+    filter: blur(1.8px);
     border-radius: 8px;
-    animation-name: floatHorizontal;
-    animation-timing-function: linear;
-    animation-fill-mode: forwards;
-    transition: opacity 0.3s ease, filter 0.3s ease, box-shadow 0.3s ease;
     object-fit: cover;
+    cursor: pointer;
+    transition: opacity 0.3s ease, filter 0.3s ease, box-shadow 0.3s ease;
+    pointer-events: auto;
+    will-change: transform;
   }
 
   .floating-video:hover {
     opacity: 0.95;
     filter: blur(0.5px);
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
-    z-index: 10;
+    z-index: 10001;
   }
 
-  @keyframes floatHorizontal {
-    from {
-      transform: translateX(100vw);
-    }
-    to {
-      transform: translateX(-120vw);
-    }
-  }
+  /* Animation moved to JS for better control */
 </style>
 </head>
 <body>
@@ -84,33 +75,39 @@
 <script>
   const videosSrc = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
   const maxVideosOnScreen = 10;
+
   const containerHeight = window.innerHeight;
   const containerWidth = window.innerWidth;
 
-  // Tableau pour suivre les positions verticales utilisées (pour éviter superposition verticale)
   const usedTops = [];
+  const floatingVideos = [];
 
-  // Fonction pour trouver une position verticale libre (éviter chevauchement vertical)
+  // Trouver une position verticale sans superposition
   function findFreeTop(height) {
-    const step = 30; // espacement minimum vertical
-    for(let top = 50; top < containerHeight - height - 50; top += step) {
-      // Vérifier chevauchement avec les positions déjà prises
+    const step = 40; // minimum spacing
+    for (let top = 60; top < containerHeight - height - 60; top += step) {
       let conflict = false;
-      for(let used of usedTops) {
-        if(Math.abs(used - top) < step) {
+      for (const used of usedTops) {
+        if (Math.abs(used - top) < step) {
           conflict = true;
           break;
         }
       }
-      if(!conflict) {
+      if (!conflict) {
         usedTops.push(top);
         return top;
       }
     }
-    // Si rien trouvé, renvoyer un random à défaut
+    // fallback
     return Math.random() * (containerHeight - height - 100) + 50;
   }
 
+  // Générer une position horizontale initiale aléatoire dans la fenêtre (pour effet boucle déjà commencée)
+  function getRandomStartX(width) {
+    return Math.random() * (containerWidth + 400) - width - 200;
+  }
+
+  // Création d'une vidéo flottante
   function createFloatingVideo(src) {
     const video = document.createElement('video');
     video.src = src;
@@ -121,97 +118,123 @@
     video.preload = 'auto';
     video.className = 'floating-video';
 
-    // Taille aléatoire entre 150 et 300px de large, avec ratio 16/9
+    // taille aléatoire 150-300 px largeur, ratio 16:9
     const width = 150 + Math.random() * 150;
     const height = width * 9 / 16;
 
     video.style.width = `${width}px`;
     video.style.height = `${height}px`;
 
-    // Position verticale sans superposition
     const top = findFreeTop(height);
     video.style.top = `${top}px`;
 
-    // Position horizontale de départ (hors écran à droite)
-    video.style.left = `${containerWidth + Math.random() * 300}px`;
+    // Position horizontale aléatoire pour démarrer sur toute la largeur + marge hors écran
+    video.style.left = `${getRandomStartX(width)}px`;
 
-    // Durée d'animation entre 50 et 80 secondes (plus lent)
-    const duration = 50 + Math.random() * 30;
+    // Stocke les infos de vitesse et position pour animation manuelle
+    const speed = 10 + Math.random() * 15; // pixels / seconde
 
-    video.style.animationDuration = `${duration}s`;
+    floatingVideos.push({video, top, width, height, speed, x: parseFloat(video.style.left)});
 
-    // Supprimer la position verticale de la vidéo quand l'animation est finie (pour réutiliser)
-    video.addEventListener('animationend', () => {
-      const index = usedTops.indexOf(top);
-      if(index > -1) usedTops.splice(index, 1);
-      video.remove();
-      spawnVideo(); // relancer une nouvelle vidéo
-    });
-
-    // Clic pour agrandir la vidéo au centre
     video.addEventListener('click', () => {
       if(video.classList.contains('selected')) {
-        // Deselect: revenir à l'état normal
-        video.classList.remove('selected');
-        resumeFloatingVideos();
+        deselectVideo();
       } else {
         selectVideo(video);
       }
     });
 
-    return video;
+    document.body.appendChild(video);
   }
 
-  // Gestion sélection vidéo
+  // Sélection vidéo au centre
   function selectVideo(video) {
-    // Stop et cacher les autres vidéos en fond, garder un léger flottement
-    document.querySelectorAll('.floating-video').forEach(v => {
-      if(v !== video) {
-        v.style.animationPlayState = 'paused';
-        v.style.filter = 'blur(1px)';
+    // Bloquer animation autres vidéos (garder léger flottement)
+    floatingVideos.forEach(({video: v}) => {
+      if (v !== video) {
         v.style.opacity = '0.3';
+        v.style.filter = 'blur(1px)';
       }
     });
 
-    // Style vidéo sélectionnée
+    // Styles vidéo sélectionnée
+    video.classList.add('selected');
     video.style.position = 'fixed';
     video.style.top = '50%';
     video.style.left = '50%';
     video.style.transform = 'translate(-50%, -50%) scale(1.5)';
-    video.style.zIndex = 10000;
-    video.style.opacity = 1;
+    video.style.zIndex = '10000';
+    video.style.opacity = '1';
     video.style.filter = 'none';
-    video.style.animationPlayState = 'paused';
-    video.classList.add('selected');
   }
 
-  function resumeFloatingVideos() {
-    document.querySelectorAll('.floating-video').forEach(v => {
-      v.style.position = 'absolute';
-      v.style.transform = 'none';
-      v.style.animationPlayState = 'running';
-      v.style.opacity = 0.6;
-      v.style.filter = 'blur(2px)';
-      v.style.zIndex = '';
-      v.classList.remove('selected');
+  // Désélection vidéo, reprise animation
+  function deselectVideo() {
+    floatingVideos.forEach(({video}) => {
+      video.style.position = 'absolute';
+      video.style.transform = 'none';
+      video.style.zIndex = '';
+      video.style.opacity = '0.6';
+      video.style.filter = 'blur(1.8px)';
+      video.classList.remove('selected');
     });
   }
 
-  function spawnVideo() {
-    if(document.querySelectorAll('.floating-video').length >= maxVideosOnScreen) return;
-
-    // Choisir une vidéo aléatoire
-    const src = videosSrc[Math.floor(Math.random() * videosSrc.length)];
-    const video = createFloatingVideo(src);
-    document.body.appendChild(video);
-  }
-
-  // Initial spawn : pour avoir la page déjà remplie
+  // Créer les vidéos initiales (maxVideosOnScreen)
   for(let i=0; i < maxVideosOnScreen; i++) {
-    spawnVideo();
+    createFloatingVideo(videosSrc[i % videosSrc.length]);
   }
 
-  // Recalcule container sizes et reset usedTops au resize
+  let lastTimestamp = null;
+  let selected = false;
+
+  // Animation JS pour contrôle précis (évite superposition horizontale)
+  function animate(timestamp) {
+    if (!lastTimestamp) lastTimestamp = timestamp;
+    const delta = (timestamp - lastTimestamp) / 1000; // en secondes
+    lastTimestamp = timestamp;
+
+    if (!selected) {
+      // On déplace les vidéos si aucune sélection
+      floatingVideos.forEach(obj => {
+        obj.x -= obj.speed * delta;
+
+        // Si complètement hors écran à gauche, remettre à droite (loop)
+        if (obj.x + obj.width < -100) {
+          obj.x = containerWidth + Math.random() * 300;
+          // Reposition verticale pour éviter superpositions sur loop
+          const newTop = findFreeTop(obj.height);
+          obj.top = newTop;
+          obj.video.style.top = `${newTop}px`;
+        }
+        obj.video.style.left = `${obj.x}px`;
+      });
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  // Démarrer animation
+  animate();
+
+  // Gestion sélection / désélection vidéo par clic
+  document.body.addEventListener('click', e => {
+    if (e.target.classList.contains('floating-video')) {
+      if (e.target.classList.contains('selected')) {
+        selected = false;
+        deselectVideo();
+      } else {
+        selected = true;
+        selectVideo(e.target);
+      }
+    } else if (selected) {
+      // Si clic hors vidéo sélectionnée, désélectionner
+      selected = false;
+      deselectVideo();
+    }
+  });
+
+  // Met à jour la taille des conteneurs si resize
   window.addEventListener('resize', () => {
     usedTops.length = 0;
   });
