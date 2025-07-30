@@ -2,190 +2,104 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Nokuta</title>
-  <link rel="icon" href="favicon.jpg" type="image/jpg" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
-  
-  <!-- Plyr CSS -->
-  <link rel="stylesheet" href="https://cdn.plyr.io/4.1.10/plyr.css" />
-
+  <title>Carrousel Vidéo Fond N&B</title>
   <style>
-    body {
-      background-color: white;
-      color: black;
-      font-family: 'Poppins', sans-serif;
-      margin: 0;
-      padding: 0;
-      text-align: center;
-      overflow-x: hidden;
-    }
-
-    .carousel {
-      position: relative;
-      width: 100%;
-      max-width: 900px;
-      margin: 150px auto 20px auto;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-      border-radius: 10px;
+    body, html {
+      margin: 0; padding: 0; height: 100%;
       overflow: hidden;
-      background: #000;
+      font-family: 'Poppins', sans-serif;
+      background: black;
+      color: white;
     }
 
-    /* Plyr container taille fixe */
-    #videoPlayer {
-      border-radius: 10px;
-      width: 100% !important;
-      height: 500px; /* Hauteur fixe pour garder une bonne taille */
-      max-height: 80vh;
+    /* Vidéo de fond en noir et blanc avec transparence */
+    #bg-video {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
       object-fit: cover;
+      filter: grayscale(100%);
+      opacity: 0.3;
+      z-index: -1;
     }
 
+    /* Conteneur des boutons au centre */
     .controls {
-      margin-top: 15px;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 120px;
       display: flex;
-      justify-content: center;
-      gap: 30px;
+      justify-content: space-between;
+      transform: translate(-50%, -50%);
+      z-index: 10;
     }
 
+    /* Boutons noirs et blancs avec transparence */
     button {
-      background: rgba(0, 0, 0, 0.4);
-      border: 2px solid rgba(255, 255, 255, 0.7);
+      background: rgba(255, 255, 255, 0.15);
+      border: 2px solid rgba(255, 255, 255, 0.4);
       color: white;
       font-size: 2rem;
-      padding: 12px 18px;
+      padding: 10px 15px;
       border-radius: 50%;
       cursor: pointer;
-      transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+      transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
       user-select: none;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
     }
 
     button:hover {
-      background: rgba(255, 255, 255, 0.85);
-      border-color: rgba(0, 0, 0, 0.85);
+      background: rgba(255, 255, 255, 0.4);
+      border-color: rgba(255, 255, 255, 0.8);
       color: black;
-      box-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
     }
 
     button:active {
-      background: rgba(255, 255, 255, 1);
-      border-color: rgba(0, 0, 0, 1);
+      background: rgba(255, 255, 255, 0.6);
+      border-color: rgba(255, 255, 255, 1);
       color: black;
       transform: scale(0.95);
-      box-shadow: 0 0 20px rgba(255, 255, 255, 1);
-    }
-
-    .logo-container {
-      position: absolute;
-      top: 60px;
-      left: 60px;
-      z-index: 1000;
-    }
-
-    .logo {
-      height: 50px;
-      user-select: none;
-      pointer-events: none;
-    }
-
-    .content {
-      margin-top: 10px;
-      font-size: 0.5rem;
-      text-align: right;
-      padding-right: 80px;
-    }
-
-    #bg-video {
-      position: fixed;    
-      top: 0;
-      left: 0;
-      width: 100vw;    
-      height: 100vh;    
-      object-fit: cover;  
-      z-index: -1;
-      filter: grayscale(100%) brightness(0.7);
     }
   </style>
 </head>
 <body>
-  <div class="logo-container">
-    <img src="logo1.png" alt="Logo" class="logo" />
-  </div>
-
-  <!-- Carrousel de vidéos avec Plyr -->
-  <div class="carousel">
-    <video
-      id="videoPlayer"
-      controls
-      crossorigin
-      playsinline
-      muted
-      autoplay
-      loop
-    >
-      <source src="video1.mp4" type="video/mp4" />
-      Votre navigateur ne supporte pas la vidéo HTML5.
-    </video>
-
-    <div class="controls">
-      <button id="prevBtn" aria-label="Vidéo précédente">◀</button>
-      <button id="nextBtn" aria-label="Vidéo suivante">▶</button>
-    </div>
-  </div>
 
   <!-- Vidéo de fond -->
-  <video autoplay muted loop playsinline id="bg-video" tabindex="-1" aria-hidden="true">
-    <source src="fond.mp4" type="video/mp4" />
+  <video autoplay muted loop playsinline id="bg-video">
+    <source src="video1.mp4" type="video/mp4" />
     Votre navigateur ne supporte pas la vidéo HTML5.
   </video>
 
-  <!-- Plyr JS -->
-  <script src="https://cdn.plyr.io/4.1.10/plyr.polyfilled.js"></script>
+  <!-- Boutons flèches uniquement -->
+  <div class="controls">
+    <button onclick="prevVideo()" aria-label="Précédent">◀</button>
+    <button onclick="nextVideo()" aria-label="Suivant">▶</button>
+  </div>
 
   <script>
     const videos = ["video1.mp4", "video2.mp4", "video3.mp4"];
     let current = 0;
+    const bgVideo = document.getElementById("bg-video");
 
-    const player = new Plyr('#videoPlayer', {
-      autoplay: true,
-      muted: true,
-      loop: { active: true },
-      controls: ['play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'fullscreen'],
-      clickToPlay: true,
-    });
-
-    function loadVideo(index) {
-      current = index;
-      player.source = {
-        type: 'video',
-        sources: [
-          {
-            src: videos[current],
-            type: 'video/mp4',
-          },
-        ],
-      };
-      // Jouer après que Plyr ait chargé la source
-      player.once('ready', () => {
-        player.play();
-      });
+    function updateVideo() {
+      bgVideo.src = videos[current];
+      bgVideo.load();
+      bgVideo.play();
     }
 
-    document.getElementById('nextBtn').addEventListener('click', () => {
-      const nextIndex = (current + 1) % videos.length;
-      loadVideo(nextIndex);
-    });
+    function nextVideo() {
+      current = (current + 1) % videos.length;
+      updateVideo();
+    }
 
-    document.getElementById('prevBtn').addEventListener('click', () => {
-      const prevIndex = (current - 1 + videos.length) % videos.length;
-      loadVideo(prevIndex);
-    });
-
-    // Charge la première vidéo au démarrage
-    loadVideo(current);
+    function prevVideo() {
+      current = (current - 1 + videos.length) % videos.length;
+      updateVideo();
+    }
   </script>
+
 </body>
 </html>
