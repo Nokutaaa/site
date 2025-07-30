@@ -10,7 +10,7 @@
     margin: 0; padding: 0; height: 100%;
     font-family: 'Poppins', sans-serif;
     overflow: hidden;
-    background: black;
+    background: none;
   }
 
   #bg-video {
@@ -18,7 +18,9 @@
     top: 0; left: 0;
     width: 100vw; height: 100vh;
     object-fit: cover;
-    z-index: -10;
+    z-index: -100; /* plus bas que tout */
+    filter: none;
+    pointer-events: none; /* pas cliquable */
   }
 
   .logo-container {
@@ -37,10 +39,11 @@
   #videos-container {
     position: fixed;
     top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
     width: 90vw;
     height: 60vh;
-    pointer-events: none; /* avoid interfering with clicks outside videos */
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 5;
   }
 
   video.floating-video {
@@ -50,9 +53,11 @@
     filter: blur(1.2px);
     opacity: 0.75;
     cursor: pointer;
-    pointer-events: auto; /* enable clicks on videos */
+    pointer-events: auto;
     box-shadow: 0 0 10px rgba(0,0,0,0.3);
     transition: filter 0.3s ease, opacity 0.3s ease;
+    width: 360px;  /* +20% taille */
+    height: 204px; /* proportion 16:9 */
   }
   video.floating-video:hover {
     filter: blur(0);
@@ -96,7 +101,7 @@
 </head>
 <body>
 
-  <video autoplay muted loop playsinline id="bg-video">
+  <video autoplay muted loop playsinline id="bg-video" preload="auto">
     <source src="fond.mp4" type="video/mp4" />
     Votre navigateur ne supporte pas la vidéo HTML5.
   </video>
@@ -126,21 +131,23 @@
   const videoElements = [];
   const positions = [];
 
-  // Ellipse parameters (wide ellipse around logo)
-  const centerX = container.clientWidth / 2;
-  const centerY = container.clientHeight / 2;
-  const radiusX = centerX - 100;  // leave margin from edges (~80px + safe)
-  const radiusY = centerY - 60;
-
-  // Minimum distance between videos & logo & borders
-  const minDistance = 20;
+  // Taille vidéos fixes agrandies
+  const videoWidth = 360;
+  const videoHeight = 204;
+  const minDistance = 50; // espacement mini augmenté
   const borderPadding = 80;
 
-  // For floating effect
-  const floatRange = 10; // px max float
-  const floatSpeed = 0.002; // speed factor
+  // Dimensions container (ellipse plus large horizontalement)
+  const centerX = container.clientWidth / 2;
+  const centerY = container.clientHeight / 2;
+  const radiusX = centerX - videoWidth / 2 - borderPadding; // largeur ellipse
+  const radiusY = centerY - videoHeight / 2 - borderPadding; // hauteur ellipse
 
-  // Generate initial video elements and fixed ellipse positions + random offset
+  // Flottement subtil et lent
+  const floatRange = 2.5;
+  const floatSpeed = 0.00035;
+
+  // Création vidéos avec position angulaire régulière + petit offset aléatoire
   videos.forEach((src, i) => {
     const video = document.createElement("video");
     video.src = src;
@@ -149,43 +156,40 @@
     video.autoplay = true;
     video.playsInline = true;
     video.classList.add("floating-video");
-    video.style.width = "280px";
-    video.style.height = "160px";
 
     container.appendChild(video);
     videoElements.push(video);
 
-    // Calculate base angle for ellipse distribution with slight random offset
     const baseAngle = (i / videos.length) * 2 * Math.PI;
-    const randomOffset = (Math.random() - 0.5) * 0.4; // ±0.2 rad ~ ±11°
+    const randomOffset = (Math.random() - 0.5) * 0.3;
     const angle = baseAngle + randomOffset;
 
-    // Calculate position on ellipse
-    let x = centerX + radiusX * Math.cos(angle);
-    let y = centerY + radiusY * Math.sin(angle);
+    const x = centerX + radiusX * Math.cos(angle);
+    const y = centerY + radiusY * Math.sin(angle);
 
-    // Store base position for floating animation
     positions.push({ baseX: x, baseY: y, angleOffset: Math.random() * 2 * Math.PI });
   });
 
-  // Place videos without overlap with logo or each other (simple repel method)
+  // Rejet chevauchement vidéos & logo & bords
   function repelPositions() {
-    const maxIter = 100;
+    const maxIter = 150;
     for(let iter = 0; iter < maxIter; iter++) {
       let moved = false;
       for(let i=0; i<videoElements.length; i++) {
-        const v1 = videoElements[i];
         const p1 = positions[i];
-        const r1 = v1.offsetWidth / 2;
+        const r1x = videoWidth / 2;
+        const r1y = videoHeight / 2;
 
-        // Repel from logo center
         const logoRect = logo.getBoundingClientRect();
-        const logoCenterX = logoRect.left + logoRect.width/2 - container.getBoundingClientRect().left;
-        const logoCenterY = logoRect.top + logoRect.height/2 - container.getBoundingClientRect().top;
+        const containerRect = container.getBoundingClientRect();
+        const logoCenterX = logoRect.left + logoRect.width/2 - containerRect.left;
+        const logoCenterY = logoRect.top + logoRect.height/2 - containerRect.top;
+
+        // Rejet logo
         const dxLogo = p1.baseX - logoCenterX;
         const dyLogo = p1.baseY - logoCenterY;
         const distLogo = Math.sqrt(dxLogo*dxLogo + dyLogo*dyLogo);
-        const minDistLogo = r1 + logoRect.width/2 + minDistance;
+        const minDistLogo = Math.max(r1x, r1y) + logoRect.width/2 + minDistance;
         if(distLogo < minDistLogo) {
           const diff = minDistLogo - distLogo;
           p1.baseX += (dxLogo / distLogo) * diff;
@@ -193,42 +197,55 @@
           moved = true;
         }
 
-        // Repel from borders (padding 80px)
-        if(p1.baseX - r1 < borderPadding) {
-          p1.baseX = borderPadding + r1;
+        // Rejet bords
+        if(p1.baseX - r1x < borderPadding) {
+          p1.baseX = borderPadding + r1x;
           moved = true;
         }
-        if(p1.baseX + r1 > container.clientWidth - borderPadding) {
-          p1.baseX = container.clientWidth - borderPadding - r1;
+        if(p1.baseX + r1x > container.clientWidth - borderPadding) {
+          p1.baseX = container.clientWidth - borderPadding - r1x;
           moved = true;
         }
-        if(p1.baseY - r1 < borderPadding) {
-          p1.baseY = borderPadding + r1;
+        if(p1.baseY - r1y < borderPadding) {
+          p1.baseY = borderPadding + r1y;
           moved = true;
         }
-        if(p1.baseY + r1 > container.clientHeight - borderPadding) {
-          p1.baseY = container.clientHeight - borderPadding - r1;
+        if(p1.baseY + r1y > container.clientHeight - borderPadding) {
+          p1.baseY = container.clientHeight - borderPadding - r1y;
           moved = true;
         }
 
-        // Repel from other videos
+        // Rejet entre vidéos
         for(let j=0; j<videoElements.length; j++) {
           if(i === j) continue;
-          const v2 = videoElements[j];
           const p2 = positions[j];
-          const r2 = v2.offsetWidth / 2;
+          const r2x = videoWidth / 2;
+          const r2y = videoHeight / 2;
+
           const dx = p1.baseX - p2.baseX;
           const dy = p1.baseY - p2.baseY;
-          const dist = Math.sqrt(dx*dx + dy*dy);
-          const minDist = r1 + r2 + minDistance;
-          if(dist < minDist && dist > 0) {
-            const diff = minDist - dist;
-            const offsetX = (dx / dist) * (diff/2);
-            const offsetY = (dy / dist) * (diff/2);
-            p1.baseX += offsetX;
-            p1.baseY += offsetY;
-            p2.baseX -= offsetX;
-            p2.baseY -= offsetY;
+          const distX = Math.abs(dx);
+          const distY = Math.abs(dy);
+          const minDistX = r1x + r2x + minDistance;
+          const minDistY = r1y + r2y + minDistance;
+
+          if(distX < minDistX && distY < minDistY) {
+            const overlapX = minDistX - distX;
+            if(dx !== 0) {
+              p1.baseX += (dx / distX) * (overlapX/2);
+              p2.baseX -= (dx / distX) * (overlapX/2);
+            } else {
+              p1.baseX += overlapX/2;
+              p2.baseX -= overlapX/2;
+            }
+            const overlapY = minDistY - distY;
+            if(dy !== 0) {
+              p1.baseY += (dy / distY) * (overlapY/2);
+              p2.baseY -= (dy / distY) * (overlapY/2);
+            } else {
+              p1.baseY += overlapY/2;
+              p2.baseY -= overlapY/2;
+            }
             moved = true;
           }
         }
@@ -236,23 +253,20 @@
       if(!moved) break;
     }
   }
-
   repelPositions();
 
   let startTime = null;
-
   function animate(time) {
     if(!startTime) startTime = time;
     const elapsed = time - startTime;
 
     videoElements.forEach((video, i) => {
       const pos = positions[i];
-      // Floating offsets
       const floatX = floatRange * Math.sin(elapsed * floatSpeed * 2 + pos.angleOffset);
       const floatY = floatRange * Math.cos(elapsed * floatSpeed * 3 + pos.angleOffset);
 
-      let finalX = pos.baseX + floatX - video.offsetWidth/2;
-      let finalY = pos.baseY + floatY - video.offsetHeight/2;
+      let finalX = pos.baseX + floatX - videoWidth/2;
+      let finalY = pos.baseY + floatY - videoHeight/2;
 
       video.style.left = finalX + "px";
       video.style.top = finalY + "px";
@@ -260,10 +274,9 @@
 
     requestAnimationFrame(animate);
   }
-
   requestAnimationFrame(animate);
 
-  // Fullscreen video & overlay logic
+  // Fullscreen video logic
   const fullscreenVideo = document.getElementById("fullscreenVideo");
   const overlay = document.getElementById("overlay");
 
