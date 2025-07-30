@@ -18,9 +18,9 @@
     top: 0; left: 0;
     width: 100vw; height: 100vh;
     object-fit: cover;
-    z-index: -100; /* plus bas que tout */
+    z-index: -100;
+    pointer-events: none;
     filter: none;
-    pointer-events: none; /* pas cliquable */
   }
 
   .logo-container {
@@ -56,8 +56,8 @@
     pointer-events: auto;
     box-shadow: 0 0 10px rgba(0,0,0,0.3);
     transition: filter 0.3s ease, opacity 0.3s ease;
-    width: 360px;  /* +20% taille */
-    height: 204px; /* proportion 16:9 */
+    width: 360px;
+    height: 204px;
   }
   video.floating-video:hover {
     filter: blur(0);
@@ -101,7 +101,7 @@
 </head>
 <body>
 
-  <video autoplay muted loop playsinline id="bg-video" preload="auto">
+  <video id="bg-video" autoplay muted loop playsinline preload="auto">
     <source src="fond.mp4" type="video/mp4" />
     Votre navigateur ne supporte pas la vidéo HTML5.
   </video>
@@ -131,17 +131,17 @@
   const videoElements = [];
   const positions = [];
 
-  // Taille vidéos fixes agrandies
+  // Taille vidéos agrandies
   const videoWidth = 360;
   const videoHeight = 204;
-  const minDistance = 50; // espacement mini augmenté
+  const minDistance = 50; 
   const borderPadding = 80;
 
   // Dimensions container (ellipse plus large horizontalement)
   const centerX = container.clientWidth / 2;
   const centerY = container.clientHeight / 2;
-  const radiusX = centerX - videoWidth / 2 - borderPadding; // largeur ellipse
-  const radiusY = centerY - videoHeight / 2 - borderPadding; // hauteur ellipse
+  const radiusX = centerX - videoWidth / 2 - borderPadding; 
+  const radiusY = centerY - videoHeight / 2 - borderPadding; 
 
   // Flottement subtil et lent
   const floatRange = 2.5;
@@ -276,18 +276,17 @@
   }
   requestAnimationFrame(animate);
 
-  // Fullscreen video logic
-  const fullscreenVideo = document.getElementById("fullscreenVideo");
+  // Fullscreen video sur click
   const overlay = document.getElementById("overlay");
+  const fullscreenVideo = document.getElementById("fullscreenVideo");
 
-  videoElements.forEach(video => {
+  videoElements.forEach((video, i) => {
     video.addEventListener("click", () => {
-      fullscreenVideo.src = video.src;
-      fullscreenVideo.currentTime = 0;
-      fullscreenVideo.volume = 0.35;
-      fullscreenVideo.play();
-      fullscreenVideo.classList.add("active");
+      fullscreenVideo.src = videos[i];
+      fullscreenVideo.style.display = "block";
       overlay.classList.add("active");
+      setTimeout(() => fullscreenVideo.classList.add("active"), 10);
+      fullscreenVideo.play();
     });
   });
 
@@ -295,8 +294,12 @@
     fullscreenVideo.pause();
     fullscreenVideo.classList.remove("active");
     overlay.classList.remove("active");
-    fullscreenVideo.src = "";
+    setTimeout(() => {
+      fullscreenVideo.style.display = "none";
+      fullscreenVideo.src = "";
+    }, 400);
   }
 </script>
+
 </body>
 </html>
