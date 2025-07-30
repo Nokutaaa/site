@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Nokuta</title>
+  <title>Nokuta - Carrousel vidéo</title>
   <link rel="icon" href="favicon.jpg" type="image/jpg" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
   <style>
@@ -32,6 +32,22 @@
       max-width: 1300px;
       margin: 150px auto 20px;
       height: 520px;
+    }
+
+    .background-video {
+      position: absolute;
+      top: 50%;
+      width: 280px;
+      height: 160px;
+      transform: translateY(-50%);
+      filter: blur(8px) grayscale(70%);
+      opacity: 0.4;
+      border-radius: 8px;
+      object-fit: cover;
+      box-shadow: 0 0 6px rgba(0,0,0,0.1);
+      pointer-events: none;
+      transition: filter 0.3s ease, opacity 0.3s ease;
+      z-index: 0;
     }
 
     .side-video {
@@ -67,39 +83,11 @@
     .main-video {
       position: relative;
       width: 900px;
-      height: 506px; /* ratio 16:9 */
+      height: 506px;
       border-radius: 8px;
       object-fit: cover;
       box-shadow: 0 0 20px rgba(0,0,0,0.5);
       z-index: 10;
-    }
-
-    .controls {
-      margin-top: 15px;
-      display: flex;
-      justify-content: center;
-      gap: 50px;
-    }
-
-    /* Boutons flèches minimalistes sans rond ni contour */
-    button {
-      background: transparent;
-      border: none;
-      color: black;
-      font-size: 3rem;
-      cursor: pointer;
-      user-select: none;
-      padding: 0 10px;
-      transition: color 0.3s ease;
-    }
-
-    button:hover {
-      color: #555;
-    }
-
-    button:active {
-      color: #222;
-      transform: scale(0.9);
     }
 
     .logo-container {
@@ -126,13 +114,8 @@
 
   <div class="carousel" id="carousel"></div>
 
-  <div class="controls">
-    <button id="prevBtn" aria-label="Vidéo précédente">◀</button>
-    <button id="nextBtn" aria-label="Vidéo suivante">▶</button>
-  </div>
-
   <script>
-    const videos = ["video3.mp4", "video2.mp4", "video1.mp4"];
+    const videos = ["video3.mp4", "video2.mp4", "video1.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
     let currentIndex = 0;
 
     const carousel = document.getElementById('carousel');
@@ -153,18 +136,27 @@
     function renderCarousel() {
       carousel.innerHTML = '';
 
-      const leftIndex = (currentIndex - 1 + videos.length) % videos.length;
-      const rightIndex = (currentIndex + 1) % videos.length;
+      const len = videos.length;
+
+      const leftIndex = (currentIndex - 1 + len) % len;
+      const rightIndex = (currentIndex + 1) % len;
+
+      for(let i = 0; i < len; i++) {
+        if(i !== leftIndex && i !== currentIndex && i !== rightIndex) {
+          const bgVid = createVideoElement(videos[i], 'background-video');
+          const spacing = 100;
+          let posIndex = i < currentIndex ? i - currentIndex + len : i - currentIndex;
+          const centerOffset = (len - 3) / 2;
+          const leftPosPercent = 30 + (posIndex + centerOffset) * spacing;
+          bgVid.style.left = leftPosPercent + 'px';
+          carousel.appendChild(bgVid);
+        }
+      }
 
       const leftVideo = createVideoElement(videos[leftIndex], 'side-video left');
       leftVideo.addEventListener('click', () => {
         currentIndex = leftIndex;
         renderCarousel();
-      });
-
-      const mainVideo = createVideoElement(videos[currentIndex], 'main-video', true, true);
-      mainVideo.addEventListener('canplay', () => {
-        mainVideo.play().catch(() => {});
       });
 
       const rightVideo = createVideoElement(videos[rightIndex], 'side-video right');
@@ -173,20 +165,15 @@
         renderCarousel();
       });
 
+      const mainVideo = createVideoElement(videos[currentIndex], 'main-video', true, true);
+      mainVideo.addEventListener('canplay', () => {
+        mainVideo.play().catch(() => {});
+      });
+
       carousel.appendChild(leftVideo);
       carousel.appendChild(mainVideo);
       carousel.appendChild(rightVideo);
     }
-
-    document.getElementById('prevBtn').addEventListener('click', () => {
-      currentIndex = (currentIndex - 1 + videos.length) % videos.length;
-      renderCarousel();
-    });
-
-    document.getElementById('nextBtn').addEventListener('click', () => {
-      currentIndex = (currentIndex + 1) % videos.length;
-      renderCarousel();
-    });
 
     renderCarousel();
   </script>
