@@ -29,21 +29,22 @@
       cursor: pointer;
       transition: all 0.3s ease;
       object-fit: cover;
+      background: black;
     }
 
-    /* Vidéo principale : taille plus grande, nette */
+    /* Vidéo principale : plus grande, nette */
     .main-video {
-      width: 900px;
+      width: 700px;
       filter: none;
       box-shadow: 0 0 15px rgba(0,0,0,0.3);
     }
 
     /* Vidéos latérales : plus petites et floues */
     .side-video {
-      width: 350px;
+      width: 250px;
       filter: blur(4px) grayscale(50%);
       opacity: 0.7;
-      pointer-events: auto; /* pour pouvoir cliquer dessus */
+      pointer-events: auto; /* cliquables */
     }
 
     /* Boutons */
@@ -98,12 +99,12 @@
   </div>
 
   <div class="carousel" id="carousel">
-    <!-- Vidéos ajoutées via JS -->
+    <!-- Vidéos seront insérées ici -->
   </div>
 
   <div class="controls">
-    <button id="prevBtn">◀</button>
-    <button id="nextBtn">▶</button>
+    <button id="prevBtn" aria-label="Vidéo précédente">◀</button>
+    <button id="nextBtn" aria-label="Vidéo suivante">▶</button>
   </div>
 
   <script>
@@ -112,37 +113,66 @@
 
     const carousel = document.getElementById('carousel');
 
-    // Crée les éléments vidéo dans le DOM
+    // Fonction pour créer un élément vidéo configuré
+    function createVideoElement(src, className, muted = true, controls = false) {
+      const video = document.createElement('video');
+      video.src = src;
+      video.className = className;
+      video.muted = muted;
+      video.loop = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      video.controls = controls;
+      video.setAttribute('preload', 'auto');
+      return video;
+    }
+
     function renderCarousel() {
       carousel.innerHTML = '';
 
-      // Index des vidéos à afficher : côté gauche, centre, côté droit
-      // On fait modulo pour boucler
       const leftIndex = (currentIndex - 1 + videos.length) % videos.length;
       const rightIndex = (currentIndex + 1) % videos.length;
 
-      // Vidéo côté gauche
-      const leftVideo = document.createElement('video');
-      leftVideo.src = videos[leftIndex];
-      leftVideo.classList.add('side-video');
-      leftVideo.muted = true;
-      leftVideo.loop = true;
-      leftVideo.autoplay = true;
-      leftVideo.playsInline = true;
+      // Vidéo gauche (latérale)
+      const leftVideo = createVideoElement(videos[leftIndex], 'side-video');
       leftVideo.addEventListener('click', () => {
         currentIndex = leftIndex;
         renderCarousel();
       });
-      leftVideo.load();
-      leftVideo.play();
 
-      // Vidéo centrale
-      const mainVideo = document.createElement('video');
-      mainVideo.src = videos[currentIndex];
-      mainVideo.classList.add('main-video');
-      mainVideo.muted = true;
-      mainVideo.loop = true;
-      mainVideo.autoplay = true;
-      mainVideo.playsInline = true;
-      mainVideo.controls = true;  // Contrôles visibles uniquement pour la vidéo principale
-      mainVideo
+      // Vidéo principale
+      const mainVideo = createVideoElement(videos[currentIndex], 'main-video', true, true);
+
+      // Quand la vidéo principale est prête, on joue
+      mainVideo.addEventListener('canplay', () => {
+        mainVideo.play().catch(() => {}); // Pour éviter les erreurs autoplay bloqué
+      });
+
+      // Vidéo droite (latérale)
+      const rightVideo = createVideoElement(videos[rightIndex], 'side-video');
+      rightVideo.addEventListener('click', () => {
+        currentIndex = rightIndex;
+        renderCarousel();
+      });
+
+      carousel.appendChild(leftVideo);
+      carousel.appendChild(mainVideo);
+      carousel.appendChild(rightVideo);
+    }
+
+    // Gestion des boutons
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      currentIndex = (currentIndex - 1 + videos.length) % videos.length;
+      renderCarousel();
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      currentIndex = (currentIndex + 1) % videos.length;
+      renderCarousel();
+    });
+
+    // Affichage initial
+    renderCarousel();
+  </script>
+</body>
+</html>
