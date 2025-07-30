@@ -11,14 +11,15 @@
     width: 100%; height: 100%;
     overflow: hidden;
     font-family: 'Poppins', sans-serif;
-    background: black;
+    /* background: transparent; */ /* enlever le fond noir */
+    background: none;
   }
   #bg-video {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
     object-fit: cover;
-    z-index: -10;
+    z-index: -100;
   }
   #logo {
     position: fixed;
@@ -62,7 +63,7 @@
     box-shadow: 0 0 30px rgba(0,0,0,0.7);
     z-index: 11000;
     display: none;
-    background: black;
+    background: rgba(0, 0, 0, 0.8);
   }
   #fullscreen-video video {
     width: 100%;
@@ -105,7 +106,6 @@
   const fullscreenWrapper = document.getElementById('fullscreen-video');
   const fullscreenVideo = fullscreenWrapper.querySelector('video');
 
-  // Ellipse parameters for base positions (centered on viewport center)
   const ellipse = {
     centerX: window.innerWidth / 2,
     centerY: window.innerHeight / 2,
@@ -113,15 +113,12 @@
     radiusY: window.innerHeight / 3,
   };
 
-  // Minimum distance from edges
   const edgeMargin = 80;
 
-  // Positions array for base coords and floating offsets
   let positions = [];
 
-  // Initialize 6 fixed base positions on ellipse, spaced evenly by angle
   for (let i = 0; i < videosSrc.length; i++) {
-    const angle = (i * (360 / videosSrc.length) - 90) * Math.PI / 180; // start top center, clockwise
+    const angle = (i * (360 / videosSrc.length) - 90) * Math.PI / 180;
     let x = ellipse.centerX + ellipse.radiusX * Math.cos(angle);
     let y = ellipse.centerY + ellipse.radiusY * Math.sin(angle);
     positions.push({
@@ -138,7 +135,6 @@
     });
   }
 
-  // Repel function to keep minimum distance 80px from edges, logo & other videos
   function repelPositions() {
     const logoRect = logo.getBoundingClientRect();
     const minDist = 80;
@@ -151,11 +147,9 @@
     do {
       changed = false;
       for(let i = 0; i < positions.length; i++) {
-        // Keep away from edges
         positions[i].baseX = Math.min(Math.max(positions[i].baseX, minDist + positions[i].width/2), window.innerWidth - minDist - positions[i].width/2);
         positions[i].baseY = Math.min(Math.max(positions[i].baseY, minDist + positions[i].height/2), window.innerHeight - minDist - positions[i].height/2);
 
-        // Keep away from logo
         const dxLogo = positions[i].baseX - (logoRect.left + logoRect.width/2);
         const dyLogo = positions[i].baseY - (logoRect.top + logoRect.height/2);
         const distLogo = Math.sqrt(dxLogo*dxLogo + dyLogo*dyLogo);
@@ -166,7 +160,6 @@
           changed = true;
         }
 
-        // Keep away from other videos
         for(let j = 0; j < positions.length; j++) {
           if(i === j) continue;
           const d = dist(positions[i], positions[j]);
@@ -181,10 +174,8 @@
     } while(changed);
   }
 
-  // Apply repel to initial positions
   repelPositions();
 
-  // Create video elements
   let videoElements = [];
 
   function createVideos() {
@@ -217,14 +208,12 @@
 
   createVideos();
 
-  // Animate floating subtle movement around base points
   function animate() {
     for(let i = 0; i < positions.length; i++) {
       const pos = positions[i];
       pos.angleX += pos.offsetSpeedX;
       pos.angleY += pos.offsetSpeedY;
 
-      // Small elliptical floating movement (+/- 8px)
       const floatX = Math.cos(pos.angleX) * 8;
       const floatY = Math.sin(pos.angleY) * 6;
 
@@ -238,7 +227,6 @@
 
   animate();
 
-  // Close fullscreen video if click outside video
   fullscreenWrapper.addEventListener('click', e => {
     if(e.target === fullscreenWrapper) {
       fullscreenVideo.pause();
@@ -247,7 +235,6 @@
     }
   });
 
-  // Handle window resize: recalc ellipse center and repel positions
   window.addEventListener('resize', () => {
     ellipse.centerX = window.innerWidth / 2;
     ellipse.centerY = window.innerHeight / 2;
