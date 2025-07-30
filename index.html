@@ -263,3 +263,24 @@
       const dx = floatingRange * Math.sin(time * speedX + phaseX);
       const dy = floatingRange * Math.cos(time * speedY + phaseY);
 
+      video.style.transform = `translate(${dx}px, ${dy}px)`;
+    });
+    requestAnimationFrame(animate);
+  }
+
+  createFloatingVideos();
+  animate();
+
+  window.addEventListener('resize', () => {
+    // Met à jour les positions centrées au resize
+    const newCenterX = window.innerWidth / 2;
+    const newCenterY = window.innerHeight / 2;
+    for(let i=0; i < videoPositionsPolar.length; i++){
+      videoPositionsPolar[i].cartesian = polarToCartesian(videoPositionsPolar[i].angleDeg, videoPositionsPolar[i].distance);
+    }
+    createFloatingVideos();
+  });
+</script>
+
+</body>
+</html>
