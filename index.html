@@ -13,60 +13,29 @@
       margin: 0;
       padding: 0;
       text-align: center;
-      overflow-x: hidden;
     }
 
     .carousel {
       position: relative;
       width: 100%;
-      max-width: 1100px;
-      height: 620px;
+      max-width: 1200px; /* agrandi */
       margin: 150px auto 20px auto;
-      display: flex;
-      justify-content: center;
-      align-items: center;
     }
 
-    .video-wrapper {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      border-radius: 0;
-      overflow: hidden;
-      cursor: pointer;
-      transition: all 0.6s ease;
-      box-shadow: none;
-      opacity: 0.5;
-      filter: blur(6px) brightness(0.7);
-      width: 30%;
-      pointer-events: auto;
-    }
-
-    .video-wrapper video {
+    video {
       width: 100%;
-      height: auto;
+      border-radius: 0px;
+      outline: none;
       display: block;
-      border-radius: 8px;
-      object-fit: cover;
     }
 
-    .video-wrapper.active {
-      width: 60%;
-      z-index: 10;
-      opacity: 1;
-      filter: none;
-      box-shadow: 0 0 25px rgba(0,0,0,0.6);
-      pointer-events: auto;
-    }
-
-    .video-wrapper.left {
-      left: 0;
-      transform: translate(-10%, -50%) scale(0.85);
-    }
-
-    .video-wrapper.right {
-      right: 0;
-      transform: translate(10%, -50%) scale(0.85);
+    .controls {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      width: 200px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     #bg-video {
@@ -89,7 +58,6 @@
       border: none;
       cursor: pointer;
       transition: box-shadow 0.3s ease;
-      margin: 0 10px;
     }
 
     button:hover {
@@ -130,14 +98,14 @@
 
   <!-- Carrousel de vidéos -->
   <div class="carousel">
-    <div class="video-wrapper left" data-index="0">
-      <video src="video3.mp4" muted loop></video>
-    </div>
-    <div class="video-wrapper active" data-index="1">
-      <video src="video2.mp4" autoplay muted loop></video>
-    </div>
-    <div class="video-wrapper right" data-index="2">
-      <video src="video1.mp4" muted loop></video>
+    <video id="videoPlayer" autoplay loop muted playsinline>
+      <source src="video1.mp4" type="video/mp4" />
+      Votre navigateur ne supporte pas la vidéo HTML5.
+    </video>
+
+    <div class="controls">
+      <button onclick="prevVideo()">◀</button>
+      <button onclick="nextVideo()">▶</button>
     </div>
   </div>
 
@@ -146,59 +114,39 @@
     Votre navigateur ne supporte pas la vidéo HTML5.
   </video>
 
-  <script>
-    const videos = document.querySelectorAll('.video-wrapper');
-    let activeIndex = 1; // Vidéo centrale au départ
+<script>
+  const videos = ["video3.mp4", "video2.mp4", "video1.mp4"];
+  let current = 0;
+  const videoPlayer = document.getElementById("videoPlayer");
 
-    // Pause les vidéos non actives au chargement
-    videos.forEach((wrapper, i) => {
-      const vid = wrapper.querySelector('video');
-      if (!wrapper.classList.contains('active')) {
-        vid.pause();
-      } else {
-        vid.play();
-      }
-    });
-
-    function setActive(index) {
-      videos.forEach((wrapper, i) => {
-        const vid = wrapper.querySelector('video');
-        wrapper.classList.remove('active', 'left', 'right');
-        vid.pause();
-
-        if (i === index) {
-          wrapper.classList.add('active');
-          vid.play();
-          wrapper.style.opacity = '1';
-          wrapper.style.pointerEvents = 'auto';
-        } else if (i === (index - 1 + videos.length) % videos.length) {
-          wrapper.classList.add('left');
-          wrapper.style.opacity = '0.5';
-          wrapper.style.pointerEvents = 'auto';
-        } else if (i === (index + 1) % videos.length) {
-          wrapper.classList.add('right');
-          wrapper.style.opacity = '0.5';
-          wrapper.style.pointerEvents = 'auto';
-        } else {
-          // Optionnel : cacher les autres vidéos si plus de 3
-          wrapper.style.opacity = '0';
-          wrapper.style.pointerEvents = 'none';
-        }
-      });
-      activeIndex = index;
+  function startVideoAtThreeSeconds() {
+    if(videos[current] === "video3.mp4") {
+      videoPlayer.currentTime = 3;
+    } else {
+      videoPlayer.currentTime = 0;
     }
+  }
 
-    videos.forEach(wrapper => {
-      wrapper.addEventListener('click', () => {
-        const index = parseInt(wrapper.getAttribute('data-index'));
-        if (index !== activeIndex) {
-          setActive(index);
-        }
-      });
-    });
+  function updateVideo() {
+    videoPlayer.src = videos[current];
+    videoPlayer.load();
+    videoPlayer.play();
+    startVideoAtThreeSeconds();
+    videoPlayer.controls = true;
+  }
 
-    // Initialisation
-    setActive(activeIndex);
-  </script>
+  function nextVideo() {
+    current = (current + 1) % videos.length;
+    updateVideo();
+  }
+
+  function prevVideo() {
+    current = (current - 1 + videos.length) % videos.length;
+    updateVideo();
+  }
+
+  // Initialisation
+  videoPlayer.controls = true;
+</script>
 </body>
 </html>
