@@ -91,7 +91,7 @@
     }
 
     video.floating-video.show {
-      animation: fadeIn 0.6s ease forwards;
+      animation: fadeIn 1.2s ease forwards; /* durée doublée */
     }
 
     video.floating-video:hover {
@@ -160,13 +160,20 @@
       right: 10%;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.5s ease, filter 0.3s ease;
       z-index: 30;
+      filter: drop-shadow(0 0 5px rgba(255,255,255,0.7));
+      cursor: pointer;
+      user-select: none;
     }
     
     #back-btn.active {
       opacity: 1;
       pointer-events: auto;
+    }
+
+    #back-btn:hover {
+      filter: drop-shadow(0 0 12px rgba(255,255,255,1));
     }
   </style>
 </head>
@@ -188,9 +195,10 @@
     <div id="info-text">
       <h2>Hey!</h2>
       <p>I am a videographer passionate about capturing life through my camera. My goal is to make viewers feel the deepest emotions possible when watching my videos. While I primarily focus on documentaries and music videos, I’m open to collaborating on any artistic project that inspires me.<br/><br/>Feel free to contact me.</p>
-      <img id="back-btn" src="back.png" alt="Revenir" />
     </div>
   </div>
+
+  <img id="back-btn" src="back.png" alt="Revenir" />
 
   <script>
     window.onload = () => {
@@ -198,8 +206,8 @@
       const container = document.getElementById("videos-container");
       const videoElements = [];
       const positions = [
-        { x: -250, y: -220 },
-        { x: +250, y: -220 },
+        { x: -250, y: -220 },  // haut gauche
+        { x: +250, y: -220 },  // haut droite (un peu en haut à droite)
         { x: +530, y: 0 },
         { x: +250, y: +220 },
         { x: -250, y: +220 },
@@ -225,7 +233,7 @@
       videoElements.forEach((v, i) => {
         setTimeout(() => {
           v.classList.add("show");
-        }, i * 300);
+        }, i * 700);  // +700ms entre chaque apparition
       });
 
       const bgMusic = document.getElementById("bg-music");
