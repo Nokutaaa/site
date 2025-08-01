@@ -10,7 +10,7 @@
       margin: 0; padding: 0; height: 100%;
       font-family: 'Poppins', sans-serif;
       overflow: hidden;
-      background: none;
+      background-color: black;
     }
 
     @keyframes glowPulse {
@@ -35,6 +35,7 @@
       animation: glowPulse 3s ease-in-out infinite;
       cursor: pointer;
       transition: top 0.6s ease, transform 0.6s ease;
+      user-select: none;
     }
 
     .logo-container.moved-up {
@@ -51,22 +52,15 @@
 
     #videos-container {
       position: fixed;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       width: 100vw;
       height: 100vh;
-      pointer-events: none;
+      overflow: hidden;
       z-index: 5;
-      transition: opacity 0.5s ease;
-    }
-
-    #videos-container.hidden {
-      opacity: 0;
-      pointer-events: none;
     }
 
     video.floating-video {
-      position: fixed;
+      position: absolute;
       width: 360px;
       height: 204px;
       border-radius: 8px;
@@ -77,10 +71,6 @@
       cursor: pointer;
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
       transition: filter 0.3s ease, opacity 0.3s ease, border-radius 0.6s ease, box-shadow 0.6s ease, transform 0.6s ease;
-      user-select: none;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
     }
 
     video.floating-video:hover {
@@ -110,7 +100,6 @@
       pointer-events: none;
       transition: opacity 0.8s ease;
       z-index: 20;
-      color: white;
     }
 
     #info-container.active {
@@ -123,11 +112,10 @@
       object-fit: cover;
       width: 45%;
       transition: transform 0.6s ease, border-radius 0.6s ease, box-shadow 0.6s ease;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
 
     #info-text {
+      color: white;
       width: 45%;
       font-size: 1.2rem;
       line-height: 1.4;
@@ -157,7 +145,7 @@
       cursor: pointer;
       user-select: none;
     }
-    
+
     #back-btn.active {
       opacity: 1;
       pointer-events: auto;
@@ -166,6 +154,23 @@
     #back-btn:hover {
       filter: drop-shadow(0 0 18px #60eff3);
     }
+
+    /* Plein écran style */
+    video.floating-video.fullscreen {
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      width: 90vw !important;
+      height: 80vh !important;
+      border-radius: 0 !important;
+      filter: none !important;
+      opacity: 1 !important;
+      box-shadow: none !important;
+      transform: translate(-50%, -50%) !important;
+      z-index: 50 !important;
+      cursor: default !important;
+    }
+
   </style>
 </head>
 <body>
@@ -196,22 +201,22 @@
       const videos = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
       const container = document.getElementById("videos-container");
       const videoElements = [];
-      const containerWidth = window.innerWidth;
-      const containerHeight = window.innerHeight;
 
-      function randomStartX() {
-        return Math.random() * -300 - 100; // entre -400 et -100 px à gauche
+      // Générer une position initiale aléatoire dans toute la fenêtre
+      function getRandomPosition() {
+        return {
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight
+        };
       }
 
-      function randomY() {
-        return containerHeight * (0.1 + Math.random() * 0.7); // entre 10% et 80% de la hauteur
+      // Vitesse aléatoire entre 20 et 60 px par seconde
+      function getRandomSpeed() {
+        return 20 + Math.random() * 40;
       }
 
-      function randomSpeed() {
-        return 20 + Math.random() * 40; // vitesse entre 20 et 60 px/s
-      }
-
-      videos.forEach((src, i) => {
+      // Créer les vidéos avec position et vitesse aléatoires
+      videos.forEach(src => {
         const video = document.createElement("video");
         video.src = src;
         video.muted = true;
@@ -219,103 +224,143 @@
         video.autoplay = true;
         video.playsInline = true;
         video.classList.add("floating-video");
-        video.style.position = "fixed";
-        video.style.top = randomY() + "px";
-        video.style.left = randomStartX() + "px";
-        video.style.filter = "blur(1.2px)";
-        video.style.opacity = "0.7";
         container.appendChild(video);
-        video.speed = randomSpeed();
+
+        const pos = getRandomPosition();
+        video.style.left = `${pos.x}px`;
+        video.style.top = `${pos.y}px`;
+
+        video._posX = pos.x;
+        video._posY = pos.y;
+        video._speed = getRandomSpeed();
+
         videoElements.push(video);
       });
 
       const bgMusic = document.getElementById("bg-music");
+      bgMusic.volume = 0.08;
+
       const logo = document.getElementById("logo");
       const infoContainer = document.getElementById("info-container");
       const infoVideo = document.getElementById("info-video");
       const backBtn = document.getElementById("back-btn");
       const videosContainer = document.getElementById("videos-container");
 
-      bgMusic.volume = 0.15;
-      bgMusic.play().catch(() => {});
       let descriptionShown = false;
+      let fullscreenVideo = null;
 
+      // Animation horizontale avec "wrap-around" style Pacman
+      function animateVideos(deltaTime) {
+        videoElements.forEach(video => {
+          if (video !== fullscreenVideo) {
+            video._posX += video._speed * deltaTime;
+
+            if (video._posX > window.innerWidth) {
+              video._posX = -video.offsetWidth;
+              // Pour changer aussi la position verticale aléatoirement à chaque wrap :
+              video._posY = Math.random() * (window.innerHeight - video.offsetHeight);
+            }
+
+            video.style.left = `${video._posX}px`;
+            video.style.top = `${video._posY}px`;
+          }
+        });
+      }
+
+      let lastTime = null;
+      function loop(time) {
+        if (!lastTime) lastTime = time;
+        const deltaTime = (time - lastTime) / 1000; // en secondes
+        animateVideos(deltaTime);
+        lastTime = time;
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+
+      // Gestion du clic sur vidéo pour passer en plein écran
       videoElements.forEach(video => {
         video.addEventListener("click", () => {
+          if (fullscreenVideo) return; // ignore si déjà en fullscreen
+
+          fullscreenVideo = video;
+          descriptionShown = true;
+
+          logo.classList.add("moved-up");
+          videosContainer.classList.add("hidden");
+          videoElements.forEach(v => {
+            if (v !== fullscreenVideo) {
+              v.style.display = "none";
+            } else {
+              v.classList.add("fullscreen");
+              v.muted = false;
+              v.play();
+            }
+          });
+
+          infoContainer.classList.add("active");
+          backBtn.classList.add("active");
+
+          // Pause la musique
           bgMusic.pause();
         });
       });
 
-      function showDescription() {
-        descriptionShown = true;
-        logo.classList.add("moved-up");
-        videosContainer.classList.add("hidden");
-        videoElements.forEach(v => v.classList.add("description-state"));
-        infoContainer.classList.add("active");
-        infoVideo.classList.add("active-state");
-        backBtn.classList.add("active");
-        bgMusic.pause();
-      }
-
+      // Bouton retour pour quitter le plein écran
       function hideDescription() {
+        if (!fullscreenVideo) return;
+
         descriptionShown = false;
+
         logo.classList.remove("moved-up");
         videosContainer.classList.remove("hidden");
-        videoElements.forEach(v => v.classList.remove("description-state"));
+
+        videoElements.forEach(v => {
+          v.style.display = "block";
+          v.classList.remove("fullscreen");
+          v.muted = true;
+          v.pause();
+          v.currentTime = 0;
+          v.play();
+        });
+
         infoContainer.classList.remove("active");
-        infoVideo.classList.remove("active-state");
         backBtn.classList.remove("active");
+
+        fullscreenVideo = null;
+
+        // Reprend la musique
         bgMusic.play().catch(() => {});
       }
 
-      logo.addEventListener("click", () => {
-        descriptionShown ? hideDescription() : showDescription();
-      });
-
       backBtn.addEventListener("click", hideDescription);
 
-      let lastTimestamp = null;
-      function animate(timestamp) {
-        if (!lastTimestamp) lastTimestamp = timestamp;
-        const delta = (timestamp - lastTimestamp) / 1000;
-        lastTimestamp = timestamp;
+      // Aussi reprendre la musique si on quitte le plein écran via ESC
+      document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && fullscreenVideo) {
+          hideDescription();
+        }
+      });
 
-        videoElements.forEach(video => {
-          let currentLeft = parseFloat(video.style.left);
-          if (isNaN(currentLeft)) currentLeft = 0;
-          currentLeft += video.speed * delta;
-
-          if (currentLeft > containerWidth + 400) {
-            currentLeft = -400;
-            video.style.top = randomY() + "px";
-          }
-
-          video.style.left = currentLeft + "px";
-        });
-
-        requestAnimationFrame(animate);
-      }
-
-      requestAnimationFrame(animate);
-
+      // Gérer l'opacité selon la position du curseur (optionnel)
       window.addEventListener("mousemove", (e) => {
         const mouseX = e.clientX;
         const mouseY = e.clientY;
 
         videoElements.forEach(video => {
-          const rect = video.getBoundingClientRect();
-          const videoCenterX = rect.left + rect.width / 2;
-          const videoCenterY = rect.top + rect.height / 2;
+          if (video !== fullscreenVideo) {
+            const rect = video.getBoundingClientRect();
+            const videoCenterX = rect.left + rect.width / 2;
+            const videoCenterY = rect.top + rect.height / 2;
 
-          const dist = Math.sqrt((mouseX - videoCenterX) ** 2 + (mouseY - videoCenterY) ** 2);
-          const maxDist = 800;
+            const dist = Math.sqrt((mouseX - videoCenterX) ** 2 + (mouseY - videoCenterY) ** 2);
+            const maxDist = 800;
+            let opacity = 0.7 - (dist / maxDist) * (0.7 - 0.1);
+            if (opacity < 0.1) opacity = 0.1;
+            if (opacity > 0.7) opacity = 0.7;
 
-          let opacity = 0.7 - (dist / maxDist) * (0.7 - 0.1);
-          if (opacity < 0.1) opacity = 0.1;
-          if (opacity > 0.7) opacity = 0.7;
-
-          if (!video.classList.contains('description-state') && !video.matches(':hover')) {
-            video.style.opacity = opacity;
+            if (!video.classList.contains('fullscreen') && !video.matches(':hover')) {
+              video.style.opacity = opacity;
+            }
           }
         });
       });
