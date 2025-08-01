@@ -59,6 +59,19 @@
       pointer-events: none;
     }
 
+    @keyframes glitch {
+      0% { transform: translate(0); }
+      20% { transform: translate(-1px, 1px); }
+      40% { transform: translate(1px, -1px); }
+      60% { transform: translate(-1px, -1px); }
+      80% { transform: translate(1px, 1px); }
+      100% { transform: translate(0); }
+    }
+
+    .logo-container.glitching {
+      animation: glitch 0.3s steps(2, end);
+    }
+
     #videos-container {
       position: fixed;
       top: 50%; left: 50%;
@@ -210,6 +223,7 @@
       opacity: 1;
       pointer-events: auto;
     }
+  
   </style>
 </head>
 <body>
@@ -339,6 +353,13 @@
     logo.addEventListener("click", () => {
       descriptionShown ? hideDescription() : showDescription();
     });
+    
+    setInterval(() => {
+  if (!descriptionShown) {
+    logo.classList.add("glitching");
+    setTimeout(() => logo.classList.remove("glitching"), 300);
+  }
+}, 4000 + Math.random() * 3000); // toutes les 4 à 7 secondes
 
     backBtn.addEventListener("click", () => {
       hideDescription();
