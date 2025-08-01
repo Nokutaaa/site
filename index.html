@@ -148,6 +148,14 @@
     box-shadow: 0 0 20px rgba(255,255,255,0.6);
     object-fit: cover;
     width: 45%;
+    transition: transform 0.6s ease, border-radius 0.6s ease, box-shadow 0.6s ease;
+  }
+
+  /* Nouvelle classe pour état après clic */
+  #info-video.active-state {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: translateY(20px);
   }
 
   #info-text {
@@ -168,12 +176,8 @@
     position: fixed;
     top: 20px;
     right: 20px;
-    padding: 10px 20px;
-    font-size: 1rem;
-    background: rgba(255,255,255,0.1);
-    border: 2px solid white;
-    border-radius: 6px;
-    color: white;
+    width: 40px;
+    height: 40px;
     cursor: pointer;
     opacity: 0;
     pointer-events: none;
@@ -209,7 +213,8 @@
     </div>
   </div>
 
-  <button id="back-btn">Revenir</button>
+  <!-- Image cliquable remplaçant le bouton revenir -->
+  <img id="back-btn" src="back.png" alt="Revenir" />
 
   <div id="overlay" onclick="closeFullscreenVideo()"></div>
   <video id="fullscreenVideo" controls onclick="event.stopPropagation()"></video>
@@ -290,32 +295,21 @@
     const infoContainer = document.getElementById("info-container");
     const backBtn = document.getElementById("back-btn");
     const logoContainer = document.querySelector(".logo-container");
+    const infoVideo = document.getElementById("info-video");
 
     logo.addEventListener("click", () => {
-      // Cacher toutes les petites vidéos avec fondu
       videosContainer.classList.add("hidden");
-
-      // Monter le logo
       logoContainer.classList.add("moved-up");
-
-      // Afficher la vidéo + texte avec fondu
       infoContainer.classList.add("active");
-
-      // Afficher bouton retour
+      infoVideo.classList.add("active-state");
       backBtn.classList.add("active");
     });
 
     backBtn.addEventListener("click", () => {
-      // Réafficher les petites vidéos
       videosContainer.classList.remove("hidden");
-
-      // Revenir logo au centre avec animation
       logoContainer.classList.remove("moved-up");
-
-      // Cacher la vidéo + texte
       infoContainer.classList.remove("active");
-
-      // Cacher bouton retour
+      infoVideo.classList.remove("active-state");
       backBtn.classList.remove("active");
     });
   };
