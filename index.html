@@ -79,13 +79,21 @@
     pointer-events: auto;
     cursor: pointer;
     box-shadow: 0 0 10px rgba(0,0,0,0.3);
-    transition: filter 0.3s ease, opacity 0.3s ease;
+    transition: filter 0.3s ease, opacity 0.3s ease, border-radius 0.6s ease, box-shadow 0.6s ease, transform 0.6s ease;
   }
 
   video.floating-video:hover {
     filter: blur(0);
     opacity: 1;
     box-shadow: 0 0 20px rgba(0,0,0,0.6);
+  }
+
+  video.floating-video.description-state {
+    filter: none !important;
+    opacity: 1 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: translateY(60px);
   }
 
   #overlay {
@@ -200,6 +208,8 @@
     Votre navigateur ne supporte pas la vidéo HTML5.
   </video>
 
+  <audio id="bg-music" src="musique.mp3" autoplay loop></audio>
+
   <div class="logo-container" id="logo">
     <img src="logo1.png" alt="Logo" />
   </div>
@@ -235,19 +245,20 @@
     const videoWidth = 360;
     const videoHeight = 204;
 
-    const centerX = window.innerWidth / 2;
-    const centerY = window.innerHeight / 2;
-
+    // On centre parfaitement le container, donc on positionne vidéos par rapport au container (top: 50% left: 50%)
+    // Donc on utilise des positions relatives dans le container
+    // Positions autour du centre (0,0) du container :
+    // Par exemple, V1 en haut gauche, décalé vers (-offsetX/2, -offsetY-100) par rapport au centre
     const offsetX = 320;
     const offsetY = 180;
 
     const positions = [
-      { x: centerX - offsetX / 2, y: centerY - offsetY - 100 }, // V1
-      { x: centerX + offsetX / 2, y: centerY - offsetY - 100 }, // V2
-      { x: centerX + offsetX,     y: centerY },                 // V3
-      { x: centerX + offsetX / 2, y: centerY + offsetY + 100 }, // V4
-      { x: centerX - offsetX / 2, y: centerY + offsetY + 100 }, // V5
-      { x: centerX - offsetX,     y: centerY }                  // V6
+      { x: -offsetX / 2, y: -offsetY - 100 }, // V1
+      { x: +offsetX / 2, y: -offsetY - 100 }, // V2
+      { x: +offsetX,     y: 0 },               // V3
+      { x: +offsetX / 2, y: +offsetY + 100 }, // V4
+      { x: -offsetX / 2, y: +offsetY + 100 }, // V5
+      { x: -offsetX,     y: 0 }                // V6
     ];
 
     videos.forEach((src, i) => {
@@ -261,8 +272,9 @@
       video.playsInline = true;
       video.classList.add("floating-video");
 
-      video.style.left = `${pos.x - videoWidth / 2}px`;
-      video.style.top = `${pos.y - videoHeight / 2}px`;
+      // Position relative à #videos-container (qui est fixed top:50% left:50%)
+      video.style.left = `calc(50% + ${pos.x}px - ${videoWidth / 2}px)`;
+      video.style.top = `calc(50% + ${pos.y}px - ${videoHeight / 2}px)`;
 
       container.appendChild(video);
       videoElements.push(video);
@@ -270,7 +282,19 @@
 
     const fullscreenVideo = document.getElementById("fullscreenVideo");
     const overlay = document.getElementById("overlay");
+    const logo = document.getElementById("logo");
+    const infoContainer = document.getElementById("info-container");
+    const infoVideo = document.getElementById("info-video");
+    const backBtn = document.getElementById("back-btn");
+    const videosContainer = document.getElementById("videos-container");
+    const bgMusic = document.getElementById("bg-music");
 
+    bgMusic.volume = 0.15;
+    bgMusic.play();
+
+    let descriptionShown = false;
+
+    // Quand on clique sur une vidéo flottante : plein écran + pause musique
     videoElements.forEach(video => {
       video.addEventListener("click", () => {
         fullscreenVideo.src = video.src;
@@ -279,6 +303,8 @@
         fullscreenVideo.play();
         fullscreenVideo.classList.add("active");
         overlay.classList.add("active");
+        // Pause musique fond
+        bgMusic.pause();
       });
     });
 
@@ -287,33 +313,54 @@
       fullscreenVideo.classList.remove("active");
       overlay.classList.remove("active");
       fullscreenVideo.src = "";
+      // Remet musique en route
+      if(!descriptionShown) {
+        bgMusic.play();
+      }
     };
 
-    const logo = document.getElementById("logo");
-    const videosContainer = document.getElementById("videos-container");
-    const infoContainer = document.getElementById("info-container");
-    const backBtn = document.getElementById("back-btn");
-    const logoContainer = document.querySelector(".logo-container");
-    const infoVideo = document.getElementById("info-video");
-
+    // Fonction pour afficher description
     function showDescription() {
+      descriptionShown = true;
+      // Logo monte
+      logo.classList.add("moved-up");
+
+      // Cacher vidéos en fondu + modif styles vidéos flottantes
       videosContainer.classList.add("hidden");
-      logoContainer.classList.add("moved-up");
+      videoElements.forEach(v => {
+        v.classList.add("description-state");
+      });
+
+      // Afficher info container
       infoContainer.classList.add("active");
       infoVideo.classList.add("active-state");
+      // Affiche back btn
       backBtn.classList.add("active");
+
+      // Met pause musique (pas demandé, mais cohérent)
+      bgMusic.pause();
     }
 
+    // Fonction pour revenir à la page d'accueil
     function hideDescription() {
+      descriptionShown = false;
+      logo.classList.remove("moved-up");
+
       videosContainer.classList.remove("hidden");
-      logoContainer.classList.remove("moved-up");
+      videoElements.forEach(v => {
+        v.classList.remove("description-state");
+      });
+
       infoContainer.classList.remove("active");
       infoVideo.classList.remove("active-state");
       backBtn.classList.remove("active");
+
+      // Remet musique
+      bgMusic.play();
     }
 
     logo.addEventListener("click", () => {
-      if (infoContainer.classList.contains("active")) {
+      if (descriptionShown) {
         hideDescription();
       } else {
         showDescription();
