@@ -37,17 +37,13 @@
       cursor: pointer;
       transition: top 0.6s ease, transform 0.6s ease;
       user-select: none;
+      pointer-events: auto; /* Toujours cliquable */
     }
 
     .logo-container.moved-up {
       top: 15%;
       transform: translate(-50%, 0);
       animation: none;
-    }
-
-    .logo-container.clickable {
-      cursor: pointer;
-      pointer-events: auto;
     }
 
     .logo-container img {
@@ -67,8 +63,6 @@
 
     video.floating-video {
       position: absolute;
-      width: 360px;
-      height: 204px;
       border-radius: 8px;
       object-fit: cover;
       filter: blur(1.2px);
@@ -134,6 +128,7 @@
       display: none;
       border-radius: 12px;
       box-shadow: 0 0 30px rgba(0,0,0,0.8);
+      cursor: default;
     }
 
     #fullscreen-player video {
@@ -142,6 +137,7 @@
       object-fit: contain;
       border-radius: 12px;
       outline: none;
+      cursor: default;
     }
 
     /* Bouton retour pour page description */
@@ -201,39 +197,48 @@
       const videos = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
       const container = document.getElementById("videos-container");
       const videoElements = [];
-      const videoWidth = 360;
-      const videoHeight = 204;
+      const baseWidth = 360;
+      const baseHeight = 204;
       const spaceBetween = 10; // px minimum entre vidéos
       const borderMargin = 50; // px minimum bord haut/bas
       const screenWidth = window.innerWidth;
       const screenHeight = window.innerHeight;
 
-      // Fonction pour vérifier le chevauchement d'une nouvelle position avec les précédentes
-      function isOverlapping(x, y, positions) {
+      // Fonction pour vérifier chevauchement (en tenant compte taille variable)
+      function isOverlapping(x, y, w, h, positions) {
         for (const pos of positions) {
-          const dx = Math.abs(x - pos.x);
-          const dy = Math.abs(y - pos.y);
-          if (dx < videoWidth + spaceBetween && dy < videoHeight + spaceBetween) {
+          if (
+            x < pos.x + pos.w + spaceBetween &&
+            x + w + spaceBetween > pos.x &&
+            y < pos.y + pos.h + spaceBetween &&
+            y + h + spaceBetween > pos.y
+          ) {
             return true; // chevauchement détecté
           }
         }
         return false;
       }
 
-      // Génération des positions initiales aléatoires sans chevauchement
+      // Génération des positions et tailles initiales aléatoires sans chevauchement
       const positions = [];
       for (let i = 0; i < videos.length; i++) {
+        // Taille variable ±20%
+        const scale = 0.8 + Math.random() * 0.4; // entre 0.8 et 1.2
+        const w = baseWidth * scale;
+        const h = baseHeight * scale;
+
         let x, y, tries = 0;
         do {
-          x = Math.random() * (screenWidth - videoWidth);
-          y = borderMargin + Math.random() * (screenHeight - videoHeight - 2 * borderMargin);
+          x = Math.random() * (screenWidth - w);
+          y = borderMargin + Math.random() * (screenHeight - h - 2 * borderMargin);
           tries++;
           if (tries > 1000) break; // éviter boucle infinie si trop difficile
-        } while(isOverlapping(x, y, positions));
-        positions.push({x, y});
+        } while(isOverlapping(x, y, w, h, positions));
+
+        positions.push({x, y, w, h});
       }
 
-      // Vitesse unique pour toutes les vidéos (px / frame)
+      // Vitesse unique (px / frame)
       const speed = 0.5;
 
       // Création des vidéos
@@ -245,10 +250,13 @@
         video.autoplay = true;
         video.playsInline = true;
         video.classList.add("floating-video");
-        video.style.left = positions[i].x + "px";
-        video.style.top = positions[i].y + "px";
+        const pos = positions[i];
+        video.style.left = pos.x + "px";
+        video.style.top = pos.y + "px";
+        video.style.width = pos.w + "px";
+        video.style.height = pos.h + "px";
         container.appendChild(video);
-        videoElements.push({element: video, x: positions[i].x, y: positions[i].y});
+        videoElements.push({element: video, x: pos.x, y: pos.y, w: pos.w, h: pos.h});
       });
 
       const bgMusic = document.getElementById("bg-music");
@@ -266,13 +274,12 @@
       let descriptionShown = false;
 
       // Quand on clique sur une vidéo, ouvrir le player fullscreen avec contrôles
-      videoElements.forEach(({element, x, y}) => {
+      videoElements.forEach(({element, x, y, w, h}) => {
         element.addEventListener("click", () => {
           // Masquer les vidéos flottantes et la description (si visible)
           videosContainer.style.display = "none";
           infoContainer.classList.remove("active");
           backBtn.classList.remove("active");
-          logo.classList.add("clickable");
           logo.classList.add("moved-up");
 
           // Mettre la vidéo sélectionnée dans le player fullscreen
@@ -288,45 +295,37 @@
         });
       });
 
-      // Lorsque l'on clique sur le logo dans la page description / fullscreen, revenir à l'accueil
-      logo.addEventListener("click", () => {
-        if (fullscreenPlayer.style.display === "block" || descriptionShown) {
-          fullscreenPlayer.style.display = "none";
+      // Pour fermer le fullscreen en cliquant en dehors de la vidéo
+      fullscreenPlayer.addEventListener("click", (e) => {
+        // Si clic en dehors de la vidéo (sur le conteneur)
+        if (e.target === fullscreenPlayer) {
           fullscreenVideo.pause();
           fullscreenVideo.src = "";
-
+          fullscreenPlayer.style.display = "none";
           videosContainer.style.display = "block";
-
-          // Remettre la musique
           bgMusic.play().catch(() => {});
-
-          // Cacher la description (si elle était ouverte)
-          infoContainer.classList.remove("active");
-          backBtn.classList.remove("active");
-          logo.classList.remove("clickable");
           logo.classList.remove("moved-up");
-          descriptionShown = false;
-        } else {
-          // Affiche la description seulement si nécessaire (selon demande précédente)
-          // Ici on ne fait rien car la description ne s'ouvre que via logo + bouton back
         }
       });
 
-      // Back bouton pour cacher description (pas nécessaire si description pas utilisée)
-      backBtn.addEventListener("click", () => {
-        infoContainer.classList.remove("active");
-        backBtn.classList.remove("active");
-        descriptionShown = false;
-        logo.classList.remove("clickable");
-        logo.classList.remove("moved-up");
+      // Logo toujours cliquable pour revenir à l'accueil
+      logo.addEventListener("click", () => {
+        if (fullscreenPlayer.style.display === "block") {
+          fullscreenVideo.pause();
+          fullscreenVideo.src = "";
+          fullscreenPlayer.style.display = "none";
+          videosContainer.style.display = "block";
+          bgMusic.play().catch(() => {});
+          logo.classList.remove("moved-up");
+        }
       });
 
-      // Animation de déplacement horizontal avec wrap-around
+      // Animation déplacement horizontal avec wrap-around
       function animate() {
         videoElements.forEach(v => {
           v.x += speed;
           if (v.x > screenWidth) {
-            v.x = -videoWidth;
+            v.x = -v.w;
           }
           v.element.style.left = v.x + "px";
         });
@@ -335,15 +334,6 @@
 
       animate();
 
-      // Gestion volume musique au sortir du fullscreen
-      fullscreenVideo.addEventListener("pause", () => {
-        fullscreenPlayer.style.display = "none";
-        fullscreenVideo.src = "";
-        videosContainer.style.display = "block";
-        bgMusic.play().catch(() => {});
-        logo.classList.remove("clickable");
-        logo.classList.remove("moved-up");
-      });
     };
   </script>
 </body>
