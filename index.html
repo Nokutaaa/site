@@ -245,20 +245,20 @@
     const videoWidth = 360;
     const videoHeight = 204;
 
-    // On centre parfaitement le container, donc on positionne vidéos par rapport au container (top: 50% left: 50%)
-    // Donc on utilise des positions relatives dans le container
-    // Positions autour du centre (0,0) du container :
-    // Par exemple, V1 en haut gauche, décalé vers (-offsetX/2, -offsetY-100) par rapport au centre
+    // Décalages :  
+    // Gauche: indices 0,4,5 => x -= 100  
+    // Droite: indices 1,2,3 => x += 100
+
     const offsetX = 320;
     const offsetY = 180;
 
     const positions = [
-      { x: -offsetX / 2, y: -offsetY - 100 }, // V1
-      { x: +offsetX / 2, y: -offsetY - 100 }, // V2
-      { x: +offsetX,     y: 0 },               // V3
-      { x: +offsetX / 2, y: +offsetY + 100 }, // V4
-      { x: -offsetX / 2, y: +offsetY + 100 }, // V5
-      { x: -offsetX,     y: 0 }                // V6
+      { x: -offsetX / 2 - 100, y: -offsetY - 100 }, // V1 gauche
+      { x: +offsetX / 2 + 100, y: -offsetY - 100 }, // V2 droite
+      { x: +offsetX + 100,     y: 0 },               // V3 droite
+      { x: +offsetX / 2 + 100, y: +offsetY + 100 }, // V4 droite
+      { x: -offsetX / 2 - 100, y: +offsetY + 100 }, // V5 gauche
+      { x: -offsetX - 100,     y: 0 }                // V6 gauche
     ];
 
     videos.forEach((src, i) => {
@@ -290,7 +290,11 @@
     const bgMusic = document.getElementById("bg-music");
 
     bgMusic.volume = 0.15;
-    bgMusic.play();
+    // Essaye de jouer la musique, catch pour éviter erreur autoplay bloqué
+    bgMusic.play().catch(() => {
+      // silence si bloqué, user devra interagir pour lancer
+      console.log("Background music autoplay blocked.");
+    });
 
     let descriptionShown = false;
 
@@ -313,7 +317,7 @@
       fullscreenVideo.classList.remove("active");
       overlay.classList.remove("active");
       fullscreenVideo.src = "";
-      // Remet musique en route
+      // Remet musique en route si pas sur description
       if(!descriptionShown) {
         bgMusic.play();
       }
@@ -337,7 +341,7 @@
       // Affiche back btn
       backBtn.classList.add("active");
 
-      // Met pause musique (pas demandé, mais cohérent)
+      // Met pause musique
       bgMusic.pause();
     }
 
@@ -356,7 +360,7 @@
       backBtn.classList.remove("active");
 
       // Remet musique
-      bgMusic.play();
+      bgMusic.play().catch(() => {});
     }
 
     logo.addEventListener("click", () => {
