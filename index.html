@@ -18,11 +18,6 @@
       50% { filter: drop-shadow(0 0 12px rgba(255,255,255,0.8)); }
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: scale(0.96); }
-      to { opacity: 1; transform: scale(1); }
-    }
-
     @keyframes float1 { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
     @keyframes float2 { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
     @keyframes float3 { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);} }
@@ -83,20 +78,16 @@
       border-radius: 8px;
       object-fit: cover;
       filter: blur(1.2px);
-      opacity: 0.75;
+      opacity: 0.7; /* opacité par défaut */
       pointer-events: auto;
       cursor: pointer;
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
       transition: filter 0.3s ease, opacity 0.3s ease, border-radius 0.6s ease, box-shadow 0.6s ease, transform 0.6s ease;
     }
 
-    video.floating-video.show {
-      animation: fadeIn 1.2s ease forwards; /* durée doublée */
-    }
-
     video.floating-video:hover {
       filter: blur(0);
-      opacity: 1;
+      opacity: 1 !important;
       box-shadow: 0 0 20px rgba(0,0,0,0.6);
     }
 
@@ -117,7 +108,6 @@
       align-items: center;
       gap: 1.5rem;
       transform: translate(-50%, calc(-50% + 100px));
-      /* Descendu de 100px */
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.8s ease;
@@ -142,8 +132,8 @@
       font-size: 1.2rem;
       line-height: 1.4;
       position: relative;
-      top: 50px;   /* descendre de 50px */
-      left: 50px;  /* décaler vers la droite de 50px */
+      top: 50px;
+      left: 50px;
     }
 
     #info-text h2 {
@@ -162,7 +152,7 @@
       pointer-events: none;
       transition: opacity 0.5s ease, filter 0.3s ease;
       z-index: 30;
-      filter: drop-shadow(0 0 5px rgba(255,255,255,0.7));
+      filter: drop-shadow(0 0 6px #60eff3);
       cursor: pointer;
       user-select: none;
     }
@@ -173,7 +163,7 @@
     }
 
     #back-btn:hover {
-      filter: drop-shadow(0 0 12px rgba(255,255,255,1));
+      filter: drop-shadow(0 0 18px #60eff3);
     }
   </style>
 </head>
@@ -206,15 +196,16 @@
       const container = document.getElementById("videos-container");
       const videoElements = [];
       const positions = [
-        { x: -250, y: -220 },  // haut gauche
-        { x: +250, y: -220 },  // haut droite (un peu en haut à droite)
-        { x: +530, y: 0 },
-        { x: +250, y: +220 },
-        { x: -250, y: +220 },
+        { x: -250, y: -220 },
+        { x: 250, y: -220 },
+        { x: 530, y: 0 },
+        { x: 250, y: 220 },
+        { x: -250, y: 220 },
         { x: -530, y: 0 }
       ];
       const floatAnimations = ["float1", "float2", "float3", "float4", "float5", "float6"];
 
+      // Création des vidéos sans animation d'apparition
       videos.forEach((src, i) => {
         const video = document.createElement("video");
         video.src = src;
@@ -228,12 +219,6 @@
         video.style.animation = `${floatAnimations[i]} ${4 + i * 0.2}s ease-in-out infinite`;
         container.appendChild(video);
         videoElements.push(video);
-      });
-
-      videoElements.forEach((v, i) => {
-        setTimeout(() => {
-          v.classList.add("show");
-        }, i * 700);  // +700ms entre chaque apparition
       });
 
       const bgMusic = document.getElementById("bg-music");
@@ -281,7 +266,33 @@
 
       backBtn.addEventListener("click", hideDescription);
 
-      // Suppression de l'effet glitch, donc on retire l'intervalle
+      // Fonction pour calculer et mettre à jour l'opacité selon la distance curseur -> vidéo
+      window.addEventListener("mousemove", (e) => {
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
+
+        videoElements.forEach(video => {
+          const rect = video.getBoundingClientRect();
+          const videoCenterX = rect.left + rect.width / 2;
+          const videoCenterY = rect.top + rect.height / 2;
+
+          // Calcul distance euclidienne souris -> centre vidéo
+          const dist = Math.sqrt((mouseX - videoCenterX) ** 2 + (mouseY - videoCenterY) ** 2);
+
+          // On définit un maxDist au-delà duquel l'opacité sera minimale
+          const maxDist = 800; // px (ajustable)
+
+          // Calcul opacité inversement proportionnelle à la distance
+          let opacity = 0.7 - (dist / maxDist) * (0.7 - 0.1);
+          if (opacity < 0.1) opacity = 0.1;
+          if (opacity > 0.7) opacity = 0.7;
+
+          // Si la vidéo est en hover ou en description-state on laisse l'opacité à 1 (hover géré via CSS)
+          if (!video.classList.contains('description-state') && !video.matches(':hover')) {
+            video.style.opacity = opacity;
+          }
+        });
+      });
     };
   </script>
 </body>
