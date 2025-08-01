@@ -12,6 +12,7 @@
       overflow: hidden;
       background: none;
       background-color: black;
+      color: white;
     }
 
     @keyframes glowPulse {
@@ -32,9 +33,10 @@
       position: fixed;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      z-index: 10;
+      z-index: 100;
       animation: glowPulse 3s ease-in-out infinite;
       cursor: pointer;
+      user-select: none;
       transition: top 0.6s ease, transform 0.6s ease;
     }
 
@@ -46,22 +48,17 @@
 
     .logo-container img {
       height: 80px;
-      user-select: none;
       pointer-events: none;
+      display: block;
     }
 
     #videos-container {
       position: fixed;
       top: 0; left: 0;
       width: 100vw; height: 100vh;
-      overflow: hidden;
-      z-index: 5;
-      transition: opacity 0.5s ease;
-    }
-
-    #videos-container.hidden {
-      opacity: 0;
-      pointer-events: none;
+      pointer-events: auto;
+      z-index: 10;
+      overflow: visible;
     }
 
     video.floating-video {
@@ -70,30 +67,62 @@
       height: 204px; /* 16:9 */
       border-radius: 8px;
       object-fit: cover;
-      filter: blur(1.5px);
-      opacity: 0.3;
+      filter: blur(2.2px);
+      opacity: 0.4;
       pointer-events: auto;
       cursor: pointer;
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
-      transition: filter 0.3s ease, opacity 0.3s ease, border-radius 0.6s ease, box-shadow 0.6s ease, transform 0.6s ease;
+      transition: filter 0.3s ease, opacity 0.3s ease;
+      user-select: none;
     }
 
-    video.floating-video:hover {
-      filter: blur(0);
-      opacity: 0.7 !important;
-      box-shadow: 0 0 20px rgba(0,0,0,0.6);
-    }
-
-    video.floating-video.description-state {
-      filter: none !important;
-      opacity: 1 !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
+    /* Quand description ouverte : vidéos non cliquables, plus floues et opaques */
+    #videos-container.description-open video.floating-video {
       pointer-events: none;
+      filter: blur(4px);
+      opacity: 0.25;
       cursor: default;
-      transform: translateY(60px);
     }
 
+    /* Lecteur vidéo superposé */
+    #video-player-overlay {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 75vw;
+      max-width: 1280px;
+      aspect-ratio: 16 / 9;
+      background-color: rgba(0,0,0,0.95);
+      box-shadow: 0 0 30px rgba(255,255,255,0.7);
+      border-radius: 12px;
+      z-index: 300;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+    }
+
+    #video-player-overlay video {
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      background: black;
+      outline: none;
+    }
+
+    /* Overlay de fond sombre pour fermer le player en cliquant en dehors */
+    #overlay-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      z-index: 290;
+      display: none;
+      cursor: pointer;
+    }
+
+    /* Page description */
     #info-container {
       position: fixed;
       top: 50%; left: 50%;
@@ -102,11 +131,15 @@
       justify-content: flex-start;
       align-items: center;
       gap: 1.5rem;
-      transform: translate(-50%, calc(-50% + 50px));
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.85);
+      border-radius: 12px;
+      padding: 20px;
+      box-sizing: border-box;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.8s ease;
-      z-index: 20;
+      transition: opacity 0.6s ease;
+      z-index: 200;
       color: white;
     }
 
@@ -119,79 +152,57 @@
       max-height: 100%;
       object-fit: cover;
       width: 45%;
-      transition: transform 0.6s ease, border-radius 0.6s ease, box-shadow 0.6s ease;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.5);
+    }
+
+    #info-video[muted] {
+      filter: none;
     }
 
     #info-text {
       width: 45%;
       font-size: 1.2rem;
       line-height: 1.4;
-      position: relative;
-      top: 50px;
-      left: 50px;
-      color: white;
+      user-select: text;
     }
 
     #info-text h2 {
       margin-top: 0;
       margin-bottom: 1rem;
       font-weight: 600;
-      font-size: 2.6rem;
       font-style: italic;
+      font-size: 2.6rem;
     }
 
     #back-btn {
       position: fixed;
       top: 15%;
       right: 15%;
-      width: 5%;
+      width: 40px;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.5s ease, filter 0.3s ease;
-      z-index: 30;
+      z-index: 210;
       filter: drop-shadow(0 0 3px #57f1f1);
       cursor: pointer;
       user-select: none;
     }
-    
     #back-btn.active {
       opacity: 1;
       pointer-events: auto;
     }
-
     #back-btn:hover {
       filter: drop-shadow(0 0 18px #60eff3);
-    }
-
-    /* Fullscreen-like player overlay (75%) */
-    #video-player-overlay {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      width: 75vw;
-      height: calc(75vw * 9 / 16); /* 16:9 ratio */
-      max-height: 75vh;
-      max-width: calc(75vh * 16 / 9);
-      transform: translate(-50%, -50%);
-      background: black;
-      z-index: 50;
-      display: none;
-      border-radius: 12px;
-      box-shadow: 0 0 40px rgba(0,0,0,0.8);
-      overflow: hidden;
-    }
-
-    #video-player-overlay video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      background: black;
     }
 
   </style>
 </head>
 <body>
-  <video autoplay muted loop playsinline id="bg-video" src="fond.mp4"></video>
+
+  <video autoplay muted loop playsinline id="bg-video" preload="auto">
+    <source src="fond.mp4" type="video/mp4" />
+  </video>
 
   <audio id="bg-music" src="MUSIQUE.mp3" autoplay loop></audio>
 
@@ -201,202 +212,198 @@
 
   <div id="videos-container"></div>
 
-  <div id="info-container">
+  <!-- Page description -->
+  <div id="info-container" aria-hidden="true">
     <video id="info-video" src="video me.mp4" autoplay loop muted playsinline></video>
     <div id="info-text">
       <h2>Hey!</h2>
-      <p>I am a videographer passionate about capturing life through my camera. My goal is to make viewers feel the deepest emotions possible when watching my videos. While I primarily focus on documentaries and music videos, I’m open to collaborating on any artistic project that inspires me.<br/><br/>Feel free to contact me.</p>
+      <p>
+        I am a videographer passionate about capturing life through my camera. My goal is to make viewers feel the deepest emotions possible when watching my videos.
+        While I primarily focus on documentaries and music videos, I’m open to collaborating on any artistic project that inspires me.<br/><br/>
+        Feel free to contact me.
+      </p>
     </div>
   </div>
 
   <img id="back-btn" src="back.png" alt="Revenir" />
 
+  <!-- Overlay background to close video player -->
+  <div id="overlay-bg"></div>
+
+  <!-- Video player overlay -->
   <div id="video-player-overlay">
-    <video controls playsinline></video>
+    <video controls id="player-video" playsinline></video>
   </div>
 
-  <script>
-    window.onload = () => {
-      const videosSrc = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
-      const container = document.getElementById("videos-container");
-      const videoElements = [];
+<script>
+window.onload = () => {
+  const videosSrc = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
+  const container = document.getElementById("videos-container");
+  const videoElements = [];
 
-      const videoWidth = 360;
-      const videoHeight = 204; // 16:9
+  const videoWidth = 360;
+  const videoHeight = 204;
 
-      const marginTop = 50;
-      const marginBottom = 50;
+  const marginTop = 50;
+  const marginBottom = 50;
 
-      const existingYPositions = [];
+  const screenHeight = window.innerHeight;
+  const screenWidth = window.innerWidth;
 
-      function getRandomY(existingPositions, height, marginTop, marginBottom) {
-        const maxY = window.innerHeight - marginBottom - height;
-        let tries = 0;
-        while (tries < 1000) {
-          let y = marginTop + Math.random() * (maxY - marginTop);
-          let overlap = existingPositions.some(posY => Math.abs(posY - y) < height + 10);
-          if (!overlap) return y;
-          tries++;
-        }
-        return marginTop;
+  // Vertical spacing (6 videos)
+  const totalVerticalSpace = screenHeight - marginTop - marginBottom;
+  const verticalGap = totalVerticalSpace / videosSrc.length;
+
+  const fixedYPositions = [];
+  for(let i=0; i < videosSrc.length; i++) {
+    let y = marginTop + i * verticalGap + (verticalGap - videoHeight) / 2;
+    fixedYPositions.push(y);
+  }
+
+  // Horizontal start position offscreen left
+  const horizontalStart = -videoWidth * videosSrc.length;
+  const horizontalGap = videoWidth + 20;
+
+  // Create videos with fixed initial positions
+  for(let i=0; i < videosSrc.length; i++) {
+    const v = document.createElement("video");
+    v.src = videosSrc[i];
+    v.muted = true;
+    v.loop = true;
+    v.autoplay = true;
+    v.playsInline = true;
+    v.classList.add("floating-video");
+    container.appendChild(v);
+
+    const posX = horizontalStart + i * horizontalGap;
+    const posY = fixedYPositions[i];
+    const speed = 0.6 + Math.random() * 0.3;
+
+    v.style.left = posX + "px";
+    v.style.top = posY + "px";
+
+    videoElements.push({
+      el: v,
+      posX: posX,
+      posY: posY,
+      speed: speed,
+      width: videoWidth,
+      height: videoHeight,
+    });
+  }
+
+  function updatePositions() {
+    videoElements.forEach(vObj => {
+      vObj.posX += vObj.speed;
+      if (vObj.posX > screenWidth) {
+        vObj.posX = -vObj.width;
       }
+      vObj.el.style.left = vObj.posX + "px";
+      vObj.el.style.top = vObj.posY + "px";
+    });
+    requestAnimationFrame(updatePositions);
+  }
 
-      // On calcule une répartition horizontale espacée
-      const spacingX = window.innerWidth / videosSrc.length;
+  updatePositions();
 
-      for(let i=0; i < videosSrc.length; i++) {
-        const v = document.createElement("video");
-        v.src = videosSrc[i];
-        v.muted = true;
-        v.loop = true;
-        v.autoplay = true;
-        v.playsInline = true;
-        v.classList.add("floating-video");
+  // LOGO & description page logic
 
-        // Position horizontale départ (espacé régulièrement)
-        const baseX = i * spacingX + (spacingX - videoWidth) / 2;
+  const logo = document.getElementById("logo");
+  const infoContainer = document.getElementById("info-container");
+  const infoVideo = document.getElementById("info-video");
+  const backBtn = document.getElementById("back-btn");
+  const bgMusic = document.getElementById("bg-music");
+  const videosContainer = container;
 
-        // Position verticale aléatoire non superposée
-        const baseY = getRandomY(existingYPositions, videoHeight, marginTop, marginBottom);
-        existingYPositions.push(baseY);
+  // Overlay and video player
+  const overlayBg = document.getElementById("overlay-bg");
+  const videoPlayerOverlay = document.getElementById("video-player-overlay");
+  const playerVideo = document.getElementById("player-video");
 
-        container.appendChild(v);
+  // Flag description open
+  let descriptionOpen = false;
 
-        // vitesse de défilement horizontale légèrement différente (entre 0.6 et 0.9)
-        const speed = 0.6 + Math.random() * 0.3;
+  // Function to open description page
+  function openDescription() {
+    descriptionOpen = true;
+    logo.classList.add("moved-up");
+    infoContainer.classList.add("active");
+    backBtn.classList.add("active");
+    videosContainer.classList.add("description-open");
+    // Pause bg music
+    bgMusic.pause();
+  }
 
-        videoElements.push({
-          el: v,
-          posX: baseX,
-          baseY: baseY,
-          speed: speed,
-          width: videoWidth,
-          height: videoHeight,
-        });
+  // Function to close description page
+  function closeDescription() {
+    descriptionOpen = false;
+    logo.classList.remove("moved-up");
+    infoContainer.classList.remove("active");
+    backBtn.classList.remove("active");
+    videosContainer.classList.remove("description-open");
+    // Resume bg music
+    bgMusic.play();
+  }
 
-        // On positionne la vidéo à sa position initiale (top et left)
-        v.style.left = baseX + "px";
-        v.style.top = baseY + "px";
+  logo.addEventListener("click", () => {
+    if (!descriptionOpen && videoPlayerOverlay.style.display === "none") {
+      openDescription();
+    }
+  });
+
+  backBtn.addEventListener("click", () => {
+    closeDescription();
+  });
+
+  // --- VIDEO PLAYER on clicking floating videos ---
+  function openVideoPlayer(src) {
+    playerVideo.src = src;
+    playerVideo.currentTime = 0;
+    playerVideo.play();
+    videoPlayerOverlay.style.display = "flex";
+    overlayBg.style.display = "block";
+    // Pause bg music & info video
+    bgMusic.pause();
+    infoVideo.pause();
+    // Disable clicks on floating videos and description
+    videosContainer.classList.add("description-open");
+    infoContainer.classList.remove("active");
+    backBtn.classList.remove("active");
+    logo.classList.add("moved-up");
+  }
+
+  function closeVideoPlayer() {
+    playerVideo.pause();
+    playerVideo.src = "";
+    videoPlayerOverlay.style.display = "none";
+    overlayBg.style.display = "none";
+    // Resume bg music & info video if description open
+    if(descriptionOpen) {
+      infoVideo.play();
+      videosContainer.classList.add("description-open");
+    } else {
+      videosContainer.classList.remove("description-open");
+      bgMusic.play();
+      logo.classList.remove("moved-up");
+    }
+  }
+
+  overlayBg.addEventListener("click", closeVideoPlayer);
+
+  // Add click on each floating video to open player
+  videoElements.forEach(vObj => {
+    vObj.el.addEventListener("click", () => {
+      if(!descriptionOpen && videoPlayerOverlay.style.display === "none") {
+        openVideoPlayer(vObj.el.src);
       }
+    });
+  });
 
-      const bgMusic = document.getElementById("bg-music");
-      bgMusic.volume = 0.08;
-      bgMusic.play().catch(() => {});
+  // Prevent click on videos container when description is open or player visible
+  // But we already set pointer-events:none with CSS when .description-open class applied.
 
-      const logo = document.getElementById("logo");
-      const infoContainer = document.getElementById("info-container");
-      const infoVideo = document.getElementById("info-video");
-      const backBtn = document.getElementById("back-btn");
-      const videosContainer = document.getElementById("videos-container");
+};
+</script>
 
-      const videoPlayerOverlay = document.getElementById("video-player-overlay");
-      const videoPlayerVideo = videoPlayerOverlay.querySelector("video");
-
-      let descriptionShown = false;
-      let playerOpen = false;
-
-      // Update positions horizontales avec wrap-around
-      function updatePositions() {
-        videoElements.forEach(vObj => {
-          vObj.posX -= vObj.speed;
-          if (vObj.posX < -vObj.width) {
-            vObj.posX = window.innerWidth;
-          }
-          vObj.el.style.left = vObj.posX + "px";
-          // vertical position fixe (plus de flottement)
-          vObj.el.style.top = vObj.baseY + "px";
-        });
-        if(!playerOpen && !descriptionShown) {
-          requestAnimationFrame(updatePositions);
-        }
-      }
-
-      updatePositions();
-
-      // Quand on clique sur le logo, toggle description
-      logo.addEventListener("click", () => {
-        descriptionShown = !descriptionShown;
-
-        if (descriptionShown) {
-          // Arrêter défilement
-          // Le requestAnimationFrame ne continue plus car updatePositions check la variable
-
-          // Afficher container description
-          infoContainer.classList.add("active");
-
-          // Déplacer logo en haut
-          logo.classList.add("moved-up");
-
-          // Baisser opacité vidéos + flou + désactiver clic
-          videosContainer.classList.add("hidden");
-          videoElements.forEach(vObj => {
-            vObj.el.classList.add("description-state");
-          });
-        } else {
-          // Cacher container description
-          infoContainer.classList.remove("active");
-
-          // Remettre logo centre
-          logo.classList.remove("moved-up");
-
-          // Rétablir vidéos normales
-          videosContainer.classList.remove("hidden");
-          videoElements.forEach(vObj => {
-            vObj.el.classList.remove("description-state");
-          });
-
-          // Reprendre défilement
-          updatePositions();
-        }
-      });
-
-      // Quand on clique sur une vidéo, ouvrir le lecteur large (75% écran)
-      videoElements.forEach(vObj => {
-        vObj.el.addEventListener("click", (e) => {
-          if (descriptionShown) return; // clic désactivé en description
-          e.stopPropagation();
-          playerOpen = true;
-
-          // Afficher overlay
-          videoPlayerOverlay.style.display = "block";
-
-          // Charger la vidéo cliquée
-          videoPlayerVideo.src = vObj.el.src;
-          videoPlayerVideo.play();
-
-          // Cacher les vidéos flottantes
-          videosContainer.style.opacity = "0";
-          videosContainer.style.pointerEvents = "none";
-
-          // Cacher logo
-          logo.style.opacity = "0";
-          logo.style.pointerEvents = "none";
-        });
-      });
-
-      // Cliquer en dehors du lecteur ferme le player
-      videoPlayerOverlay.addEventListener("click", () => {
-        playerOpen = false;
-        videoPlayerVideo.pause();
-        videoPlayerVideo.src = "";
-        videoPlayerOverlay.style.display = "none";
-
-        // Rétablir les vidéos flottantes
-        videosContainer.style.opacity = "1";
-        videosContainer.style.pointerEvents = "auto";
-
-        // Rétablir logo
-        logo.style.opacity = "1";
-        logo.style.pointerEvents = "auto";
-
-        // Reprendre défilement des vidéos si pas en description
-        if (!descriptionShown) updatePositions();
-      });
-
-      // Empêcher propagation du clic sur la vidéo du player (sinon clique ferme le player)
-      videoPlayerVideo.addEventListener("click", e => e.stopPropagation());
-
-    };
-  </script>
 </body>
 </html>
