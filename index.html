@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Nokuta</title>
+  <title>nokuta.mp4</title>
   <link rel="icon" href="favicon.jpg" type="image/jpg" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
   <style>
@@ -16,22 +16,6 @@
     @keyframes glowPulse {
       0%, 100% { filter: drop-shadow(0 0 5px rgba(255,255,255,0.4)); }
       50% { filter: drop-shadow(0 0 12px rgba(255,255,255,0.8)); }
-    }
-
-    @keyframes float1 { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
-    @keyframes float2 { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
-    @keyframes float3 { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);} }
-    @keyframes float4 { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-12px);} }
-    @keyframes float5 { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
-    @keyframes float6 { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-5px);} }
-
-    #bg-video {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      object-fit: cover;
-      z-index: -100;
-      pointer-events: none;
     }
 
     .logo-container {
@@ -56,6 +40,15 @@
       pointer-events: none;
     }
 
+    #bg-video {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      object-fit: cover;
+      z-index: -100;
+      pointer-events: none;
+    }
+
     #videos-container {
       position: fixed;
       top: 50%; left: 50%;
@@ -77,7 +70,7 @@
       border-radius: 8px;
       object-fit: cover;
       filter: blur(1.2px);
-      opacity: 0.7; /* opacité par défaut */
+      opacity: 0.7;
       pointer-events: auto;
       cursor: pointer;
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
@@ -147,7 +140,7 @@
       position: fixed;
       top: 15%;
       right: 15%;
-      width: 2.5%; /* réduit de 50% */
+      width: 2.5%;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.5s ease, filter 0.3s ease;
@@ -156,7 +149,7 @@
       cursor: pointer;
       user-select: none;
     }
-    
+
     #back-btn.active {
       opacity: 1;
       pointer-events: auto;
@@ -166,25 +159,33 @@
       filter: drop-shadow(0 0 18px #60eff3);
     }
 
-    /* Overlay lecteur vidéo plein écran avec zone cliquable hors lecteur */
-    #video-overlay {
+    /* LECTEUR VIDEO OVERLAY */
+    #video-player-overlay {
       position: fixed;
       top: 0; left: 0;
       width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.75);
+      background: rgba(0, 0, 0, 0.6);
       display: none;
       justify-content: center;
       align-items: center;
-      z-index: 50;
+      z-index: 100;
+    }
+
+    #video-player-container {
+      width: 75vw;
+      max-width: 1280px;
+      aspect-ratio: 16 / 9;
+      background: black;
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 0 30px rgba(0,0,0,0.5);
     }
 
     #video-player {
-      width: 75vw;
-      max-height: 80vh;
-      background: black;
-      border-radius: 10px;
-      box-shadow: 0 0 20px #00ffffaa;
-      outline: none;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
   </style>
 </head>
@@ -211,27 +212,27 @@
 
   <img id="back-btn" src="back.png" alt="Revenir" />
 
-  <!-- Overlay lecteur vidéo -->
-  <div id="video-overlay">
-    <video id="video-player" controls></video>
+  <!-- LECTEUR VIDEO -->
+  <div id="video-player-overlay">
+    <div id="video-player-container">
+      <video id="video-player" controls autoplay></video>
+    </div>
   </div>
 
   <script>
     window.onload = () => {
       const videos = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
+      const positions = [
+        { x: -250, y: -220 },
+        { x: 250, y: -220 },
+        { x: 530, y: 0 },
+        { x: 250, y: 220 },
+        { x: -250, y: 220 },
+        { x: -530, y: 0 }
+      ];
       const container = document.getElementById("videos-container");
       const videoElements = [];
-      const positions = [
-        { x: -530, y: -102 },
-        { x: -250, y: -102 },
-        { x: 30, y: -102 },
-        { x: 310, y: -102 },
-        { x: 590, y: -102 },
-        { x: 870, y: -102 }
-      ];
-      const floatAnimations = ["float1", "float2", "float3", "float4", "float5", "float6"];
 
-      // Création des vidéos sans défilement, positionnées horizontalement sans superposition, à 50px du haut/bas
       videos.forEach((src, i) => {
         const video = document.createElement("video");
         video.src = src;
@@ -240,10 +241,8 @@
         video.autoplay = true;
         video.playsInline = true;
         video.classList.add("floating-video");
-        // position fixe : x selon tableau, y = 50px du haut (en centrant la vidéo 204px de haut)
         video.style.left = `calc(50% + ${positions[i].x}px - 180px)`;
-        video.style.top = `calc(50% + ${positions[i].y}px - 102px)`; 
-        video.style.animation = `${floatAnimations[i]} ${4 + i * 0.2}s ease-in-out infinite`;
+        video.style.top = `calc(50% + ${positions[i].y}px - 102px)`;
         container.appendChild(video);
         videoElements.push(video);
       });
@@ -254,14 +253,11 @@
       const infoVideo = document.getElementById("info-video");
       const backBtn = document.getElementById("back-btn");
       const videosContainer = document.getElementById("videos-container");
-      const videoOverlay = document.getElementById("video-overlay");
-      const player = document.getElementById("video-player");
 
       bgMusic.volume = 0.15;
       bgMusic.play().catch(() => {});
       let descriptionShown = false;
 
-      // Ne plus arrêter la musique au clic sur logo
       function showDescription() {
         descriptionShown = true;
         logo.classList.add("moved-up");
@@ -270,7 +266,7 @@
         infoContainer.classList.add("active");
         infoVideo.classList.add("active-state");
         backBtn.classList.add("active");
-        // Musique non stoppée ici
+        bgMusic.pause();
       }
 
       function hideDescription() {
@@ -281,7 +277,7 @@
         infoContainer.classList.remove("active");
         infoVideo.classList.remove("active-state");
         backBtn.classList.remove("active");
-        // Ne touche pas musique ici non plus
+        bgMusic.play().catch(() => {});
       }
 
       logo.addEventListener("click", () => {
@@ -290,33 +286,8 @@
 
       backBtn.addEventListener("click", hideDescription);
 
-      // Quand on clique sur une vidéo : ouvrir lecteur 75% écran, volume 25%, musique fond en pause
-      videoElements.forEach(video => {
-        video.addEventListener("click", (e) => {
-          if (descriptionShown) return; // bloquer si description ouverte
-          player.src = video.src;
-          player.currentTime = 0;
-          player.volume = 0.25;
-          videoOverlay.style.display = "flex";
-          bgMusic.pause();
-          player.play().catch(() => {});
-        });
-      });
-
-      // Fermer lecteur en cliquant en dehors du player
-      videoOverlay.addEventListener("click", (e) => {
-        if (e.target === videoOverlay) {
-          player.pause();
-          player.src = "";
-          videoOverlay.style.display = "none";
-          bgMusic.play().catch(() => {});
-        }
-      });
-
-      // Opacité des vidéos selon distance souris (uniquement si pas en description ni overlay ouvert)
+      // Effet d’opacité relative à la souris
       window.addEventListener("mousemove", (e) => {
-        if(descriptionShown || videoOverlay.style.display === "flex") return;
-
         const mouseX = e.clientX;
         const mouseY = e.clientY;
 
@@ -324,17 +295,37 @@
           const rect = video.getBoundingClientRect();
           const videoCenterX = rect.left + rect.width / 2;
           const videoCenterY = rect.top + rect.height / 2;
-
           const dist = Math.sqrt((mouseX - videoCenterX) ** 2 + (mouseY - videoCenterY) ** 2);
           const maxDist = 800;
           let opacity = 0.7 - (dist / maxDist) * (0.7 - 0.1);
-          if (opacity < 0.1) opacity = 0.1;
-          if (opacity > 0.7) opacity = 0.7;
-
+          opacity = Math.min(Math.max(opacity, 0.1), 0.7);
           if (!video.classList.contains('description-state') && !video.matches(':hover')) {
             video.style.opacity = opacity;
           }
         });
+      });
+
+      // LECTEUR VIDEO LOGIQUE
+      const overlay = document.getElementById("video-player-overlay");
+      const player = document.getElementById("video-player");
+
+      videoElements.forEach(video => {
+        video.addEventListener("click", (e) => {
+          if (descriptionShown) return;
+          player.src = video.src;
+          player.currentTime = 0;
+          overlay.style.display = "flex";
+          bgMusic.pause();
+        });
+      });
+
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) {
+          player.pause();
+          player.src = "";
+          overlay.style.display = "none";
+          bgMusic.play().catch(() => {});
+        }
       });
     };
   </script>
