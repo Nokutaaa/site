@@ -23,6 +23,17 @@
     opacity: 1;
   }
 
+  @keyframes glowPulse {
+    0%, 100% {
+      filter: drop-shadow(0 0 6px #3df9ff);
+      opacity: 1;
+    }
+    50% {
+      filter: drop-shadow(0 0 18px #09f9ff);
+      opacity: 0.7;
+    }
+  }
+
   .logo-container {
     position: fixed;
     top: 50%; left: 50%;
@@ -37,7 +48,7 @@
   .logo-container.moved-up {
     top: 15%;
     transform: translate(-50%, 0);
-    animation: none;
+    animation: glowPulse 3s ease-in-out infinite;
   }
 
   .logo-container img {
@@ -68,7 +79,6 @@
   video.floating-video:hover {
     filter: blur(0);
     opacity: 1 !important;
-    box-shadow: 0 0 20px rgba(0,0,0,0.6);
   }
 
   #info-container {
@@ -84,9 +94,7 @@
     pointer-events: none;
     transition: opacity 0.8s ease;
     z-index: 25;
-    background: rgba(0,0,0,0.7);
-    border-radius: 15px;
-    padding: 20px;
+    color: white;
   }
 
   #info-container.active {
@@ -95,15 +103,14 @@
   }
 
   #info-video {
-    width: 45%;
-    height: auto;
     max-height: 100%;
-    border-radius: 8px;
     object-fit: cover;
+    width: 55%;
+    border-radius: 8px;
   }
 
   #info-text {
-    width: 50%;
+    width: 40%;
     font-size: 1.2rem;
     line-height: 1.4;
   }
@@ -116,38 +123,60 @@
     font-style: italic;
   }
 
-  /* Lecteur vidéo superposé (75% écran, 16/9) */
-  #fullscreen-player-overlay {
-    display: none;
+  #back-btn {
     position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 75vw;
-    max-width: 1280px; /* max width for 75vw on large screens */
-    aspect-ratio: 16 / 9;
-    background: black;
-    z-index: 50;
-    box-shadow: 0 0 20px rgba(0,0,0,0.8);
-    border-radius: 12px;
+    top: 15%;
+    right: 15%;
+    width: 5%;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease, filter 0.3s ease;
+    z-index: 30;
+    filter: drop-shadow(0 0 3px #57f1f1);
+    cursor: pointer;
+    user-select: none;
+  }
+  
+  #back-btn.active {
+    opacity: 1;
+    pointer-events: auto;
   }
 
-  #fullscreen-player-overlay video {
+  #back-btn:hover {
+    filter: drop-shadow(0 0 18px #60eff3);
+  }
+
+  /* Lecteur vidéo superposé 75% largeur, ratio 16:9 */
+  #video-player-overlay {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    width: 75vw;
+    max-width: 1200px;
+    aspect-ratio: 16 / 9;
+    background: black;
+    border-radius: 12px;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8);
+    transform: translate(-50%, -50%);
+    z-index: 50;
+    display: none;
+  }
+
+  #video-player-overlay video {
     width: 100%;
     height: 100%;
     border-radius: 12px;
     background: black;
   }
 
-  /* Overlay pour détecter clic hors player */
-  #fullscreen-player-background {
-    display: none;
+  #overlay-background {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
     background: rgba(0,0,0,0.6);
     z-index: 45;
+    display: none;
   }
-
 </style>
 </head>
 <body>
@@ -168,13 +197,18 @@
     <video id="info-video" src="video me.mp4" autoplay loop muted playsinline></video>
     <div id="info-text">
       <h2>Hey!</h2>
-      <p>I am a videographer passionate about capturing life through my camera. My goal is to make viewers feel the deepest emotions possible when watching my videos. While I primarily focus on documentaries and music videos, I’m open to collaborating on any artistic project that inspires me.<br/><br/>Feel free to contact me.</p>
+      <p>I am a videographer passionate about capturing life through my camera. My goal is to make viewers feel the deepest emotions possible when watching my videos. While I primarily focus on documentaries and music videos, I’m open to collaborating on any artistic project that inspires me.<br><br>Feel free to contact me.</p>
     </div>
   </div>
 
-  <div id="fullscreen-player-background"></div>
-  <div id="fullscreen-player-overlay">
-    <video controls id="fullscreen-video" src="" playsinline></video>
+  <img id="back-btn" src="back.png" alt="Revenir" />
+
+  <!-- Overlay fond pour fermer lecteur -->
+  <div id="overlay-background"></div>
+
+  <!-- Lecteur vidéo superposé -->
+  <div id="video-player-overlay">
+    <video controls id="player-video"></video>
   </div>
 
 <script>
@@ -182,31 +216,58 @@
     const videosSrc = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
     const container = document.getElementById("videos-container");
     const videoElements = [];
-    const containerWidth = window.innerWidth;
-    const containerHeight = window.innerHeight;
-    const minY = 50; // minimum distance from top and bottom
-    const maxY = containerHeight - 50;
+    const minTop = 50; // px, pas trop proche bord haut
+    const maxTop = window.innerHeight - 50 - 204; // hauteur vidéo max = 204
+    const videoWidthBase = 360;
+    const videoHeightBase = 204;
+    const speed = 40; // px/s constant pour toutes les vidéos
 
-    // Generate random size variation ±20%
-    function randomSize(base) {
-      return base * (0.8 + Math.random() * 0.4);
-    }
+    // Musique
+    const bgMusic = document.getElementById("bg-music");
+    bgMusic.volume = 0.08;
+    bgMusic.play().catch(() => {});
 
-    // Positions tracker to avoid overlapping (simple bounding boxes)
-    const positions = [];
+    // Logo, info container & back button
+    const logo = document.getElementById("logo");
+    const infoContainer = document.getElementById("info-container");
+    const backBtn = document.getElementById("back-btn");
 
-    function isOverlapping(x, y, width, height) {
-      for (const pos of positions) {
-        // Check overlap horizontally and vertically
-        if (!(x + width + 20 < pos.x || x > pos.x + pos.width + 20 ||
-              y + height + 20 < pos.y || y > pos.y + pos.height + 20)) {
-          return true;
+    // Lecteur overlay
+    const overlayBg = document.getElementById("overlay-background");
+    const playerOverlay = document.getElementById("video-player-overlay");
+    const playerVideo = document.getElementById("player-video");
+
+    let descriptionActive = false;
+    let playerActive = false;
+
+    // Positions initiales pour éviter chevauchement simple (en verticale)
+    // On va espacer verticalement au moins 50px entre vidéos, en cherchant des places
+    let usedPositions = [];
+
+    function getRandomTop(height) {
+      let tries = 0;
+      while (tries < 1000) {
+        const top = Math.floor(Math.random() * (maxTop - minTop) + minTop);
+        // vérifier chevauchement vertical
+        let collision = false;
+        for (let pos of usedPositions) {
+          if (Math.abs(pos - top) < height + 50) { // 50 px marge
+            collision = true;
+            break;
+          }
         }
+        if (!collision) {
+          usedPositions.push(top);
+          return top;
+        }
+        tries++;
       }
-      return false;
+      // fallback
+      return minTop;
     }
 
-    videosSrc.forEach(src => {
+    // Créer les vidéos flottantes avec tailles variant ±20%
+    videosSrc.forEach((src, i) => {
       const video = document.createElement("video");
       video.src = src;
       video.muted = true;
@@ -215,135 +276,117 @@
       video.playsInline = true;
       video.classList.add("floating-video");
 
-      // taille de base
-      const baseWidth = 360;
-      const width = randomSize(baseWidth);
-      const aspectRatio = 16 / 9;
-      const height = width / aspectRatio;
-
+      // Taille aléatoire ±20%
+      const scaleFactor = 0.8 + Math.random() * 0.4;
+      const width = videoWidthBase * scaleFactor;
+      const height = videoHeightBase * scaleFactor;
       video.style.width = width + "px";
       video.style.height = height + "px";
 
-      // Choix position aléatoire sans chevauchement
-      let x, y;
-      let attempts = 0;
-      do {
-        x = Math.random() * (containerWidth - width);
-        y = minY + Math.random() * (maxY - height - minY);
-        attempts++;
-        if (attempts > 100) break; // sécurité pour éviter boucle infinie
-      } while (isOverlapping(x, y, width, height));
+      // Position horizontale random entre 0 et window width
+      const left = Math.random() * window.innerWidth;
+      // Position verticale sans chevauchement et marge bord haut/bas
+      const top = getRandomTop(height);
 
-      positions.push({x, y, width, height});
-
-      video.style.left = x + "px";
-      video.style.top = y + "px";
+      video.style.left = left + "px";
+      video.style.top = top + "px";
 
       container.appendChild(video);
-      videoElements.push({el: video, x, y, width, height});
+      videoElements.push({el: video, left, top, width, height});
     });
 
-    // Vitesse unique pour toutes les vidéos en px/s
-    const speed = 40; // px per second
-
-    // Déplacement continu à gauche -> droite avec wrap-around (Pacman)
-    function animateVideos(timestamp) {
-      if (!animateVideos.lastTime) animateVideos.lastTime = timestamp;
-      const delta = (timestamp - animateVideos.lastTime) / 1000; // secondes écoulées
-      animateVideos.lastTime = timestamp;
+    // Fonction animation
+    function animate() {
+      if (playerActive || descriptionActive) return; // pause animation
 
       videoElements.forEach(obj => {
-        obj.x += speed * delta;
-        if (obj.x > containerWidth) obj.x = -obj.width;
-        obj.el.style.left = obj.x + "px";
+        obj.left += speed / 60; // déplacement par frame (~60fps)
+
+        // wrap around à droite
+        if (obj.left > window.innerWidth) {
+          obj.left = -obj.width;
+        }
+
+        obj.el.style.left = obj.left + "px";
       });
 
-      requestAnimationFrame(animateVideos);
+      requestAnimationFrame(animate);
     }
-    requestAnimationFrame(animateVideos);
+    animate();
 
-    // Musique
-    const bgMusic = document.getElementById("bg-music");
-    bgMusic.volume = 0.08;
-    bgMusic.loop = true;
-    bgMusic.play().catch(() => {});
-
-    // Éléments DOM
-    const logo = document.getElementById("logo");
-    const infoContainer = document.getElementById("info-container");
-    const videosContainer = document.getElementById("videos-container");
-
-    // Fullscreen player elements
-    const fullscreenOverlay = document.getElementById("fullscreen-player-overlay");
-    const fullscreenBackground = document.getElementById("fullscreen-player-background");
-    const fullscreenVideo = document.getElementById("fullscreen-video");
-
-    // Etat
-    let descriptionVisible = false;
-    let playerOpen = false;
-
-    // Gestion clic logo (affiche/masque description)
+    // Gestion clic logo : toggle description
     logo.addEventListener("click", () => {
-      if (descriptionVisible) {
-        // Retour écran principal
-        infoContainer.classList.remove("active");
-        descriptionVisible = false;
-        logo.classList.remove("moved-up");
-        videosContainer.style.display = "block";
-      } else {
-        // Affiche description
+      if (playerActive) return; // pas d'action si lecteur ouvert
+
+      if (!descriptionActive) {
+        // ouvrir description
+        descriptionActive = true;
         infoContainer.classList.add("active");
-        descriptionVisible = true;
+        backBtn.classList.add("active");
         logo.classList.add("moved-up");
-        videosContainer.style.display = "none";
+        // Pause musique
+        bgMusic.pause();
+      } else {
+        // fermer description
+        descriptionActive = false;
+        infoContainer.classList.remove("active");
+        backBtn.classList.remove("active");
+        logo.classList.remove("moved-up");
+        bgMusic.play().catch(() => {});
       }
     });
 
-    // Clic sur vidéo => ouvrir lecteur superposé
-    videoElements.forEach(({el}) => {
-      el.addEventListener("click", () => {
-        if (playerOpen) return; // ignore si déjà ouvert
-
-        // Pause musique
-        bgMusic.pause();
-
-        // Cacher autres contenus
-        videosContainer.style.display = "none";
+    // Back button ferme description
+    backBtn.addEventListener("click", () => {
+      if (descriptionActive) {
+        descriptionActive = false;
         infoContainer.classList.remove("active");
-        descriptionVisible = false;
+        backBtn.classList.remove("active");
         logo.classList.remove("moved-up");
+        bgMusic.play().catch(() => {});
+      }
+    });
 
-        // Configurer la vidéo du lecteur
-        fullscreenVideo.src = el.src;
-        fullscreenVideo.currentTime = 0;
-        fullscreenVideo.volume = 0.5;
-        fullscreenVideo.play();
+    // Clic sur vidéo flottante ouvre lecteur
+    videoElements.forEach(obj => {
+      obj.el.addEventListener("click", (e) => {
+        if (descriptionActive || playerActive) return; // interdit si description ou player ouvert
 
-        // Afficher lecteur et background overlay
-        fullscreenOverlay.style.display = "block";
-        fullscreenBackground.style.display = "block";
-        playerOpen = true;
+        playerActive = true;
+        playerVideo.src = obj.el.src;
+        playerVideo.currentTime = 0;
+        playerVideo.muted = false;
+        playerVideo.play().catch(() => {});
+
+        playerOverlay.style.display = "block";
+        overlayBg.style.display = "block";
+
+        bgMusic.pause();
       });
     });
 
-    // Clic en dehors du lecteur = fermer lecteur
-    fullscreenBackground.addEventListener("click", closePlayer);
-    // Clic sur overlay (au cas où) aussi ferme
-    fullscreenOverlay.addEventListener("click", e => e.stopPropagation()); // empêcher propagation du clic à background
+    // Click en dehors lecteur ferme lecteur
+    overlayBg.addEventListener("click", () => {
+      if (!playerActive) return;
 
-    function closePlayer() {
-      if (!playerOpen) return;
+      playerActive = false;
+      playerOverlay.style.display = "none";
+      overlayBg.style.display = "none";
 
-      fullscreenVideo.pause();
-      fullscreenVideo.src = "";
-      fullscreenOverlay.style.display = "none";
-      fullscreenBackground.style.display = "none";
-      playerOpen = false;
+      playerVideo.pause();
+      playerVideo.src = "";
 
-      // Re-afficher la page principale
-      videosContainer.style.display = "block";
-      bgMusic.play().catch(() => {});
-    }
+      // Reprise musique
+      if (!descriptionActive) {
+        bgMusic.play().catch(() => {});
+      }
+    });
+
+    // Resize window => adapter maxTop etc
+    window.addEventListener("resize", () => {
+      const newMaxTop = window.innerHeight - 50 - 204;
+      // recalculer usedPositions si besoin, mais on laisse fixe pour simplification
+    });
 
   };
 </script>
