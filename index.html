@@ -128,12 +128,12 @@
 <script>
   window.onload = () => {
     const videos = [
-      "video1.mp4",
-      "video2.mp4",
-      "video3.mp4",
-      "video4.mp4",
-      "video5.mp4",
-      "video6.mp4"
+      "video1.mp4", // V1 - haut gauche
+      "video2.mp4", // V2 - haut droite
+      "video3.mp4", // droite
+      "video4.mp4", // bas droite
+      "video5.mp4", // bas gauche
+      "video6.mp4"  // gauche
     ];
 
     const container = document.getElementById("videos-container");
@@ -144,22 +144,21 @@
 
     const centerX = window.innerWidth / 2;
     const centerY = window.innerHeight / 2;
-    const radiusX = centerX - videoWidth / 2 - 60;
-    const radiusY = centerY - videoHeight / 2 - 60;
+
+    const offsetX = 320;
+    const offsetY = 180;
+
+    const positions = [
+      { x: centerX - offsetX / 2, y: centerY - offsetY - 100 }, // V1
+      { x: centerX + offsetX / 2, y: centerY - offsetY - 100 }, // V2
+      { x: centerX + offsetX,     y: centerY },                 // V3
+      { x: centerX + offsetX / 2, y: centerY + offsetY + 100 }, // V4
+      { x: centerX - offsetX / 2, y: centerY + offsetY + 100 }, // V5
+      { x: centerX - offsetX,     y: centerY }                  // V6
+    ];
 
     videos.forEach((src, i) => {
-      const angle = (i / videos.length) * 2 * Math.PI;
-      let yOffset = 0;
-      const angleDeg = (angle * 180) / Math.PI;
-
-      if (angleDeg >= 60 && angleDeg <= 120) {
-        yOffset = -80;
-      } else if (angleDeg >= 240 && angleDeg <= 300) {
-        yOffset = 80;
-      }
-
-      const x = centerX + radiusX * Math.cos(angle) - videoWidth / 2;
-      const y = centerY + radiusY * Math.sin(angle) + yOffset - videoHeight / 2;
+      const pos = positions[i];
 
       const video = document.createElement("video");
       video.src = src;
@@ -168,8 +167,9 @@
       video.autoplay = true;
       video.playsInline = true;
       video.classList.add("floating-video");
-      video.style.left = `${x}px`;
-      video.style.top = `${y}px`;
+
+      video.style.left = `${pos.x - videoWidth / 2}px`;
+      video.style.top = `${pos.y - videoHeight / 2}px`;
 
       container.appendChild(video);
       videoElements.push(video);
@@ -197,5 +197,6 @@
     };
   };
 </script>
+
 </body>
 </html>
