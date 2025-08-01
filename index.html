@@ -1,42 +1,52 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Nokuta</title>
-  <link rel="icon" href="favicon.jpg" type="image/jpg">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+  <link rel="icon" href="favicon.jpg" type="image/jpg" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
   <style>
+    /* ===== Reset & Base ===== */
     html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      overflow: hidden;
+      margin: 0; padding: 0; height: 100%;
       font-family: 'Poppins', sans-serif;
-      background: none;
+      overflow: hidden;
+      background: transparent;
+      color: white;
+      user-select: none;
     }
 
+    /* ===== Animation glow logo ===== */
+    @keyframes glowPulse {
+      0%, 100% { filter: drop-shadow(0 0 5px rgba(255,255,255,0.4)); }
+      50% { filter: drop-shadow(0 0 12px rgba(255,255,255,0.8)); }
+    }
+
+    /* ===== Vidéo de fond ===== */
     #bg-video {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
       object-fit: cover;
       z-index: -100;
       pointer-events: none;
+      user-select: none;
     }
 
+    /* ===== Logo ===== */
     .logo-container {
       position: fixed;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      z-index: 10;
+      z-index: 100;
       animation: glowPulse 3s ease-in-out infinite;
       cursor: pointer;
+      user-select: none;
       transition: top 0.6s ease, transform 0.6s ease;
     }
 
+    /* Logo remonte quand description ouverte */
     .logo-container.moved-up {
       top: 15%;
       transform: translate(-50%, 0);
@@ -45,126 +55,366 @@
 
     .logo-container img {
       height: 80px;
-      user-select: none;
       pointer-events: none;
+      display: block;
+      user-select: none;
     }
 
-    @keyframes glowPulse {
-      0%, 100% { filter: drop-shadow(0 0 5px rgba(96, 239, 243, 0.4)); }
-      50% { filter: drop-shadow(0 0 12px rgba(96, 239, 243, 0.9)); }
-    }
-
+    /* ===== Container vidéos flottantes ===== */
     #videos-container {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      z-index: 5;
-      transition: opacity 0.5s ease;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: auto; /* important pour clics */
+      z-index: 10;
+      overflow: visible;
     }
 
-    #videos-container.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-
+    /* ===== Vidéos flottantes ===== */
     video.floating-video {
       position: absolute;
-      width: 320px;
-      height: 180px;
-      object-fit: cover;
+      width: 360px;
+      height: 204px; /* 16:9 ratio */
       border-radius: 8px;
-      opacity: 0.3;
-      filter: blur(2px);
-      transition: opacity 0.3s ease, filter 0.3s ease;
+      object-fit: cover;
+      filter: blur(2.2px);
+      opacity: 0.4;
       pointer-events: auto;
       cursor: pointer;
-      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      transition: filter 0.3s ease, opacity 0.3s ease;
+      user-select: none;
+      will-change: transform;
+      user-drag: none;
     }
 
-    video.floating-video:hover {
-      opacity: 1;
-      filter: blur(0);
-    }
-
-    .floating-video.inactive {
+    /* Quand page description ouverte: videos plus floues, opaques, non cliquables */
+    #videos-container.description-open video.floating-video {
       pointer-events: none;
+      filter: blur(4px);
+      opacity: 0.25;
+      cursor: default;
+    }
+
+    /* ===== Lecteur vidéo overlay ===== */
+    #overlay-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.5);
+      z-index: 290;
+      display: none;
+      cursor: pointer;
+      user-select: none;
     }
 
     #video-player-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.6);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 75vw;
+      max-width: 1280px;
+      aspect-ratio: 16 / 9;
+      background-color: rgba(0,0,0,0.95);
+      box-shadow: 0 0 30px rgba(255,255,255,0.7);
+      border-radius: 12px;
+      z-index: 300;
       display: none;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
-      z-index: 20;
+      padding: 10px;
+      user-select: none;
     }
 
-    #video-player {
-      width: 75vw;
-      aspect-ratio: 16 / 9;
+    #video-player-overlay video {
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
       background: black;
+      outline: none;
+      user-select: none;
     }
 
+    /* ===== Page description ===== */
     #info-container {
       position: fixed;
-      top: 50%;
-      left: 50%;
-      width: 80vw;
-      height: 60vh;
+      top: 50%; left: 50%;
+      width: 80vw; height: 60vh;
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-start;
       align-items: center;
+      gap: 1.5rem;
       transform: translate(-50%, -50%);
-      z-index: 15;
+      background: rgba(0,0,0,0.85);
+      border-radius: 12px;
+      padding: 20px;
+      box-sizing: border-box;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.6s ease;
+      z-index: 200;
+      color: white;
+      user-select: text;
     }
-
     #info-container.active {
       opacity: 1;
       pointer-events: auto;
     }
 
     #info-video {
+      max-height: 100%;
+      object-fit: cover;
       width: 45%;
-      height: auto;
-      border-radius: 10px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(255,255,255,0.5);
+      user-select: none;
     }
 
     #info-text {
       width: 45%;
-      color: white;
       font-size: 1.2rem;
+      line-height: 1.4;
     }
 
+    #info-text h2 {
+      margin-top: 0;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      font-style: italic;
+      font-size: 2.6rem;
+    }
+
+    /* ===== Bouton retour ===== */
     #back-btn {
       position: fixed;
       top: 15%;
       right: 15%;
-      width: 5%;
+      width: 40px;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.5s ease, filter 0.3s ease;
-      z-index: 30;
+      z-index: 210;
       filter: drop-shadow(0 0 3px #57f1f1);
       cursor: pointer;
       user-select: none;
     }
-
     #back-btn.active {
       opacity: 1;
       pointer-events: auto;
     }
-
     #back-btn:hover {
       filter: drop-shadow(0 0 18px #60eff3);
     }
+
   </style>
 </head>
+<body>
+
+  <!-- Fond vidéo -->
+  <video autoplay muted loop playsinline id="bg-video" preload="auto" tabindex="-1" aria-hidden="true" >
+    <source src="fond.mp4" type="video/mp4" />
+  </video>
+
+  <!-- Musique de fond -->
+  <audio id="bg-music" src="MUSIQUE.mp3" autoplay loop></audio>
+
+  <!-- Logo cliquable -->
+  <div class="logo-container" id="logo" role="button" tabindex="0" aria-label="Afficher description">
+    <img src="logo1.png" alt="Logo Nokuta" />
+  </div>
+
+  <!-- Container vidéos flottantes -->
+  <div id="videos-container" aria-label="Vidéos flottantes"></div>
+
+  <!-- Page description -->
+  <div id="info-container" aria-hidden="true">
+    <video id="info-video" src="video me.mp4" autoplay loop muted playsinline tabindex="-1" aria-hidden="true"></video>
+    <div id="info-text">
+      <h2>Hey!</h2>
+      <p>
+        I am a videographer passionate about capturing life through my camera. My goal is to make viewers feel the deepest emotions possible when watching my videos.
+        While I primarily focus on documentaries and music videos, I’m open to collaborating on any artistic project that inspires me.<br/><br/>
+        Feel free to contact me.
+      </p>
+    </div>
+  </div>
+
+  <!-- Bouton retour -->
+  <img id="back-btn" src="back.png" alt="Revenir" role="button" tabindex="0" />
+
+  <!-- Overlay sombre derrière player -->
+  <div id="overlay-bg" tabindex="-1" aria-hidden="true"></div>
+
+  <!-- Lecteur vidéo overlay -->
+  <div id="video-player-overlay" role="dialog" aria-modal="true" aria-label="Lecteur vidéo">
+    <video controls id="player-video" playsinline tabindex="0"></video>
+  </div>
+
+<script>
+window.addEventListener("load", () => {
+
+  // --- Variables de base ---
+  const videosSrc = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
+  const container = document.getElementById("videos-container");
+  const videoElements = [];
+
+  const videoWidth = 360;
+  const videoHeight = 204;
+
+  const marginTop = 50;
+  const marginBottom = 50;
+
+  const screenHeight = window.innerHeight;
+  const screenWidth = window.innerWidth;
+
+  // Calculer positions verticales fixes, bien espacées
+  const totalVerticalSpace = screenHeight - marginTop - marginBottom;
+  const verticalGap = totalVerticalSpace / videosSrc.length;
+  const fixedYPositions = [];
+
+  for(let i=0; i < videosSrc.length; i++) {
+    // Centrer verticalement dans chaque segment, éviter superposition verticale
+    let y = marginTop + i * verticalGap + (verticalGap - videoHeight) / 2;
+    fixedYPositions.push(y);
+  }
+
+  // Position horizontale de départ: les vidéos sont réparties hors écran à gauche
+  // Pour éviter qu'elles ne commencent toutes au même endroit et se superposent horizontalement, on espace horizontalement aussi
+  const horizontalGap = videoWidth + 20;
+  const initialXOffset = - (videoWidth + 20) * videosSrc.length;
+
+  // Créer les vidéos flottantes
+  for(let i=0; i < videosSrc.length; i++) {
+    const v = document.createElement("video");
+    v.src = videosSrc[i];
+    v.muted = true;
+    v.loop = true;
+    v.autoplay = true;
+    v.playsInline = true;
+    v.classList.add("floating-video");
+    v.setAttribute("tabindex", "-1");
+    container.appendChild(v);
+
+    // Position initiale
+    const posX = initialXOffset + i * horizontalGap;
+    const posY = fixedYPositions[i];
+    // Vitesse de défilement aléatoire entre 0.6 et 0.9 px/frame
+    const speed = 0.6 + Math.random() * 0.3;
+
+    v.style.left = posX + "px";
+    v.style.top = posY + "px";
+
+    videoElements.push({
+      el: v,
+      posX: posX,
+      posY: posY,
+      speed: speed,
+      width: videoWidth,
+      height: videoHeight,
+    });
+  }
+
+  // Fonction animation déplacement horizontal des vidéos
+  function updatePositions() {
+    videoElements.forEach(vObj => {
+      vObj.posX += vObj.speed;
+      if (vObj.posX > screenWidth) {
+        vObj.posX = -vObj.width;
+      }
+      vObj.el.style.left = vObj.posX + "px";
+      vObj.el.style.top = vObj.posY + "px";
+    });
+    requestAnimationFrame(updatePositions);
+  }
+  updatePositions();
+
+  // --- Gestion page description & interactions ---
+
+  const logo = document.getElementById("logo");
+  const infoContainer = document.getElementById("info-container");
+  const infoVideo = document.getElementById("info-video");
+  const backBtn = document.getElementById("back-btn");
+  const bgMusic = document.getElementById("bg-music");
+  const videosContainer = container;
+
+  // Overlay & lecteur vidéo
+  const overlayBg = document.getElementById("overlay-bg");
+  const videoPlayerOverlay = document.getElementById("video-player-overlay");
+  const playerVideo = document.getElementById("player-video");
+
+  // Etat page description ouverte
+  let descriptionOpen = false;
+
+  // Fonction ouvrir description
+  function openDescription() {
+    descriptionOpen = true;
+    logo.classList.add("moved-up");
+    infoContainer.classList.add("active");
+    backBtn.classList.add("active");
+    videosContainer.classList.add("description-open");
+    // Pause musique fond
+    bgMusic.pause();
+    // Jouer vidéo description si elle était en pause
+    if (infoVideo.paused) infoVideo.play();
+  }
+
+  // Fonction fermer description
+  function closeDescription() {
+    descriptionOpen = false;
+    logo.classList.remove("moved-up");
+    infoContainer.classList.remove("active");
+    backBtn.classList.remove("active");
+    videosContainer.classList.remove("description-open");
+    // Reprendre musique fond
+    bgMusic.play();
+    // Pause vidéo description
+    if (!infoVideo.paused) infoVideo.pause();
+  }
+
+  // Clic logo ouvre description si player fermé et description fermée
+  logo.addEventListener("click", () => {
+    if (!descriptionOpen && videoPlayerOverlay.style.display === "none") {
+      openDescription();
+    }
+  });
+
+  // Retour bouton ferme description
+  backBtn.addEventListener("click", () => {
+    closeDescription();
+  });
+
+  // Fonction ouvrir lecteur vidéo au clic sur vidéo flottante
+  function openVideoPlayer(src) {
+    playerVideo.src = src;
+playerVideo.play();
+videoPlayerOverlay.style.display = "flex";
+overlayBg.style.display = "block";
+bgMusic.pause();
+}
+
+// Fermer player si clic hors player
+overlayBg.addEventListener("click", () => {
+playerVideo.pause();
+playerVideo.src = "";
+videoPlayerOverlay.style.display = "none";
+overlayBg.style.display = "none";
+if (!descriptionOpen) {
+bgMusic.play();
+}
+});
+
+// Gérer clics sur vidéos flottantes (si page description fermée et player non actif)
+videoElements.forEach(vObj => {
+vObj.el.addEventListener("click", (e) => {
+e.stopPropagation();
+if (!descriptionOpen && videoPlayerOverlay.style.display === "none") {
+openVideoPlayer(vObj.el.src);
+}
+});
+});
+
+});
+</script>
+
+</body> </html> ```
