@@ -79,14 +79,6 @@
       box-shadow: 0 0 20px rgba(0,0,0,0.6);
     }
 
-    video.floating-video.description-state {
-      filter: none !important;
-      opacity: 1 !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-      transform: translateY(60px);
-    }
-
     #info-container {
       position: fixed;
       top: 50%; left: 50%;
@@ -100,6 +92,11 @@
       pointer-events: none;
       transition: opacity 0.8s ease;
       z-index: 20;
+      background: rgba(0,0,0,0.8);
+      border-radius: 12px;
+      padding: 20px;
+      color: white;
+      box-sizing: border-box;
     }
 
     #info-container.active {
@@ -112,16 +109,17 @@
       object-fit: cover;
       width: 45%;
       transition: transform 0.6s ease, border-radius 0.6s ease, box-shadow 0.6s ease;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(255,255,255,0.3);
+      outline: none;
+      /* controls */
     }
 
     #info-text {
-      color: white;
       width: 45%;
       font-size: 1.2rem;
       line-height: 1.4;
-      position: relative;
-      top: 50px;
-      left: 50px;
+      user-select: text;
     }
 
     #info-text h2 {
@@ -155,22 +153,6 @@
       filter: drop-shadow(0 0 18px #60eff3);
     }
 
-    /* Plein écran style */
-    video.floating-video.fullscreen {
-      position: fixed !important;
-      top: 50% !important;
-      left: 50% !important;
-      width: 90vw !important;
-      height: 80vh !important;
-      border-radius: 0 !important;
-      filter: none !important;
-      opacity: 1 !important;
-      box-shadow: none !important;
-      transform: translate(-50%, -50%) !important;
-      z-index: 50 !important;
-      cursor: default !important;
-    }
-
   </style>
 </head>
 <body>
@@ -186,8 +168,8 @@
 
   <div id="videos-container"></div>
 
-  <div id="info-container">
-    <video id="info-video" src="video me.mp4" autoplay loop muted playsinline></video>
+  <div id="info-container" aria-hidden="true">
+    <video id="info-video" src="video me.mp4" controls playsinline></video>
     <div id="info-text">
       <h2>Hey!</h2>
       <p>I am a videographer passionate about capturing life through my camera. My goal is to make viewers feel the deepest emotions possible when watching my videos. While I primarily focus on documentaries and music videos, I’m open to collaborating on any artistic project that inspires me.<br/><br/>Feel free to contact me.</p>
@@ -202,20 +184,21 @@
       const container = document.getElementById("videos-container");
       const videoElements = [];
 
-      // Générer une position initiale aléatoire dans toute la fenêtre
+      // Position aléatoire évitant 50px du haut et du bas
       function getRandomPosition() {
+        const margin = 50;
         return {
           x: Math.random() * window.innerWidth,
-          y: Math.random() * window.innerHeight
+          y: margin + Math.random() * (window.innerHeight - 2 * margin - 204) // 204 = hauteur vidéo
         };
       }
 
-      // Vitesse aléatoire entre 20 et 60 px par seconde
+      // Vitesse aléatoire entre 20 et 60 px/s
       function getRandomSpeed() {
         return 20 + Math.random() * 40;
       }
 
-      // Créer les vidéos avec position et vitesse aléatoires
+      // Créer les vidéos avec positions et vitesses
       videos.forEach(src => {
         const video = document.createElement("video");
         video.src = src;
@@ -249,7 +232,7 @@
       let descriptionShown = false;
       let fullscreenVideo = null;
 
-      // Animation horizontale avec "wrap-around" style Pacman
+      // Animation horizontale avec wrap-around
       function animateVideos(deltaTime) {
         videoElements.forEach(video => {
           if (video !== fullscreenVideo) {
@@ -257,8 +240,7 @@
 
             if (video._posX > window.innerWidth) {
               video._posX = -video.offsetWidth;
-              // Pour changer aussi la position verticale aléatoirement à chaque wrap :
-              video._posY = Math.random() * (window.innerHeight - video.offsetHeight);
+              video._posY = 50 + Math.random() * (window.innerHeight - 2 * 50 - video.offsetHeight);
             }
 
             video.style.left = `${video._posX}px`;
@@ -270,79 +252,90 @@
       let lastTime = null;
       function loop(time) {
         if (!lastTime) lastTime = time;
-        const deltaTime = (time - lastTime) / 1000; // en secondes
+        const deltaTime = (time - lastTime) / 1000;
         animateVideos(deltaTime);
         lastTime = time;
         requestAnimationFrame(loop);
       }
       requestAnimationFrame(loop);
 
-      // Gestion du clic sur vidéo pour passer en plein écran
+      // Clic sur logo affiche la page description
+      logo.addEventListener("click", () => {
+        if (descriptionShown) return;
+        descriptionShown = true;
+
+        logo.classList.add("moved-up");
+        videosContainer.style.display = "none";
+
+        infoContainer.classList.add("active");
+        infoContainer.setAttribute("aria-hidden", "false");
+
+        backBtn.classList.add("active");
+
+        // Pause musique
+        bgMusic.pause();
+      });
+
+      // Le clic sur les vidéos lance la vidéo en plein écran natif avec contrôles
       videoElements.forEach(video => {
         video.addEventListener("click", () => {
-          if (fullscreenVideo) return; // ignore si déjà en fullscreen
+          if (fullscreenVideo) return; // déjà en fullscreen
 
           fullscreenVideo = video;
-          descriptionShown = true;
 
-          logo.classList.add("moved-up");
-          videosContainer.classList.add("hidden");
-          videoElements.forEach(v => {
-            if (v !== fullscreenVideo) {
-              v.style.display = "none";
-            } else {
-              v.classList.add("fullscreen");
-              v.muted = false;
-              v.play();
-            }
-          });
+          video.muted = false;
+          video.pause();
+          video.controls = true;
 
-          infoContainer.classList.add("active");
-          backBtn.classList.add("active");
+          // Demander le plein écran natif
+          if (video.requestFullscreen) {
+            video.requestFullscreen();
+          } else if (video.webkitRequestFullscreen) { /* Safari */
+            video.webkitRequestFullscreen();
+          } else if (video.msRequestFullscreen) { /* IE11 */
+            video.msRequestFullscreen();
+          }
 
-          // Pause la musique
+          video.play();
+
+          // Pause musique pendant la lecture fullscreen
           bgMusic.pause();
         });
       });
 
-      // Bouton retour pour quitter le plein écran
-      function hideDescription() {
-        if (!fullscreenVideo) return;
-
+      // Bouton retour pour quitter la page description
+      backBtn.addEventListener("click", () => {
         descriptionShown = false;
 
         logo.classList.remove("moved-up");
-        videosContainer.classList.remove("hidden");
-
-        videoElements.forEach(v => {
-          v.style.display = "block";
-          v.classList.remove("fullscreen");
-          v.muted = true;
-          v.pause();
-          v.currentTime = 0;
-          v.play();
-        });
+        videosContainer.style.display = "block";
 
         infoContainer.classList.remove("active");
+        infoContainer.setAttribute("aria-hidden", "true");
+
         backBtn.classList.remove("active");
 
-        fullscreenVideo = null;
-
-        // Reprend la musique
+        // Reprendre musique
         bgMusic.play().catch(() => {});
-      }
+      });
 
-      backBtn.addEventListener("click", hideDescription);
-
-      // Aussi reprendre la musique si on quitte le plein écran via ESC
-      document.addEventListener('fullscreenchange', () => {
+      // Gérer la sortie du plein écran vidéo
+      document.addEventListener("fullscreenchange", () => {
         if (!document.fullscreenElement && fullscreenVideo) {
-          hideDescription();
+          // Restaurer la vidéo flottante
+          fullscreenVideo.controls = false;
+          fullscreenVideo.muted = true;
+          fullscreenVideo.play();
+
+          fullscreenVideo = null;
+
+          // Reprendre musique
+          bgMusic.play().catch(() => {});
         }
       });
 
-      // Gérer l'opacité selon la position du curseur (optionnel)
-      window.addEventListener("mousemove", (e) => {
+      // Ajuster opacité selon la distance curseur (optionnel)
+      window.addEventListener("mousemove", e => {
         const mouseX = e.clientX;
         const mouseY = e.clientY;
 
@@ -355,15 +348,20 @@
             const dist = Math.sqrt((mouseX - videoCenterX) ** 2 + (mouseY - videoCenterY) ** 2);
             const maxDist = 800;
             let opacity = 0.7 - (dist / maxDist) * (0.7 - 0.1);
-            if (opacity < 0.1) opacity = 0.1;
-            if (opacity > 0.7) opacity = 0.7;
+            opacity = Math.min(Math.max(opacity, 0.1), 0.7);
 
-            if (!video.classList.contains('fullscreen') && !video.matches(':hover')) {
+            if (!video.matches(':hover')) {
               video.style.opacity = opacity;
             }
           }
         });
       });
+
+      // Remettre la vidéo de fond au premier plan si problème de chargement
+      const bgVideo = document.getElementById("bg-video");
+      bgVideo.volume = 0;
+      bgVideo.play().catch(() => {});
+
     };
   </script>
 </body>
