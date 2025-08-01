@@ -13,6 +13,21 @@
       background: none;
     }
 
+    @keyframes glowPulse {
+      0%, 100% { filter: drop-shadow(0 0 5px rgba(255,255,255,0.4)); }
+      50% { filter: drop-shadow(0 0 12px rgba(255,255,255,0.8)); }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
     #bg-video {
       position: fixed;
       top: 0; left: 0;
@@ -44,21 +59,6 @@
       pointer-events: none;
     }
 
-    @keyframes glowPulse {
-      0%, 100% {
-        filter: drop-shadow(0 0 5px rgba(255,255,255,0.4));
-      }
-      50% {
-        filter: drop-shadow(0 0 12px rgba(255,255,255,0.8));
-      }
-    }
-
-    @keyframes float {
-      0%   { transform: translateY(0); }
-      50%  { transform: translateY(-8px); }
-      100% { transform: translateY(0); }
-    }
-
     #videos-container {
       position: fixed;
       top: 50%; left: 50%;
@@ -85,8 +85,12 @@
       pointer-events: auto;
       cursor: pointer;
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      animation: float 4s ease-in-out infinite;
       transition: filter 0.3s ease, opacity 0.3s ease, border-radius 0.6s ease, box-shadow 0.6s ease, transform 0.6s ease;
-      animation: float 5s ease-in-out infinite;
+    }
+
+    video.floating-video.show {
+      animation: fadeIn 0.6s ease forwards, float 4s ease-in-out infinite;
     }
 
     video.floating-video:hover {
@@ -184,11 +188,11 @@
       margin-top: 0;
       margin-bottom: 1rem;
       font-weight: 600;
-      font-style: italic;
       font-size: 2.2rem;
+      font-style: italic;
     }
 
-     #back-btn {
+    #back-btn {
       width: 80px;
       height: 80px;
       cursor: pointer;
@@ -197,22 +201,22 @@
       transition: opacity 0.5s ease;
       z-index: 30;
       position: absolute;
-      top: -50px; /* 50px plus haut */
-      right: -90px;
-      transform: rotate(180deg); /* retourne l'image */
-  }
+      top: -50px;
+      right: -200px;
+      transform: rotate(180deg);
+    }
 
-#back-btn.active {
-  opacity: 1;
-  pointer-events: auto;
-}
+    #back-btn.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
   </style>
 </head>
 <body>
 
   <video autoplay muted loop playsinline id="bg-video" preload="auto">
     <source src="fond.mp4" type="video/mp4" />
-    Votre navigateur ne supporte pas la vidéo HTML5.
+    Votre navigateur ne supporte pas la vid\u00e9o HTML5.
   </video>
 
   <audio id="bg-music" src="musique.mp3" autoplay loop></audio>
@@ -235,117 +239,112 @@
   <div id="overlay" onclick="closeFullscreenVideo()"></div>
   <video id="fullscreenVideo" controls onclick="event.stopPropagation()"></video>
 
-  <script>
-    window.onload = () => {
-      const videos = [
-        "video1.mp4", "video2.mp4", "video3.mp4",
-        "video4.mp4", "video5.mp4", "video6.mp4"
-      ];
+<script>
+  window.onload = () => {
+    const videos = [
+      "video1.mp4", "video2.mp4", "video3.mp4",
+      "video4.mp4", "video5.mp4", "video6.mp4"
+    ];
 
-      const container = document.getElementById("videos-container");
-      const videoElements = [];
+    const container = document.getElementById("videos-container");
+    const videoElements = [];
 
-      const videoWidth = 360;
-      const videoHeight = 204;
-      const offsetX = 320;
-      const offsetY = 180;
+    const positions = [
+      { x: -250, y: -240 }, // video1
+      { x: +250, y: -240 }, // video2
+      { x: +530, y: -50 },  // video3
+      { x: +250, y: +240 }, // video4
+      { x: -250, y: +240 }, // video5
+      { x: -530, y: -50 }   // video6
+    ];
 
-      const positions = [
-        { x: -offsetX / 2 - 70, y: -offsetY - 60 }, // V1
-        { x: +offsetX / 2 + 70, y: -offsetY - 60 }, // V2
-        { x: +offsetX + 210,     y: 0 },            // V3
-        { x: +offsetX / 2 + 70, y: +offsetY + 60 }, // V4
-        { x: -offsetX / 2 - 70, y: +offsetY + 60 }, // V5
-        { x: -offsetX - 210,     y: 0 }             // V6
-      ];
+    videos.forEach((src, i) => {
+      const video = document.createElement("video");
+      video.src = src;
+      video.muted = true;
+      video.loop = true;
+      video.autoplay = true;
+      video.playsInline = true;
+      video.classList.add("floating-video");
 
-      videos.forEach((src, i) => {
-        const pos = positions[i];
-        const video = document.createElement("video");
-        video.src = src;
-        video.muted = true;
-        video.loop = true;
-        video.autoplay = true;
-        video.playsInline = true;
-        video.classList.add("floating-video");
-        video.style.left = `calc(50% + ${pos.x}px - ${videoWidth / 2}px)`;
-        video.style.top = `calc(50% + ${pos.y}px - ${videoHeight / 2}px)`;
-        video.style.animationDelay = `${i * 0.6}s`;
+      video.style.left = `calc(50% + ${positions[i].x}px - 180px)`;
+      video.style.top = `calc(50% + ${positions[i].y}px - 102px)`;
+      container.appendChild(video);
+      videoElements.push(video);
+    });
 
-        container.appendChild(video);
-        videoElements.push(video);
-      });
+    // Delay fade-in of each video
+    videoElements.forEach((v, i) => {
+      setTimeout(() => {
+        v.classList.add("show");
+      }, i * 300);
+    });
 
-      const fullscreenVideo = document.getElementById("fullscreenVideo");
-      const overlay = document.getElementById("overlay");
-      const logo = document.getElementById("logo");
-      const infoContainer = document.getElementById("info-container");
-      const infoVideo = document.getElementById("info-video");
-      const backBtn = document.getElementById("back-btn");
-      const videosContainer = document.getElementById("videos-container");
-      const bgMusic = document.getElementById("bg-music");
+    const fullscreenVideo = document.getElementById("fullscreenVideo");
+    const overlay = document.getElementById("overlay");
+    const logo = document.getElementById("logo");
+    const infoContainer = document.getElementById("info-container");
+    const infoVideo = document.getElementById("info-video");
+    const backBtn = document.getElementById("back-btn");
+    const videosContainer = document.getElementById("videos-container");
+    const bgMusic = document.getElementById("bg-music");
 
-      bgMusic.volume = 0.15;
-      bgMusic.play().catch(() => { console.log("Autoplay bloqué."); });
+    bgMusic.volume = 0.15;
+    bgMusic.play().catch(() => console.log("Autoplay music blocked."));
 
-      let descriptionShown = false;
+    let descriptionShown = false;
 
-      videoElements.forEach(video => {
-        video.addEventListener("click", () => {
-          fullscreenVideo.src = video.src;
-          fullscreenVideo.currentTime = 0;
-          fullscreenVideo.volume = 0.35;
-          fullscreenVideo.play();
-          fullscreenVideo.classList.add("active");
-          overlay.classList.add("active");
-          bgMusic.pause();
-        });
-      });
-
-      window.closeFullscreenVideo = function () {
-        fullscreenVideo.pause();
-        fullscreenVideo.classList.remove("active");
-        overlay.classList.remove("active");
-        fullscreenVideo.src = "";
-        if (!descriptionShown) {
-          bgMusic.play();
-        }
-      };
-
-      function showDescription() {
-        descriptionShown = true;
-        logo.classList.add("moved-up");
-        videosContainer.classList.add("hidden");
-        videoElements.forEach(v => {
-          v.classList.add("description-state");
-        });
-        infoContainer.classList.add("active");
-        infoVideo.classList.add("active-state");
-        backBtn.classList.add("active");
+    videoElements.forEach(video => {
+      video.addEventListener("click", () => {
+        fullscreenVideo.src = video.src;
+        fullscreenVideo.currentTime = 0;
+        fullscreenVideo.volume = 0.35;
+        fullscreenVideo.play();
+        fullscreenVideo.classList.add("active");
+        overlay.classList.add("active");
         bgMusic.pause();
-      }
-
-      function hideDescription() {
-        descriptionShown = false;
-        logo.classList.remove("moved-up");
-        videosContainer.classList.remove("hidden");
-        videoElements.forEach(v => {
-          v.classList.remove("description-state");
-        });
-        infoContainer.classList.remove("active");
-        infoVideo.classList.remove("active-state");
-        backBtn.classList.remove("active");
-        bgMusic.play().catch(() => {});
-      }
-
-      logo.addEventListener("click", () => {
-        if (descriptionShown) hideDescription();
-        else showDescription();
       });
+    });
 
-      backBtn.addEventListener("click", hideDescription);
+    window.closeFullscreenVideo = function () {
+      fullscreenVideo.pause();
+      fullscreenVideo.classList.remove("active");
+      overlay.classList.remove("active");
+      fullscreenVideo.src = "";
+      if (!descriptionShown) bgMusic.play().catch(() => {});
     };
-  </script>
+
+    function showDescription() {
+      descriptionShown = true;
+      logo.classList.add("moved-up");
+      videosContainer.classList.add("hidden");
+      videoElements.forEach(v => v.classList.add("description-state"));
+      infoContainer.classList.add("active");
+      infoVideo.classList.add("active-state");
+      backBtn.classList.add("active");
+      bgMusic.pause();
+    }
+
+    function hideDescription() {
+      descriptionShown = false;
+      logo.classList.remove("moved-up");
+      videosContainer.classList.remove("hidden");
+      videoElements.forEach(v => v.classList.remove("description-state"));
+      infoContainer.classList.remove("active");
+      infoVideo.classList.remove("active-state");
+      backBtn.classList.remove("active");
+      bgMusic.play().catch(() => {});
+    }
+
+    logo.addEventListener("click", () => {
+      descriptionShown ? hideDescription() : showDescription();
+    });
+
+    backBtn.addEventListener("click", () => {
+      hideDescription();
+    });
+  };
+</script>
 
 </body>
 </html>
