@@ -122,14 +122,15 @@
     opacity: 1;
   }
 
-  /* Nouveau container qui s’affiche après clic sur logo */
+  /* Container description */
   #info-container {
     position: fixed;
     top: 50%; left: 50%;
     width: 80vw; height: 60vh;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
+    gap: 1.5rem;
     transform: translate(-50%, -50%);
     opacity: 0;
     pointer-events: none;
@@ -151,19 +152,18 @@
     transition: transform 0.6s ease, border-radius 0.6s ease, box-shadow 0.6s ease;
   }
 
-  /* Nouvelle classe pour état après clic */
   #info-video.active-state {
     border-radius: 0 !important;
     box-shadow: none !important;
-    transform: translateY(20px);
+    transform: translateY(60px);
   }
 
   #info-text {
     color: white;
     width: 45%;
-    padding-left: 2rem;
     font-size: 1.2rem;
     line-height: 1.4;
+    position: relative;
   }
 
   #info-text h2 {
@@ -173,16 +173,18 @@
   }
 
   #back-btn {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 40px;
-    height: 40px;
+    width: 80px; /* doublé */
+    height: 80px;
     cursor: pointer;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.5s ease;
     z-index: 30;
+
+    /* Position absolue relative au #info-text pour top right */
+    position: absolute;
+    top: 0;
+    right: -90px; /* décale vers la droite hors du texte avec espace */
   }
 
   #back-btn.active {
@@ -210,11 +212,9 @@
     <div id="info-text">
       <h2>Description</h2>
       <p>Voici une description détaillée qui apparaît lorsque le logo est cliqué. Ce texte explique le contexte ou l’histoire associée.</p>
+      <img id="back-btn" src="back.png" alt="Revenir" />
     </div>
   </div>
-
-  <!-- Image cliquable remplaçant le bouton revenir -->
-  <img id="back-btn" src="back.png" alt="Revenir" />
 
   <div id="overlay" onclick="closeFullscreenVideo()"></div>
   <video id="fullscreenVideo" controls onclick="event.stopPropagation()"></video>
@@ -297,21 +297,34 @@
     const logoContainer = document.querySelector(".logo-container");
     const infoVideo = document.getElementById("info-video");
 
-    logo.addEventListener("click", () => {
+    function showDescription() {
       videosContainer.classList.add("hidden");
       logoContainer.classList.add("moved-up");
       infoContainer.classList.add("active");
       infoVideo.classList.add("active-state");
       backBtn.classList.add("active");
-    });
+    }
 
-    backBtn.addEventListener("click", () => {
+    function hideDescription() {
       videosContainer.classList.remove("hidden");
       logoContainer.classList.remove("moved-up");
       infoContainer.classList.remove("active");
       infoVideo.classList.remove("active-state");
       backBtn.classList.remove("active");
+    }
+
+    logo.addEventListener("click", () => {
+      if (infoContainer.classList.contains("active")) {
+        hideDescription();
+      } else {
+        showDescription();
+      }
     });
+
+    backBtn.addEventListener("click", () => {
+      hideDescription();
+    });
+
   };
 </script>
 
