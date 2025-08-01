@@ -1,42 +1,40 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Nokuta</title>
-  <link rel="icon" href="favicon.jpg" type="image/jpg" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+  <link rel="icon" href="favicon.jpg" type="image/jpg">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
   <style>
     html, body {
-      margin: 0; padding: 0; height: 100%;
-      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      height: 100%;
       overflow: hidden;
-      background-color: none;
-    }
-
-    @keyframes glowPulse {
-      0%, 100% { filter: drop-shadow(0 0 5px rgba(255,255,255,0.4)); }
-      50% { filter: drop-shadow(0 0 12px rgba(255,255,255,0.8)); }
+      font-family: 'Poppins', sans-serif;
+      background: none;
     }
 
     #bg-video {
       position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
       object-fit: cover;
       z-index: -100;
       pointer-events: none;
-      opacity: 1;
     }
 
     .logo-container {
       position: fixed;
-      top: 50%; left: 50%;
+      top: 50%;
+      left: 50%;
       transform: translate(-50%, -50%);
       z-index: 10;
       animation: glowPulse 3s ease-in-out infinite;
       cursor: pointer;
       transition: top 0.6s ease, transform 0.6s ease;
-      user-select: none;
     }
 
     .logo-container.moved-up {
@@ -45,65 +43,88 @@
       animation: none;
     }
 
-    .logo-container.clickable {
-      cursor: pointer;
-      pointer-events: auto;
-    }
-
     .logo-container img {
       height: 80px;
       user-select: none;
       pointer-events: none;
     }
 
+    @keyframes glowPulse {
+      0%, 100% { filter: drop-shadow(0 0 5px rgba(96, 239, 243, 0.4)); }
+      50% { filter: drop-shadow(0 0 12px rgba(96, 239, 243, 0.9)); }
+    }
+
     #videos-container {
       position: fixed;
-      top: 0; left: 0;
+      top: 0;
+      left: 0;
       width: 100vw;
       height: 100vh;
-      overflow: hidden;
       z-index: 5;
+      transition: opacity 0.5s ease;
+    }
+
+    #videos-container.hidden {
+      opacity: 0;
+      pointer-events: none;
     }
 
     video.floating-video {
       position: absolute;
-      width: 360px;
-      height: 204px;
-      border-radius: 8px;
+      width: 320px;
+      height: 180px;
       object-fit: cover;
-      filter: blur(1.2px);
-      opacity: 0.7;
+      border-radius: 8px;
+      opacity: 0.3;
+      filter: blur(2px);
+      transition: opacity 0.3s ease, filter 0.3s ease;
       pointer-events: auto;
       cursor: pointer;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-      transition: filter 0.3s ease, opacity 0.3s ease, border-radius 0.6s ease, box-shadow 0.6s ease, transform 0.6s ease;
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
     }
 
     video.floating-video:hover {
+      opacity: 1;
       filter: blur(0);
-      opacity: 1 !important;
-      box-shadow: 0 0 20px rgba(0,0,0,0.6);
     }
 
-    /* Conteneur page description */
+    .floating-video.inactive {
+      pointer-events: none;
+    }
+
+    #video-player-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 20;
+    }
+
+    #video-player {
+      width: 75vw;
+      aspect-ratio: 16 / 9;
+      background: black;
+    }
+
     #info-container {
       position: fixed;
-      top: 50%; left: 50%;
-      width: 80vw; height: 60vh;
+      top: 50%;
+      left: 50%;
+      width: 80vw;
+      height: 60vh;
       display: flex;
-      justify-content: flex-start;
+      justify-content: space-between;
       align-items: center;
-      gap: 1.5rem;
-      transform: translate(-50%, calc(-50% + 50px));
+      transform: translate(-50%, -50%);
+      z-index: 15;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.8s ease;
-      z-index: 20;
-      background: rgba(0,0,0,0.8);
-      border-radius: 12px;
-      padding: 20px;
-      color: white;
-      box-sizing: border-box;
+      transition: opacity 0.6s ease;
     }
 
     #info-container.active {
@@ -111,40 +132,18 @@
       pointer-events: auto;
     }
 
-    /* Vidéo description : sans contrôles, mute et loop */
     #info-video {
-      max-height: 100%;
-      object-fit: cover;
       width: 45%;
-      border-radius: 12px;
-      box-shadow: 0 0 15px rgba(255,255,255,0.3);
-      outline: none;
+      height: auto;
+      border-radius: 10px;
     }
 
-    /* Lecteur plein écran flottant */
-    #fullscreen-player {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      width: 75vw;
-      height: 75vh;
-      transform: translate(-50%, -50%);
-      background: black;
-      z-index: 1000;
-      display: none;
-      border-radius: 12px;
-      box-shadow: 0 0 30px rgba(0,0,0,0.8);
+    #info-text {
+      width: 45%;
+      color: white;
+      font-size: 1.2rem;
     }
 
-    #fullscreen-player video {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      border-radius: 12px;
-      outline: none;
-    }
-
-    /* Bouton retour pour page description */
     #back-btn {
       position: fixed;
       top: 15%;
@@ -169,182 +168,3 @@
     }
   </style>
 </head>
-<body>
-  <video autoplay muted loop playsinline id="bg-video">
-    <source src="fond.mp4" type="video/mp4" />
-  </video>
-
-  <audio id="bg-music" src="MUSIQUE.mp3" autoplay loop></audio>
-
-  <div class="logo-container" id="logo">
-    <img src="logo1.png" alt="Logo" />
-  </div>
-
-  <div id="videos-container"></div>
-
-  <div id="info-container">
-    <video id="info-video" src="video me.mp4" autoplay loop muted playsinline></video>
-    <div id="info-text">
-      <h2>Hey!</h2>
-      <p>I am a videographer passionate about capturing life through my camera. My goal is to make viewers feel the deepest emotions possible when watching my videos. While I primarily focus on documentaries and music videos, I’m open to collaborating on any artistic project that inspires me.<br/><br/>Feel free to contact me.</p>
-    </div>
-  </div>
-
-  <img id="back-btn" src="back.png" alt="Revenir" />
-
-  <div id="fullscreen-player">
-    <video controls></video>
-  </div>
-
-  <script>
-    window.onload = () => {
-      const videos = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
-      const container = document.getElementById("videos-container");
-      const videoElements = [];
-      const videoWidth = 360;
-      const videoHeight = 204;
-      const spaceBetween = 10; // px minimum entre vidéos
-      const borderMargin = 50; // px minimum bord haut/bas
-      const screenWidth = window.innerWidth;
-      const screenHeight = window.innerHeight;
-
-      // Fonction pour vérifier le chevauchement d'une nouvelle position avec les précédentes
-      function isOverlapping(x, y, positions) {
-        for (const pos of positions) {
-          const dx = Math.abs(x - pos.x);
-          const dy = Math.abs(y - pos.y);
-          if (dx < videoWidth + spaceBetween && dy < videoHeight + spaceBetween) {
-            return true; // chevauchement détecté
-          }
-        }
-        return false;
-      }
-
-      // Génération des positions initiales aléatoires sans chevauchement
-      const positions = [];
-      for (let i = 0; i < videos.length; i++) {
-        let x, y, tries = 0;
-        do {
-          x = Math.random() * (screenWidth - videoWidth);
-          y = borderMargin + Math.random() * (screenHeight - videoHeight - 2 * borderMargin);
-          tries++;
-          if (tries > 1000) break; // éviter boucle infinie si trop difficile
-        } while(isOverlapping(x, y, positions));
-        positions.push({x, y});
-      }
-
-      // Vitesse unique pour toutes les vidéos (px / frame)
-      const speed = 0.5;
-
-      // Création des vidéos
-      videos.forEach((src, i) => {
-        const video = document.createElement("video");
-        video.src = src;
-        video.muted = true;
-        video.loop = true;
-        video.autoplay = true;
-        video.playsInline = true;
-        video.classList.add("floating-video");
-        video.style.left = positions[i].x + "px";
-        video.style.top = positions[i].y + "px";
-        container.appendChild(video);
-        videoElements.push({element: video, x: positions[i].x, y: positions[i].y});
-      });
-
-      const bgMusic = document.getElementById("bg-music");
-      const logo = document.getElementById("logo");
-      const infoContainer = document.getElementById("info-container");
-      const infoVideo = document.getElementById("info-video");
-      const backBtn = document.getElementById("back-btn");
-      const videosContainer = document.getElementById("videos-container");
-      const fullscreenPlayer = document.getElementById("fullscreen-player");
-      const fullscreenVideo = fullscreenPlayer.querySelector("video");
-
-      bgMusic.volume = 0.08;
-      bgMusic.play().catch(() => {});
-
-      let descriptionShown = false;
-
-      // Quand on clique sur une vidéo, ouvrir le player fullscreen avec contrôles
-      videoElements.forEach(({element, x, y}) => {
-        element.addEventListener("click", () => {
-          // Masquer les vidéos flottantes et la description (si visible)
-          videosContainer.style.display = "none";
-          infoContainer.classList.remove("active");
-          backBtn.classList.remove("active");
-          logo.classList.add("clickable");
-          logo.classList.add("moved-up");
-
-          // Mettre la vidéo sélectionnée dans le player fullscreen
-          fullscreenVideo.src = element.src;
-          fullscreenVideo.currentTime = 0;
-          fullscreenVideo.volume = 0.5;
-          fullscreenVideo.play();
-
-          fullscreenPlayer.style.display = "block";
-
-          // Pause musique
-          bgMusic.pause();
-        });
-      });
-
-      // Lorsque l'on clique sur le logo dans la page description / fullscreen, revenir à l'accueil
-      logo.addEventListener("click", () => {
-        if (fullscreenPlayer.style.display === "block" || descriptionShown) {
-          fullscreenPlayer.style.display = "none";
-          fullscreenVideo.pause();
-          fullscreenVideo.src = "";
-
-          videosContainer.style.display = "block";
-
-          // Remettre la musique
-          bgMusic.play().catch(() => {});
-
-          // Cacher la description (si elle était ouverte)
-          infoContainer.classList.remove("active");
-          backBtn.classList.remove("active");
-          logo.classList.remove("clickable");
-          logo.classList.remove("moved-up");
-          descriptionShown = false;
-        } else {
-          // Affiche la description seulement si nécessaire (selon demande précédente)
-          // Ici on ne fait rien car la description ne s'ouvre que via logo + bouton back
-        }
-      });
-
-      // Back bouton pour cacher description (pas nécessaire si description pas utilisée)
-      backBtn.addEventListener("click", () => {
-        infoContainer.classList.remove("active");
-        backBtn.classList.remove("active");
-        descriptionShown = false;
-        logo.classList.remove("clickable");
-        logo.classList.remove("moved-up");
-      });
-
-      // Animation de déplacement horizontal avec wrap-around
-      function animate() {
-        videoElements.forEach(v => {
-          v.x += speed;
-          if (v.x > screenWidth) {
-            v.x = -videoWidth;
-          }
-          v.element.style.left = v.x + "px";
-        });
-        requestAnimationFrame(animate);
-      }
-
-      animate();
-
-      // Gestion volume musique au sortir du fullscreen
-      fullscreenVideo.addEventListener("pause", () => {
-        fullscreenPlayer.style.display = "none";
-        fullscreenVideo.src = "";
-        videosContainer.style.display = "block";
-        bgMusic.play().catch(() => {});
-        logo.classList.remove("clickable");
-        logo.classList.remove("moved-up");
-      });
-    };
-  </script>
-</body>
-</html>
