@@ -42,7 +42,6 @@
       animation: glowPulse 3s ease-in-out infinite;
       cursor: pointer;
       transition: top 0.6s ease, transform 0.6s ease;
-      user-select: none;
     }
 
     .logo-container.moved-up {
@@ -53,29 +52,31 @@
 
     .logo-container img {
       height: 80px;
+      user-select: none;
       pointer-events: none;
-      display: block;
     }
 
     #videos-container {
       position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      pointer-events: none; /* on laisse le pointer-events auto sur chaque vidéo */
+      top: 50%; left: 50%;
+      width: 90vw; height: 60vh;
+      transform: translate(-50%, -50%);
       z-index: 5;
+      transition: opacity 0.5s ease;
     }
 
     video.floating-video {
-      position: fixed;
+      position: absolute;
+      width: 360px;
+      height: 204px;
       border-radius: 8px;
       object-fit: cover;
       filter: blur(1.2px);
-      opacity: 0.7;
+      opacity: 0.5;
       pointer-events: auto;
       cursor: pointer;
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
       transition: filter 0.3s ease, opacity 0.3s ease, border-radius 0.6s ease, box-shadow 0.6s ease, transform 0.6s ease;
-      user-select: none;
     }
 
     video.floating-video:hover {
@@ -85,11 +86,11 @@
     }
 
     video.floating-video.description-state {
-      filter: none !important;
-      opacity: 1 !important;
-      border-radius: 0 !important;
+      filter: blur(5px) !important;
+      opacity: 0.2 !important;
+      pointer-events: none !important;
+      cursor: default !important;
       box-shadow: none !important;
-      transform: translateY(60px);
     }
 
     #info-container {
@@ -105,7 +106,6 @@
       pointer-events: none;
       transition: opacity 0.8s ease;
       z-index: 20;
-      color: white;
     }
 
     #info-container.active {
@@ -118,20 +118,16 @@
       object-fit: cover;
       width: 45%;
       transition: transform 0.6s ease, border-radius 0.6s ease, box-shadow 0.6s ease;
-      border-radius: 8px;
-      user-select: none;
-      pointer-events: none;
     }
 
     #info-text {
+      color: white;
       width: 45%;
       font-size: 1.2rem;
       line-height: 1.4;
       position: relative;
       top: 50px;
       left: 50px;
-      font-style: italic;
-      user-select: text;
     }
 
     #info-text h2 {
@@ -146,7 +142,7 @@
       position: fixed;
       top: 15%;
       right: 15%;
-      width: 40px;
+      width: 5%;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.5s ease, filter 0.3s ease;
@@ -155,7 +151,7 @@
       cursor: pointer;
       user-select: none;
     }
-
+    
     #back-btn.active {
       opacity: 1;
       pointer-events: auto;
@@ -173,13 +169,13 @@
 
   <audio id="bg-music" src="MUSIQUE.mp3" autoplay loop></audio>
 
-  <div class="logo-container" id="logo" title="Afficher la description">
+  <div class="logo-container" id="logo">
     <img src="logo1.png" alt="Logo" />
   </div>
 
   <div id="videos-container"></div>
 
-  <div id="info-container" aria-hidden="true">
+  <div id="info-container">
     <video id="info-video" src="video me.mp4" autoplay loop muted playsinline></video>
     <div id="info-text">
       <h2>Hey!</h2>
@@ -187,52 +183,53 @@
     </div>
   </div>
 
-  <img id="back-btn" src="back.png" alt="Revenir" title="Retour" />
+  <img id="back-btn" src="back.png" alt="Revenir" />
 
   <script>
     window.onload = () => {
       const videos = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
       const container = document.getElementById("videos-container");
       const videoElements = [];
+      const floatAnimations = ["float1", "float2", "float3", "float4", "float5", "float6"];
 
-      const verticalMargin = 50;
-      const minGap = 10;
-      const speed = 0.4;
-
-      // Génère taille aléatoire ~ ±20%
-      function randomSize() {
-        const scale = 0.8 + Math.random() * 0.4;
-        return { width: 360 * scale, height: 204 * scale };
+      // Fonction pour vérifier si deux rectangles se chevauchent
+      function isOverlapping(r1, r2) {
+        return !(r2.left > r1.right || 
+                 r2.right < r1.left || 
+                 r2.top > r1.bottom ||
+                 r2.bottom < r1.top);
       }
 
-      function isOverlapping(y, height, others) {
-        for (const other of others) {
-          if (!(y + height + minGap < other.y || y > other.y + other.height + minGap)) {
-            return true;
-          }
+      // Générer position aléatoire sans chevauchement
+      function generatePositions(numVideos, videoWidth, videoHeight, margin) {
+        const positions = [];
+        const containerWidth = window.innerWidth;
+        const containerHeight = window.innerHeight;
+
+        for(let i=0; i<numVideos; i++) {
+          let pos;
+          let attempts = 0;
+          do {
+            const x = Math.random() * (containerWidth - videoWidth - 2*margin) + margin;
+            const y = Math.random() * (containerHeight - videoHeight - 2*margin) + margin;
+            pos = {left: x, top: y, right: x + videoWidth, bottom: y + videoHeight};
+            attempts++;
+            if (attempts > 1000) break; // éviter boucle infinie si trop de vidéos
+          } while (positions.some(existing => isOverlapping(existing, pos)));
+          positions.push(pos);
         }
-        return false;
+        return positions;
       }
 
-      function findNonOverlappingY(height, others) {
-        let y, attempts = 0;
-        do {
-          y = verticalMargin + Math.random() * (window.innerHeight - 2 * verticalMargin - height);
-          attempts++;
-          if (attempts > 1000) break;
-        } while (isOverlapping(y, height, others));
-        return y;
-      }
+      // Dimensions des vidéos flottantes
+      const videoWidth = 360;
+      const videoHeight = 204;
+      const margin = 50; // margin from edges
 
-      const positions = [];
+      const positions = generatePositions(videos.length, videoWidth, videoHeight, margin);
 
-      videos.forEach(src => {
-        const { width, height } = randomSize();
-        const y = findNonOverlappingY(height, positions);
-        positions.push({ y, height });
-
-        const x = Math.random() * (window.innerWidth - width);
-
+      // Création des vidéos avec position aléatoire sans chevauchement
+      videos.forEach((src, i) => {
         const video = document.createElement("video");
         video.src = src;
         video.muted = true;
@@ -240,31 +237,12 @@
         video.autoplay = true;
         video.playsInline = true;
         video.classList.add("floating-video");
-
-        video.style.width = `${width}px`;
-        video.style.height = `${height}px`;
-        video.style.position = "fixed";
-        video.style.left = `${x}px`;
-        video.style.top = `${y}px`;
-        video.style.pointerEvents = "auto";
-        video.style.opacity = "0.7";
-        video.style.transition = "opacity 0.3s ease";
-
+        video.style.left = positions[i].left + "px";
+        video.style.top = positions[i].top + "px";
+        video.style.animation = `${floatAnimations[i]} ${4 + i * 0.2}s ease-in-out infinite`;
         container.appendChild(video);
-        videoElements.push({ el: video, width, height, x, y });
+        videoElements.push(video);
       });
-
-      function animate() {
-        videoElements.forEach(videoObj => {
-          videoObj.x += speed;
-          if (videoObj.x > window.innerWidth) {
-            videoObj.x = -videoObj.width;
-          }
-          videoObj.el.style.left = `${videoObj.x}px`;
-        });
-        requestAnimationFrame(animate);
-      }
-      animate();
 
       const bgMusic = document.getElementById("bg-music");
       const logo = document.getElementById("logo");
@@ -273,7 +251,7 @@
       const backBtn = document.getElementById("back-btn");
       const videosContainer = document.getElementById("videos-container");
 
-      bgMusic.volume = 0.15;
+      bgMusic.volume = 0.08;
       bgMusic.play().catch(() => {});
 
       let descriptionShown = false;
@@ -281,22 +259,28 @@
       function showDescription() {
         descriptionShown = true;
         logo.classList.add("moved-up");
-        videosContainer.classList.add("hidden");
-        videoElements.forEach(v => v.el.classList.add("description-state"));
         infoContainer.classList.add("active");
-        infoVideo.classList.add("active-state");
         backBtn.classList.add("active");
+        // Appliquer styles sur vidéos flottantes
+        videoElements.forEach(v => {
+          v.classList.add("description-state");
+          v.style.pointerEvents = "none";
+        });
+        // Cacher container vidéos si besoin (ou garder visible flou et opacité faible)
+        // videosContainer.style.opacity = "0.3";
         bgMusic.pause();
       }
 
       function hideDescription() {
         descriptionShown = false;
         logo.classList.remove("moved-up");
-        videosContainer.classList.remove("hidden");
-        videoElements.forEach(v => v.el.classList.remove("description-state"));
         infoContainer.classList.remove("active");
-        infoVideo.classList.remove("active-state");
         backBtn.classList.remove("active");
+        videoElements.forEach(v => {
+          v.classList.remove("description-state");
+          v.style.pointerEvents = "auto";
+        });
+        // videosContainer.style.opacity = "1";
         bgMusic.play().catch(() => {});
       }
 
@@ -306,25 +290,26 @@
 
       backBtn.addEventListener("click", hideDescription);
 
+      // Gestion opacité dynamique selon distance curseur quand description non affichée
       window.addEventListener("mousemove", (e) => {
+        if(descriptionShown) return; // désactive si description ouverte
+
         const mouseX = e.clientX;
         const mouseY = e.clientY;
 
-        videoElements.forEach(videoObj => {
-          const rect = videoObj.el.getBoundingClientRect();
+        videoElements.forEach(video => {
+          const rect = video.getBoundingClientRect();
           const videoCenterX = rect.left + rect.width / 2;
           const videoCenterY = rect.top + rect.height / 2;
 
           const dist = Math.sqrt((mouseX - videoCenterX) ** 2 + (mouseY - videoCenterY) ** 2);
           const maxDist = 800;
 
-          let opacity = 0.7 - (dist / maxDist) * (0.7 - 0.1);
+          let opacity = 0.5 - (dist / maxDist) * (0.5 - 0.1);
           if (opacity < 0.1) opacity = 0.1;
-          if (opacity > 0.7) opacity = 0.7;
+          if (opacity > 0.5) opacity = 0.5;
 
-          if (!videoObj.el.classList.contains('description-state') && !videoObj.el.matches(':hover')) {
-            videoObj.el.style.opacity = opacity;
-          }
+          video.style.opacity = opacity;
         });
       });
     };
