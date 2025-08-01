@@ -1,3 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<title>Nokuta</title>
+<link rel="icon" href="favicon.jpg" type="image/jpg" />
+<link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: 'Poppins', sans-serif;
+    overflow: hidden;
+    background: none;
+  }
+
+  #bg-video {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    object-fit: cover;
+    z-index: -100;
+    pointer-events: none;
+  }
+
+  .logo-container {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    animation: glowPulse 3s ease-in-out infinite;
+  }
+
+  .logo-container img {
+    height: 80px;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  @keyframes glowPulse {
+    0%, 100% {
+      filter: drop-shadow(0 0 5px rgba(255,255,255,0.4));
+    }
+    50% {
+      filter: drop-shadow(0 0 12px rgba(255,255,255,0.8));
+    }
+  }
+
+  #videos-container {
+    position: fixed;
+    top: 50%; left: 50%;
+    width: 90vw; height: 60vh;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 5;
+  }
+
+  video.floating-video {
+    position: absolute;
+    width: 360px;
+    height: 204px;
+    border-radius: 8px;
+    object-fit: cover;
+    filter: blur(1.2px);
+    opacity: 0.75;
+    pointer-events: auto;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+    transition: filter 0.3s ease, opacity 0.3s ease;
+  }
+
+  video.floating-video:hover {
+    filter: blur(0);
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+  }
+
+  #overlay {
+    position: fixed;
+    top:0; left:0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.65);
+    z-index: 999;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  #overlay.active {
+    display: block;
+    opacity: 1;
+  }
+
+  #fullscreenVideo {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(1);
+    max-width: 90vw;
+    max-height: 90vh;
+    z-index: 1000;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+
+  #fullscreenVideo.active {
+    display: block;
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+
+  <video autoplay muted loop playsinline id="bg-video" preload="auto">
+    <source src="fond.mp4" type="video/mp4" />
+    Votre navigateur ne supporte pas la vidéo HTML5.
+  </video>
+
+  <div class="logo-container">
+    <img src="logo1.png" alt="Logo" />
+  </div>
+
+  <div id="videos-container"></div>
+
+  <div id="overlay" onclick="closeFullscreenVideo()"></div>
+  <video id="fullscreenVideo" controls onclick="event.stopPropagation()"></video>
+
 <script>
   window.onload = () => {
     const videos = [
@@ -15,8 +142,8 @@
     const videoWidth = 360;
     const videoHeight = 204;
 
-    const centerX = container.clientWidth / 2;
-    const centerY = container.clientHeight / 2;
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
     const radiusX = centerX - videoWidth / 2 - 60;
     const radiusY = centerY - videoHeight / 2 - 60;
 
@@ -25,7 +152,6 @@
       let yOffset = 0;
       const angleDeg = (angle * 180) / Math.PI;
 
-      // Rehausse ou abaisse en fonction de l’angle
       if (angleDeg >= 60 && angleDeg <= 120) {
         yOffset = -80;
       } else if (angleDeg >= 240 && angleDeg <= 300) {
@@ -49,7 +175,6 @@
       videoElements.push(video);
     });
 
-    // Fullscreen logic
     const fullscreenVideo = document.getElementById("fullscreenVideo");
     const overlay = document.getElementById("overlay");
 
@@ -72,3 +197,5 @@
     };
   };
 </script>
+</body>
+</html>
