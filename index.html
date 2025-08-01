@@ -18,13 +18,6 @@
       50% { filter: drop-shadow(0 0 12px rgba(255,255,255,0.8)); }
     }
 
-    @keyframes float1 { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-6px);} }
-    @keyframes float2 { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
-    @keyframes float3 { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);} }
-    @keyframes float4 { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-12px);} }
-    @keyframes float5 { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
-    @keyframes float6 { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-5px);} }
-
     #bg-video {
       position: fixed;
       top: 0; left: 0;
@@ -58,9 +51,11 @@
 
     #videos-container {
       position: fixed;
-      top: 50%; left: 50%;
-      width: 90vw; height: 60vh;
-      transform: translate(-50%, -50%);
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
       z-index: 5;
       transition: opacity 0.5s ease;
     }
@@ -71,17 +66,21 @@
     }
 
     video.floating-video {
-      position: absolute;
+      position: fixed;
       width: 360px;
       height: 204px;
       border-radius: 8px;
       object-fit: cover;
       filter: blur(1.2px);
-      opacity: 0.7; /* opacité par défaut */
+      opacity: 0.7;
       pointer-events: auto;
       cursor: pointer;
       box-shadow: 0 0 10px rgba(0,0,0,0.3);
       transition: filter 0.3s ease, opacity 0.3s ease, border-radius 0.6s ease, box-shadow 0.6s ease, transform 0.6s ease;
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
     }
 
     video.floating-video:hover {
@@ -111,6 +110,7 @@
       pointer-events: none;
       transition: opacity 0.8s ease;
       z-index: 20;
+      color: white;
     }
 
     #info-container.active {
@@ -123,10 +123,11 @@
       object-fit: cover;
       width: 45%;
       transition: transform 0.6s ease, border-radius 0.6s ease, box-shadow 0.6s ease;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
 
     #info-text {
-      color: white;
       width: 45%;
       font-size: 1.2rem;
       line-height: 1.4;
@@ -195,17 +196,21 @@
       const videos = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
       const container = document.getElementById("videos-container");
       const videoElements = [];
-      const positions = [
-        { x: -250, y: -220 },
-        { x: 250, y: -220 },
-        { x: 530, y: 0 },
-        { x: 250, y: 220 },
-        { x: -250, y: 220 },
-        { x: -530, y: 0 }
-      ];
-      const floatAnimations = ["float1", "float2", "float3", "float4", "float5", "float6"];
+      const containerWidth = window.innerWidth;
+      const containerHeight = window.innerHeight;
 
-      // Création des vidéos sans animation d'apparition
+      function randomStartX() {
+        return Math.random() * -300 - 100; // entre -400 et -100 px à gauche
+      }
+
+      function randomY() {
+        return containerHeight * (0.1 + Math.random() * 0.7); // entre 10% et 80% de la hauteur
+      }
+
+      function randomSpeed() {
+        return 20 + Math.random() * 40; // vitesse entre 20 et 60 px/s
+      }
+
       videos.forEach((src, i) => {
         const video = document.createElement("video");
         video.src = src;
@@ -214,10 +219,13 @@
         video.autoplay = true;
         video.playsInline = true;
         video.classList.add("floating-video");
-        video.style.left = `calc(50% + ${positions[i].x}px - 180px)`;
-        video.style.top = `calc(50% + ${positions[i].y}px - 102px)`;
-        video.style.animation = `${floatAnimations[i]} ${4 + i * 0.2}s ease-in-out infinite`;
+        video.style.position = "fixed";
+        video.style.top = randomY() + "px";
+        video.style.left = randomStartX() + "px";
+        video.style.filter = "blur(1.2px)";
+        video.style.opacity = "0.7";
         container.appendChild(video);
+        video.speed = randomSpeed();
         videoElements.push(video);
       });
 
@@ -266,7 +274,30 @@
 
       backBtn.addEventListener("click", hideDescription);
 
-      // Fonction pour calculer et mettre à jour l'opacité selon la distance curseur -> vidéo
+      let lastTimestamp = null;
+      function animate(timestamp) {
+        if (!lastTimestamp) lastTimestamp = timestamp;
+        const delta = (timestamp - lastTimestamp) / 1000;
+        lastTimestamp = timestamp;
+
+        videoElements.forEach(video => {
+          let currentLeft = parseFloat(video.style.left);
+          if (isNaN(currentLeft)) currentLeft = 0;
+          currentLeft += video.speed * delta;
+
+          if (currentLeft > containerWidth + 400) {
+            currentLeft = -400;
+            video.style.top = randomY() + "px";
+          }
+
+          video.style.left = currentLeft + "px";
+        });
+
+        requestAnimationFrame(animate);
+      }
+
+      requestAnimationFrame(animate);
+
       window.addEventListener("mousemove", (e) => {
         const mouseX = e.clientX;
         const mouseY = e.clientY;
@@ -276,18 +307,13 @@
           const videoCenterX = rect.left + rect.width / 2;
           const videoCenterY = rect.top + rect.height / 2;
 
-          // Calcul distance euclidienne souris -> centre vidéo
           const dist = Math.sqrt((mouseX - videoCenterX) ** 2 + (mouseY - videoCenterY) ** 2);
+          const maxDist = 800;
 
-          // On définit un maxDist au-delà duquel l'opacité sera minimale
-          const maxDist = 800; // px (ajustable)
-
-          // Calcul opacité inversement proportionnelle à la distance
           let opacity = 0.7 - (dist / maxDist) * (0.7 - 0.1);
           if (opacity < 0.1) opacity = 0.1;
           if (opacity > 0.7) opacity = 0.7;
 
-          // Si la vidéo est en hover ou en description-state on laisse l'opacité à 1 (hover géré via CSS)
           if (!video.classList.contains('description-state') && !video.matches(':hover')) {
             video.style.opacity = opacity;
           }
