@@ -115,13 +115,15 @@
       outline: none;
     }
 
-    /* Lecteur plein écran flottant */
+    /* Lecteur "fullscreen" (75% écran) en 16/9 */
     #fullscreen-player {
       position: fixed;
       top: 50%;
       left: 50%;
       width: 75vw;
-      height: 75vh;
+      height: calc(75vw * 9 / 16); /* 16/9 ratio */
+      max-height: 75vh;
+      max-width: calc(75vh * 16 / 9);
       transform: translate(-50%, -50%);
       background: black;
       z-index: 1000;
@@ -273,8 +275,8 @@
 
       let descriptionShown = false;
 
-      // Quand on clique sur une vidéo, ouvrir le player fullscreen avec contrôles
-      videoElements.forEach(({element, x, y, w, h}) => {
+      // Quand on clique sur une vidéo, ouvrir le player avec contrôles
+      videoElements.forEach(({element}) => {
         element.addEventListener("click", () => {
           // Masquer les vidéos flottantes et la description (si visible)
           videosContainer.style.display = "none";
@@ -295,7 +297,7 @@
         });
       });
 
-      // Pour fermer le fullscreen en cliquant en dehors de la vidéo
+      // Pour fermer le player en cliquant en dehors du lecteur
       fullscreenPlayer.addEventListener("click", (e) => {
         // Si clic en dehors de la vidéo (sur le conteneur)
         if (e.target === fullscreenPlayer) {
@@ -308,16 +310,29 @@
         }
       });
 
-      // Logo toujours cliquable pour revenir à l'accueil
+      // Le logo ouvre uniquement la description
       logo.addEventListener("click", () => {
-        if (fullscreenPlayer.style.display === "block") {
-          fullscreenVideo.pause();
-          fullscreenVideo.src = "";
-          fullscreenPlayer.style.display = "none";
-          videosContainer.style.display = "block";
-          bgMusic.play().catch(() => {});
-          logo.classList.remove("moved-up");
-        }
+        // Si description déjà visible, rien à faire
+        if (infoContainer.classList.contains("active")) return;
+
+        // Masquer les vidéos flottantes et player si ouvert
+        videosContainer.style.display = "none";
+        fullscreenPlayer.style.display = "none";
+        fullscreenVideo.pause();
+        fullscreenVideo.src = "";
+        bgMusic.play().catch(() => {});
+
+        infoContainer.classList.add("active");
+        backBtn.classList.add("active");
+        logo.classList.add("moved-up");
+      });
+
+      // Bouton retour pour fermer la description et revenir à l'accueil
+      backBtn.addEventListener("click", () => {
+        infoContainer.classList.remove("active");
+        backBtn.classList.remove("active");
+        videosContainer.style.display = "block";
+        logo.classList.remove("moved-up");
       });
 
       // Animation déplacement horizontal avec wrap-around
@@ -331,6 +346,26 @@
         });
         requestAnimationFrame(animate);
       }
+logo.addEventListener("click", () => {
+  if (infoContainer.classList.contains("active")) {
+    // Description visible → on la ferme
+    infoContainer.classList.remove("active");
+    backBtn.classList.remove("active");
+    videosContainer.style.display = "block";
+    logo.classList.remove("moved-up");
+  } else {
+    // Description pas visible → on l'ouvre
+    videosContainer.style.display = "none";
+    fullscreenPlayer.style.display = "none";
+    fullscreenVideo.pause();
+    fullscreenVideo.src = "";
+    bgMusic.play().catch(() => {});
+
+    infoContainer.classList.add("active");
+    backBtn.classList.add("active");
+    logo.classList.add("moved-up");
+  }
+});
 
       animate();
 
