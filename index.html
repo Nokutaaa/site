@@ -195,6 +195,7 @@
       font-size: 1.2rem;
       line-height: 1.4;
       position: relative;
+      bot: +100px;
     }
 
     #info-text h2 {
@@ -203,6 +204,7 @@
       font-weight: 600;
       font-size: 2.2rem;
       font-style: italic;
+      bot: +100px;
     }
 
     #back-btn {
@@ -215,8 +217,7 @@
       z-index: 30;
       position: absolute;
       top: -50px;
-      right: -200px;
-      transform: rotate(180deg);
+      right: -100px;
     }
 
     #back-btn.active {
@@ -266,10 +267,10 @@
     const positions = [
       { x: -250, y: -240 }, // video1
       { x: +250, y: -240 }, // video2
-      { x: +530, y: -50 },  // video3
+      { x: +530, y: 0 },  // video3
       { x: +250, y: +240 }, // video4
       { x: -250, y: +240 }, // video5
-      { x: -530, y: -50 }   // video6
+      { x: -530, y: 0 }   // video6
     ];
 
     videos.forEach((src, i) => {
