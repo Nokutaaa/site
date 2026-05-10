@@ -6,643 +6,596 @@
   <title>Vidéaste & Monteur</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:          #070707;
-      --bg2:         #0e0e0e;
-      --bg3:         #141414;
-      --border:      rgba(255,255,255,.07);
-      --border2:     rgba(255,255,255,.12);
-      --text-bright: #f2f2f2;
-      --text-mid:    #777;
-      --text-dim:    #333;
-      --font:        'DM Sans', sans-serif;
-      --mono:        'DM Mono', monospace;
-      --sidebar:     220px;
+      --bg:        #f5f4f0;
+      --sidebar-w: 200px;
+      --text:      #1a1a1a;
+      --text-mid:  #888;
+      --text-dim:  #bbb;
+      --border:    #ddd;
+      --font:      'EB Garamond', Georgia, serif;
+      --mono:      'DM Mono', monospace;
     }
 
-    html, body {
-      height: 100%;
+    html {
       background: var(--bg);
-      color: var(--text-mid);
+      color: var(--text);
       font-family: var(--font);
-      font-size: 14px;
-      line-height: 1.6;
-      overflow: hidden;
+      font-size: 15px;
     }
 
-    /* ── LAYOUT ── */
-    .site {
+    body {
       display: flex;
-      height: 100vh;
-      width: 100vw;
+      min-height: 100vh;
     }
 
-    /* ── SIDEBAR ── */
-    .sidebar {
-      width: var(--sidebar);
-      min-width: var(--sidebar);
-      display: flex;
-      flex-direction: column;
-      padding: 36px 28px 32px;
-      border-right: 0.5px solid var(--border);
-      position: relative;
-      z-index: 10;
-      background: var(--bg);
-    }
-
-    .logo-img {
-      display: block;
-      width: 100%;
-      max-width: 140px;
-      height: auto;
-      margin-bottom: 52px;
-      filter: brightness(0) invert(1);
-      object-fit: contain;
-    }
-
-    .nav-label {
-      font-family: var(--mono);
-      font-size: 8px;
-      letter-spacing: .22em;
-      color: var(--text-dim);
-      text-transform: uppercase;
-      margin-bottom: 10px;
-    }
-
-    nav {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    nav a {
-      display: block;
-      font-size: 13px;
-      font-weight: 300;
-      color: var(--text-mid);
-      text-decoration: none;
-      padding: 7px 0;
-      letter-spacing: .04em;
-      transition: color .2s;
-      cursor: pointer;
-    }
-    nav a:hover  { color: var(--text-bright); }
-    nav a.active { color: var(--text-bright); }
-
-    .sidebar-bottom {
-      margin-top: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .tag-location {
-      font-family: var(--mono);
-      font-size: 8px;
-      color: var(--text-dim);
-      letter-spacing: .1em;
-    }
-
-    .cta-btn {
-      background: var(--text-bright);
-      color: var(--bg);
-      border: none;
-      padding: 12px 0;
-      font-family: var(--font);
-      font-size: 9px;
-      font-weight: 500;
-      letter-spacing: .16em;
-      text-transform: uppercase;
-      border-radius: 2px;
-      cursor: pointer;
-      width: 100%;
-      transition: opacity .15s;
-    }
-    .cta-btn:hover { opacity: .82; }
-
-    /* ── MAIN ── */
-    .main {
+    /* ══════════════════════════════════
+       MOSAÏQUE  (zone scrollable gauche)
+    ══════════════════════════════════ */
+    .mosaic-wrap {
       flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+      margin-right: var(--sidebar-w);
+      padding: 28px 24px 60px 28px;
+      overflow-y: auto;
     }
 
-    /* ── HERO SHOWREEL ── */
-    .hero {
+    /* Grille CSS masonry-like avec colonnes */
+    .mosaic {
+      columns: 3;
+      column-gap: 6px;
+    }
+
+    .tile {
+      break-inside: avoid;
+      margin-bottom: 6px;
       position: relative;
-      flex: 0 0 52%;
-      background: #000;
-      border-bottom: 0.5px solid var(--border);
-      display: flex;
-      align-items: flex-end;
+      cursor: pointer;
       overflow: hidden;
+      background: #1a1a1a;
+      display: block;
     }
 
-    .hero-video {
+    /* Showreel : pleine largeur 16:9 */
+    .tile.showreel {
+      column-span: all;
+      margin-bottom: 6px;
+    }
+    .tile.showreel .tile-ratio { padding-bottom: 56.25%; }
+
+    /* Tiles portrait */
+    .tile.portrait .tile-ratio  { padding-bottom: 133%; }
+    /* Tiles carré */
+    .tile.square .tile-ratio    { padding-bottom: 100%; }
+    /* Tiles paysage */
+    .tile.landscape .tile-ratio { padding-bottom: 66%; }
+    /* Tiles large */
+    .tile.wide .tile-ratio      { padding-bottom: 50%; }
+
+    .tile-ratio {
+      position: relative;
+      width: 100%;
+    }
+
+    .tile-media {
       position: absolute;
       inset: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
-      opacity: .72;
-    }
-
-    .hero::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image: repeating-linear-gradient(
-        0deg, transparent, transparent 3px,
-        rgba(0,0,0,.08) 3px, rgba(0,0,0,.08) 4px
-      );
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    .play-circle {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 68px;
-      height: 68px;
-      border-radius: 50%;
-      border: 1.5px solid rgba(255,255,255,.35);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 3;
-      cursor: pointer;
-      transition: border-color .25s, transform .25s;
-    }
-    .hero:hover .play-circle {
-      border-color: rgba(255,255,255,.85);
-      transform: translate(-50%, -50%) scale(1.08);
-    }
-    .play-circle::after {
-      content: '';
-      width: 0; height: 0;
-      border-top: 12px solid transparent;
-      border-bottom: 12px solid transparent;
-      border-left: 20px solid rgba(255,255,255,.75);
-      margin-left: 6px;
-    }
-
-    .hero-gradient {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top, rgba(7,7,7,.95) 0%, rgba(7,7,7,.1) 55%, transparent 100%);
-      z-index: 2;
-      pointer-events: none;
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 4;
-      padding: 32px 36px;
-      width: 100%;
-    }
-
-    .hero-eyebrow {
-      font-family: var(--mono);
-      font-size: 8px;
-      letter-spacing: .24em;
-      color: #555;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-    }
-
-    .hero-heading {
-      font-size: 28px;
-      font-weight: 300;
-      color: var(--text-bright);
-      line-height: 1.15;
-      letter-spacing: -.02em;
-    }
-
-    .hero-sub {
-      font-size: 11px;
-      color: #4a4a4a;
-      margin-top: 8px;
-      letter-spacing: .05em;
-    }
-
-    /* ── SERVICES STRIP ── */
-    .services {
-      display: flex;
-      border-bottom: 0.5px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    .svc {
-      flex: 1;
-      padding: 16px 22px;
-      border-right: 0.5px solid var(--border);
-      cursor: pointer;
-      transition: background .2s;
-    }
-    .svc:last-child { border-right: none; }
-    .svc:hover { background: var(--bg2); }
-
-    .svc-name {
-      font-family: var(--mono);
-      font-size: 8px;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      color: #444;
-      margin-bottom: 4px;
-      transition: color .2s;
-    }
-    .svc:hover .svc-name { color: var(--text-mid); }
-
-    .svc-desc {
-      font-size: 10px;
-      color: #2c2c2c;
-      line-height: 1.4;
-      transition: color .2s;
-    }
-    .svc:hover .svc-desc { color: #444; }
-
-    /* ── VIDEO GRID ── */
-    .grid {
-      flex: 1;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(2, 1fr);
-      gap: 3px;
-      background: #050505;
-      overflow: hidden;
-    }
-
-    .vi {
-      position: relative;
-      background: var(--bg3);
-      cursor: pointer;
-      overflow: hidden;
-    }
-
-    .vi-thumb {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      opacity: .55;
-      transition: opacity .3s;
-    }
-    .vi:hover .vi-thumb { opacity: .75; }
-
-    .vi-inner {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .vi-waveform {
-      display: flex;
-      align-items: flex-end;
-      gap: 2px;
-      height: 32px;
-      opacity: .18;
-    }
-    .vi-waveform span {
       display: block;
-      width: 3px;
-      background: #666;
-      border-radius: 1px;
+      transition: transform .4s ease, opacity .3s;
     }
 
-    .vi-play {
+    /* Overlay hover */
+    .tile-overlay {
       position: absolute;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      border: 1px solid rgba(255,255,255,.2);
+      inset: 0;
+      background: rgba(0,0,0,0);
+      transition: background .3s;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: border-color .2s, transform .2s;
-      z-index: 3;
     }
-    .vi:hover .vi-play {
-      border-color: rgba(255,255,255,.6);
-      transform: scale(1.1);
-    }
-    .vi-play::after {
-      content: '';
-      width: 0; height: 0;
-      border-top: 5px solid transparent;
-      border-bottom: 5px solid transparent;
-      border-left: 9px solid rgba(255,255,255,.55);
-      margin-left: 2px;
-    }
+    .tile:hover .tile-overlay { background: rgba(0,0,0,.28); }
+    .tile:hover .tile-media   { transform: scale(1.03); }
 
-    .vi-overlay {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,.85) 0%, transparent 60%);
+    /* Icône play sur les tiles vidéo */
+    .play-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
       opacity: 0;
       transition: opacity .25s;
+    }
+    .play-icon::after {
+      content: '';
+      width: 0; height: 0;
+      border-top:  9px solid transparent;
+      border-bottom: 9px solid transparent;
+      border-left: 15px solid rgba(255,255,255,.85);
+      margin-left: 4px;
+    }
+    .tile:hover .play-icon { opacity: 1; }
+
+    /* Caption */
+    .tile-caption {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 10px 12px;
+      background: linear-gradient(to top, rgba(0,0,0,.6) 0%, transparent 100%);
+      font-family: var(--mono);
+      font-size: 10px;
+      color: rgba(255,255,255,.75);
+      letter-spacing: .08em;
+      opacity: 0;
+      transition: opacity .25s;
+    }
+    .tile:hover .tile-caption { opacity: 1; }
+
+    /* ══════════════════════════════════
+       SIDEBAR DROITE (fixe)
+    ══════════════════════════════════ */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
-      padding: 14px 16px;
-      z-index: 2;
-    }
-    .vi:hover .vi-overlay { opacity: 1; }
-
-    .vi-client {
-      font-family: var(--mono);
-      font-size: 7px;
-      letter-spacing: .16em;
-      text-transform: uppercase;
-      color: #888;
-      margin-bottom: 2px;
-    }
-    .vi-type {
-      font-size: 11px;
-      color: var(--text-bright);
-      font-weight: 400;
-    }
-    .vi-dur {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      font-family: var(--mono);
-      font-size: 8px;
-      color: #444;
-      z-index: 3;
+      padding: 28px 22px 28px 18px;
+      border-left: 0.5px solid var(--border);
+      background: var(--bg);
+      z-index: 100;
+      overflow-y: auto;
     }
 
-    /* ── MODAL DEVIS ── */
+    .logo-wrap {
+      margin-bottom: 40px;
+    }
+    .logo-wrap img {
+      display: block;
+      width: 100%;
+      max-width: 130px;
+      height: auto;
+      /* Retirez ce filtre si votre logo est déjà sombre */
+      /* filter: brightness(0); */
+    }
+
+    /* Navigation */
+    .nav-section {
+      margin-bottom: 6px;
+    }
+
+    .nav-cat {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: .06em;
+      color: var(--text);
+      text-decoration: none;
+      padding: 5px 0;
+      cursor: pointer;
+      user-select: none;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    .nav-cat:hover { color: var(--text-mid); }
+
+    .nav-cat .arrow {
+      font-size: 10px;
+      color: var(--text-dim);
+      transition: transform .2s;
+      display: inline-block;
+    }
+    .nav-cat.open .arrow { transform: rotate(90deg); }
+
+    .nav-sub {
+      display: none;
+      flex-direction: column;
+      padding-left: 10px;
+      margin-bottom: 4px;
+    }
+    .nav-sub.visible { display: flex; }
+
+    .nav-sub a {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-mid);
+      text-decoration: none;
+      padding: 4px 0;
+      letter-spacing: .04em;
+      transition: color .15s;
+    }
+    .nav-sub a:hover { color: var(--text); }
+
+    /* Séparateur */
+    .nav-sep {
+      height: 0.5px;
+      background: var(--border);
+      margin: 14px 0;
+    }
+
+    /* Liens simples (sans sous-menu) */
+    .nav-link {
+      display: block;
+      font-family: var(--font);
+      font-size: 13px;
+      color: var(--text);
+      text-decoration: none;
+      padding: 5px 0;
+      letter-spacing: .04em;
+      transition: color .15s;
+    }
+    .nav-link:hover { color: var(--text-mid); }
+
+    /* Bas sidebar */
+    .sidebar-bottom {
+      margin-top: auto;
+      padding-top: 20px;
+    }
+    .sidebar-bottom a {
+      display: block;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text-dim);
+      text-decoration: none;
+      padding: 3px 0;
+      letter-spacing: .06em;
+      transition: color .15s;
+    }
+    .sidebar-bottom a:hover { color: var(--text); }
+
+    /* ══════════════════════════════════
+       MODAL LECTEUR VIDÉO
+    ══════════════════════════════════ */
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,.88);
-      z-index: 100;
+      background: rgba(0,0,0,.92);
+      z-index: 200;
       display: none;
       align-items: center;
       justify-content: center;
     }
     .modal-backdrop.open { display: flex; }
 
-    .modal {
-      background: #0f0f0f;
-      border: 0.5px solid var(--border2);
-      border-radius: 4px;
-      padding: 40px;
-      width: 400px;
-      max-width: 92vw;
-    }
-    .modal h2 {
-      font-size: 15px;
-      font-weight: 400;
-      color: var(--text-bright);
-      margin-bottom: 24px;
-      letter-spacing: .04em;
-    }
-    .modal label {
-      display: block;
-      font-family: var(--mono);
-      font-size: 8px;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      color: #444;
-      margin-bottom: 6px;
-      margin-top: 16px;
-    }
-    .modal input, .modal select, .modal textarea {
-      width: 100%;
-      background: #0a0a0a;
-      border: 0.5px solid var(--border2);
-      color: var(--text-bright);
-      font-family: var(--font);
-      font-size: 13px;
-      padding: 10px 14px;
-      border-radius: 2px;
-      outline: none;
-      transition: border-color .15s;
-    }
-    .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: #555; }
-    .modal select option { background: #111; }
-    .modal textarea { resize: vertical; min-height: 90px; }
-    .modal-actions { display: flex; gap: 10px; margin-top: 26px; }
-    .btn-send {
-      flex: 1;
-      background: var(--text-bright);
-      color: var(--bg);
-      border: none;
-      padding: 12px;
-      font-family: var(--font);
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: .14em;
-      text-transform: uppercase;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: opacity .15s;
-    }
-    .btn-send:hover { opacity: .85; }
-    .btn-cancel {
-      background: transparent;
-      color: var(--text-dim);
-      border: 0.5px solid var(--border2);
-      padding: 12px 18px;
-      font-family: var(--font);
-      font-size: 10px;
-      letter-spacing: .08em;
-      border-radius: 2px;
-      cursor: pointer;
+    .modal-inner {
+      position: relative;
+      width: 90vw;
+      max-width: 1100px;
     }
 
-    /* ── RESPONSIVE ── */
-    @media (max-width: 768px) {
-      html, body { overflow: auto; }
-      .site { flex-direction: column; height: auto; }
+    .modal-video-wrap {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%;
+      background: #000;
+    }
+
+    .modal-video-wrap video,
+    .modal-video-wrap iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: -36px;
+      right: 0;
+      background: none;
+      border: none;
+      color: rgba(255,255,255,.6);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .12em;
+      cursor: pointer;
+      padding: 4px 0;
+      transition: color .15s;
+    }
+    .modal-close:hover { color: #fff; }
+
+    .modal-title {
+      margin-top: 14px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: rgba(255,255,255,.4);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    /* ══════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════ */
+    @media (max-width: 900px) {
+      .mosaic { columns: 2; }
+    }
+    @media (max-width: 600px) {
+      body { flex-direction: column; }
+      .mosaic-wrap { margin-right: 0; padding: 16px 12px 80px; }
+      .mosaic { columns: 1; }
       .sidebar {
+        position: fixed;
+        top: auto; bottom: 0;
+        right: 0; left: 0;
         width: 100%;
+        height: auto;
         flex-direction: row;
         flex-wrap: wrap;
         align-items: center;
-        padding: 16px 20px;
-        border-right: none;
-        border-bottom: 0.5px solid var(--border);
+        padding: 12px 16px;
+        border-left: none;
+        border-top: 0.5px solid var(--border);
+        overflow: visible;
       }
-      .logo-img { max-width: 90px; margin-bottom: 0; margin-right: auto; }
-      nav { flex-direction: row; }
-      nav a { padding: 5px 10px; }
-      .nav-label, .tag-location { display: none; }
-      .sidebar-bottom { margin-top: 0; margin-left: 12px; flex-direction: row; }
-      .cta-btn { width: auto; padding: 9px 16px; }
-      .main { overflow: auto; }
-      .hero { flex: none; height: 52vw; min-height: 200px; }
-      .services { overflow-x: auto; }
-      .svc { min-width: 130px; }
-      .grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; height: auto; }
-      .vi { aspect-ratio: 16/9; }
+      .logo-wrap { margin-bottom: 0; margin-right: auto; }
+      .logo-wrap img { max-width: 80px; }
+      .nav-section, .nav-sep, .sidebar-bottom { display: none; }
     }
   </style>
 </head>
 <body>
 
-<div class="site">
+<!-- ══════════════════════════════════
+     MOSAÏQUE
+══════════════════════════════════ -->
+<div class="mosaic-wrap">
+  <div class="mosaic" id="mosaic">
 
-  <!-- ── SIDEBAR ── -->
-  <aside class="sidebar">
-    <!-- 💡 logo1.png dans le même dossier que index.html -->
-    <img class="logo-img" src="logo1.png" alt="Logo" />
-
-    <div class="nav-label">Menu</div>
-    <nav>
-      <a href="#" class="active">Accueil</a>
-      <a href="#">À propos</a>
-      <a href="#" onclick="openModal(); return false;">Contact</a>
-    </nav>
-
-    <div class="sidebar-bottom">
-      <div class="tag-location">Île-de-France · FR</div>
-      <button class="cta-btn" onclick="openModal()">Devis gratuit</button>
-    </div>
-  </aside>
-
-  <!-- ── MAIN ── -->
-  <main class="main">
-
-    <!-- ── HERO — vidéo liée à video1.mp4 ── -->
-    <section class="hero">
-      <!--
-        💡 video1.mp4 doit être dans le même dossier que index.html.
-           autoplay + muted + loop = lecture automatique en boucle silencieuse.
-      -->
-      <video class="hero-video" autoplay muted loop playsinline>
-        <source src="video1.mp4" type="video/mp4" />
-      </video>
-      <div class="hero-gradient"></div>
-      <div class="play-circle"></div>
-      <div class="hero-content">
-        <div class="hero-eyebrow">Showreel 2025</div>
-        <div class="hero-heading">Films d'entreprise<br>&amp; contenus digitaux</div>
-        <div class="hero-sub">Île-de-France · Disponible en France entière</div>
-      </div>
-    </section>
-
-    <!-- ── SERVICES ── -->
-    <div class="services">
-      <div class="svc">
-        <div class="svc-name">Film institutionnel</div>
-        <div class="svc-desc">Valorisez votre image de marque</div>
-      </div>
-      <div class="svc">
-        <div class="svc-name">Réseaux sociaux</div>
-        <div class="svc-desc">Formats natifs, impact max</div>
-      </div>
-      <div class="svc">
-        <div class="svc-name">Événementiel</div>
-        <div class="svc-desc">Captation &amp; montage live</div>
-      </div>
-      <div class="svc">
-        <div class="svc-name">Motion design</div>
-        <div class="svc-desc">Animation &amp; habillage graphique</div>
+    <!-- ── SHOWREEL (plein largeur, se lance automatiquement sans son) ── -->
+    <div class="tile showreel" data-type="local" data-src="video1.mp4" data-title="Showreel 2025">
+      <div class="tile-ratio">
+        <!--
+          La vidéo showreel joue en fond dès le chargement (autoplay muted).
+          Au clic, elle s'ouvre en plein écran dans le modal avec le son.
+        -->
+        <video
+          class="tile-media"
+          src="video1.mp4"
+          autoplay muted loop playsinline
+          id="showreel-bg"
+        ></video>
+        <div class="tile-overlay">
+          <div class="play-icon"></div>
+        </div>
+        <div class="tile-caption">Showreel 2025 — Cliquez pour regarder avec le son</div>
       </div>
     </div>
 
-    <!-- ── VIDEO GRID ── -->
-    <!--
-      💡 Pour ajouter un visuel de prévisualisation à chaque cellule,
-         ajoutez une propriété "thumb" dans les projets ci-dessous.
-         Pour ouvrir une vidéo au clic, remplacez alert() par window.open('url').
-    -->
-    <div class="grid" id="grid"></div>
+    <!-- ══════════════════════════════════
+         PROJETS
+         💡 Personnalisez chaque tile :
+            - class : portrait / square / landscape / wide
+            - data-type : "local" (fichier .mp4 local) ou "vimeo" ou "youtube"
+            - data-src  : chemin du fichier ou ID de la vidéo
+            - data-title : titre affiché dans le modal
+            - Remplacez les <div class="tile-media bg-…"> par de vraies <img>
+              ou des <video> en poster.
+         Exemple avec image :
+            <img class="tile-media" src="thumb1.jpg" alt="Projet 1" />
+         Exemple avec poster vidéo :
+            <video class="tile-media" src="projet.mp4" muted loop playsinline poster="thumb.jpg"></video>
+    ══════════════════════════════════ -->
 
-  </main>
+    <div class="tile portrait" data-type="vimeo" data-src="76979871" data-title="Esport — Tournoi Paris 2024">
+      <div class="tile-ratio">
+        <div class="tile-media" style="background:#1c1c1c;position:absolute;inset:0;"></div>
+        <div class="tile-overlay"><div class="play-icon"></div></div>
+        <div class="tile-caption">Esport — Tournoi Paris 2024</div>
+      </div>
+    </div>
+
+    <div class="tile square" data-type="vimeo" data-src="76979871" data-title="Travel — Islande 2024">
+      <div class="tile-ratio">
+        <div class="tile-media" style="background:#2a2a2a;position:absolute;inset:0;"></div>
+        <div class="tile-overlay"><div class="play-icon"></div></div>
+        <div class="tile-caption">Travel — Islande 2024</div>
+      </div>
+    </div>
+
+    <div class="tile landscape" data-type="vimeo" data-src="76979871" data-title="Music Video — Artiste A">
+      <div class="tile-ratio">
+        <div class="tile-media" style="background:#222;position:absolute;inset:0;"></div>
+        <div class="tile-overlay"><div class="play-icon"></div></div>
+        <div class="tile-caption">Music Video — Artiste A</div>
+      </div>
+    </div>
+
+    <div class="tile portrait" data-type="vimeo" data-src="76979871" data-title="Esport — Finale Lyon">
+      <div class="tile-ratio">
+        <div class="tile-media" style="background:#181818;position:absolute;inset:0;"></div>
+        <div class="tile-overlay"><div class="play-icon"></div></div>
+        <div class="tile-caption">Esport — Finale Lyon</div>
+      </div>
+    </div>
+
+    <div class="tile wide" data-type="vimeo" data-src="76979871" data-title="Travel — Japon 2023">
+      <div class="tile-ratio">
+        <div class="tile-media" style="background:#202020;position:absolute;inset:0;"></div>
+        <div class="tile-overlay"><div class="play-icon"></div></div>
+        <div class="tile-caption">Travel — Japon 2023</div>
+      </div>
+    </div>
+
+    <div class="tile square" data-type="vimeo" data-src="76979871" data-title="Music Video — Artiste B">
+      <div class="tile-ratio">
+        <div class="tile-media" style="background:#252525;position:absolute;inset:0;"></div>
+        <div class="tile-overlay"><div class="play-icon"></div></div>
+        <div class="tile-caption">Music Video — Artiste B</div>
+      </div>
+    </div>
+
+    <div class="tile landscape" data-type="vimeo" data-src="76979871" data-title="Esport — Summit 2024">
+      <div class="tile-ratio">
+        <div class="tile-media" style="background:#1e1e1e;position:absolute;inset:0;"></div>
+        <div class="tile-overlay"><div class="play-icon"></div></div>
+        <div class="tile-caption">Esport — Summit 2024</div>
+      </div>
+    </div>
+
+    <div class="tile portrait" data-type="vimeo" data-src="76979871" data-title="Travel — Maroc 2023">
+      <div class="tile-ratio">
+        <div class="tile-media" style="background:#171717;position:absolute;inset:0;"></div>
+        <div class="tile-overlay"><div class="play-icon"></div></div>
+        <div class="tile-caption">Travel — Maroc 2023</div>
+      </div>
+    </div>
+
+  </div>
 </div>
 
-<!-- ── MODAL DEVIS ── -->
-<div class="modal-backdrop" id="modal" onclick="closeModal(event)">
-  <div class="modal">
-    <h2>Demande de devis</h2>
-    <label>Nom / Entreprise</label>
-    <input type="text" placeholder="Votre entreprise" />
-    <label>Email</label>
-    <input type="email" placeholder="contact@entreprise.fr" />
-    <label>Type de projet</label>
-    <select>
-      <option>Film institutionnel</option>
-      <option>Contenu réseaux sociaux</option>
-      <option>Captation événementielle</option>
-      <option>Motion design</option>
-      <option>Autre</option>
-    </select>
-    <label>Message</label>
-    <textarea placeholder="Décrivez votre projet en quelques lignes…"></textarea>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeModal()">Annuler</button>
-      <button class="btn-send">Envoyer →</button>
+<!-- ══════════════════════════════════
+     SIDEBAR DROITE
+══════════════════════════════════ -->
+<aside class="sidebar">
+
+  <div class="logo-wrap">
+    <!-- 💡 logo1.png dans le même dossier que index.html -->
+    <img src="logo1.png" alt="Logo" />
+  </div>
+
+  <!-- FILMS -->
+  <div class="nav-section">
+    <button class="nav-cat" onclick="toggleSub('sub-films', this)">
+      Films <span class="arrow">›</span>
+    </button>
+    <div class="nav-sub" id="sub-films">
+      <!-- 💡 Remplacez # par les vrais liens de pages quand elles seront créées -->
+      <a href="esport.html">Esport</a>
+      <a href="travel.html">Travel</a>
+      <a href="music.html">Music</a>
     </div>
+  </div>
+
+  <!-- PHOTOS -->
+  <div class="nav-section">
+    <button class="nav-cat" onclick="toggleSub('sub-photos', this)">
+      Photos <span class="arrow">›</span>
+    </button>
+    <div class="nav-sub" id="sub-photos">
+      <!-- 💡 Personnalisez ces 3 sous-catégories -->
+      <a href="photo-cat1.html">Catégorie 1</a>
+      <a href="photo-cat2.html">Catégorie 2</a>
+      <a href="photo-cat3.html">Catégorie 3</a>
+    </div>
+  </div>
+
+  <div class="nav-sep"></div>
+
+  <a href="about.html" class="nav-link">À propos</a>
+  <a href="contact.html" class="nav-link">Contact</a>
+
+  <div class="sidebar-bottom">
+    <a href="mailto:contact@votresite.fr">contact@votresite.fr</a>
+    <a href="https://vimeo.com" target="_blank">Vimeo</a>
+    <a href="https://instagram.com" target="_blank">Instagram</a>
+  </div>
+
+</aside>
+
+<!-- ══════════════════════════════════
+     MODAL LECTEUR
+══════════════════════════════════ -->
+<div class="modal-backdrop" id="modal" onclick="handleBackdropClick(event)">
+  <div class="modal-inner">
+    <button class="modal-close" onclick="closeModal()">✕ FERMER</button>
+    <div class="modal-video-wrap" id="modal-video-wrap">
+      <!-- contenu injecté par JS -->
+    </div>
+    <div class="modal-title" id="modal-title"></div>
   </div>
 </div>
 
 <script>
-  /* ── Projets de la grille ──
-     Personnalisez : client, type, dur(ée), et optionnellement thumb (chemin image).
-     Au clic, remplacez le alert() par : window.open('https://vimeo.com/ID', '_blank') */
-  const projects = [
-    { client: 'Société Dupont',  type: 'Film institutionnel', dur: '1:45' },
-    { client: 'Studio Créatif',  type: 'Réseaux sociaux',     dur: '0:58' },
-    { client: 'Conférence RH',   type: 'Événementiel',         dur: '3:12' },
-    { client: 'Marque X',        type: 'Spot publicitaire',    dur: '0:30' },
-    { client: 'Agence Y',        type: 'Motion design',        dur: '1:20' },
-    { client: 'PME Loire',       type: 'Film corporate',       dur: '2:48' },
-  ];
-
-  const waveSets = [
-    [10,18,12,24,8,20,14,16,22],
-    [22,10,28,14,20,8,24,12,18],
-    [14,26,10,22,18,28,12,20,8],
-    [18,8,24,16,28,10,20,14,26],
-    [26,12,20,28,8,22,16,10,24],
-    [10,24,16,28,12,20,8,26,14],
-  ];
-
-  const grid = document.getElementById('grid');
-  projects.forEach((p, i) => {
-    const vi = document.createElement('div');
-    vi.className = 'vi';
-    vi.innerHTML = `
-      ${p.thumb ? `<img class="vi-thumb" src="${p.thumb}" alt="${p.type}" />` : ''}
-      <div class="vi-inner">
-        <div class="vi-waveform">
-          ${waveSets[i].map(h => `<span style="height:${h}px"></span>`).join('')}
-        </div>
-        <div class="vi-play"></div>
-      </div>
-      <div class="vi-dur">${p.dur}</div>
-      <div class="vi-overlay">
-        <div class="vi-client">${p.client}</div>
-        <div class="vi-type">${p.type}</div>
-      </div>
-    `;
-    vi.addEventListener('click', () => {
-      alert(`${p.type} — ${p.client}\n\n💡 Remplacez ce alert() par votre lien Vimeo/YouTube.`);
-    });
-    grid.appendChild(vi);
-  });
-
-  /* ── Modal ── */
-  function openModal() {
-    document.getElementById('modal').classList.add('open');
-  }
-  function closeModal(e) {
-    if (!e || e.target === document.getElementById('modal')) {
-      document.getElementById('modal').classList.remove('open');
+  /* ── Sous-menus ── */
+  function toggleSub(id, btn) {
+    const sub = document.getElementById(id);
+    const isOpen = sub.classList.contains('visible');
+    // Ferme tous les autres
+    document.querySelectorAll('.nav-sub').forEach(s => s.classList.remove('visible'));
+    document.querySelectorAll('.nav-cat').forEach(b => b.classList.remove('open'));
+    if (!isOpen) {
+      sub.classList.add('visible');
+      btn.classList.add('open');
     }
   }
+
+  /* ── Modal lecteur vidéo ── */
+  const modal        = document.getElementById('modal');
+  const modalWrap    = document.getElementById('modal-video-wrap');
+  const modalTitle   = document.getElementById('modal-title');
+  const showreelBg   = document.getElementById('showreel-bg');
+
+  function openModal(type, src, title) {
+    modalTitle.textContent = title || '';
+    modalWrap.innerHTML = '';
+
+    if (type === 'local') {
+      const v = document.createElement('video');
+      v.src = src;
+      v.controls = true;
+      v.autoplay = true;
+      v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;background:#000;';
+      modalWrap.appendChild(v);
+    } else if (type === 'vimeo') {
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://player.vimeo.com/video/${src}?autoplay=1`;
+      iframe.allow = 'autoplay; fullscreen';
+      modalWrap.appendChild(iframe);
+    } else if (type === 'youtube') {
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.youtube.com/embed/${src}?autoplay=1`;
+      iframe.allow = 'autoplay; fullscreen';
+      modalWrap.appendChild(iframe);
+    }
+
+    modal.classList.add('open');
+    // Met en pause la boucle fond du showreel pendant que le modal est ouvert
+    if (showreelBg) showreelBg.pause();
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal() {
+    modal.classList.remove('open');
+    modalWrap.innerHTML = '';
+    if (showreelBg) showreelBg.play();
+    document.body.style.overflow = '';
+  }
+
+  function handleBackdropClick(e) {
+    if (e.target === modal) closeModal();
+  }
+
+  // Fermer avec Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  /* ── Clic sur chaque tile ── */
+  document.querySelectorAll('.tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      const type  = tile.dataset.type;
+      const src   = tile.dataset.src;
+      const title = tile.dataset.title;
+      if (type && src) openModal(type, src, title);
+    });
+  });
 </script>
 
 </body>
