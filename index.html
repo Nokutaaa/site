@@ -2,331 +2,692 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>nokuta.mp4</title>
-  <link rel="icon" href="favicon.jpg" type="image/jpg" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Votre Nom — Vidéaste & Monteur</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
   <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080808;
+      --bg2: #101010;
+      --bg3: #161616;
+      --border: #1e1e1e;
+      --border2: #2a2a2a;
+      --text-bright: #f0f0f0;
+      --text-mid: #888;
+      --text-dim: #444;
+      --accent: #f0f0f0;
+      --font: 'DM Sans', sans-serif;
+      --mono: 'DM Mono', monospace;
+      --sidebar: 160px;
+    }
+
     html, body {
-      margin: 0; padding: 0; height: 100%;
-      font-family: 'Poppins', sans-serif;
-      overflow: hidden;
-      background: none;
-    }
-
-    @keyframes glowPulse {
-      0%, 100% { filter: drop-shadow(0 0 5px rgba(255,255,255,0.4)); }
-      50% { filter: drop-shadow(0 0 12px rgba(255,255,255,0.8)); }
-    }
-
-    .logo-container {
-      position: fixed;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 10;
-      animation: glowPulse 3s ease-in-out infinite;
-      cursor: pointer;
-      transition: top 0.6s ease, transform 0.6s ease;
-    }
-
-    .logo-container.moved-up {
-      top: 15%;
-      transform: translate(-50%, 0);
-      animation: none;
-    }
-
-    .logo-container img {
-      height: 80px;
-      user-select: none;
-      pointer-events: none;
-    }
-
-    #bg-video {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      object-fit: cover;
-      z-index: -100;
-      pointer-events: none;
-    }
-
-    #videos-container {
-      position: fixed;
-      top: 50%; left: 50%;
-      width: 90vw; height: 60vh;
-      transform: translate(-50%, -50%);
-      z-index: 5;
-      transition: opacity 0.5s ease;
-    }
-
-    #videos-container.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    video.floating-video {
-      position: absolute;
-      width: 360px;
-      height: 204px;
-      border-radius: 8px;
-      object-fit: cover;
-      filter: blur(1.2px);
-      opacity: 0.7;
-      pointer-events: auto;
-      cursor: pointer;
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-      transition: filter 0.3s ease, opacity 0.3s ease, border-radius 0.6s ease, box-shadow 0.6s ease, transform 0.6s ease;
-    }
-
-    video.floating-video:hover {
-      filter: blur(0);
-      opacity: 1 !important;
-      box-shadow: 0 0 20px rgba(0,0,0,0.6);
-    }
-
-    video.floating-video.description-state {
-      filter: none !important;
-      opacity: 1 !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-      transform: translateY(60px);
-    }
-
-    #info-container {
-      position: fixed;
-      top: 50%; left: 50%;
-      width: 80vw; height: 60vh;
-      display: flex;
-      justify-content: flex-start;
-      align-items: center;
-      gap: 1.5rem;
-      transform: translate(-50%, calc(-50% + 50px));
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.8s ease;
-      z-index: 20;
-    }
-
-    #info-container.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    #info-video {
-      max-height: 100%;
-      object-fit: cover;
-      width: 45%;
-      transition: transform 0.6s ease, border-radius 0.6s ease, box-shadow 0.6s ease;
-    }
-
-    #info-text {
-      color: white;
-      width: 45%;
-      font-size: 1.2rem;
-      line-height: 1.4;
-      position: relative;
-      top: 50px;
-      left: 50px;
-    }
-
-    #info-text h2 {
-      margin-top: 0;
-      margin-bottom: 1rem;
-      font-weight: 600;
-      font-size: 2.6rem;
-      font-style: italic;
-    }
-
-    #back-btn {
-      position: fixed;
-      top: 15%;
-      right: 15%;
-      width: 2.5%;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.5s ease, filter 0.3s ease;
-      z-index: 30;
-      filter: drop-shadow(0 0 3px #57f1f1);
-      cursor: pointer;
-      user-select: none;
-    }
-
-    #back-btn.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    #back-btn:hover {
-      filter: drop-shadow(0 0 18px #60eff3);
-    }
-
-    /* LECTEUR VIDEO OVERLAY */
-    #video-player-overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0, 0, 0, 0.6);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 100;
-    }
-
-    #video-player-container {
-      width: 75vw;
-      max-width: 1280px;
-      aspect-ratio: 16 / 9;
-      background: black;
-      border-radius: 12px;
-      overflow: hidden;
-      position: relative;
-      box-shadow: 0 0 30px rgba(0,0,0,0.5);
-    }
-
-    #video-player {
-      width: 100%;
       height: 100%;
-      object-fit: cover;
+      background: var(--bg);
+      color: var(--text-mid);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.6;
+      overflow: hidden;
+    }
+
+    /* ── LAYOUT ── */
+    .site {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar);
+      min-width: var(--sidebar);
+      display: flex;
+      flex-direction: column;
+      padding: 28px 20px 24px;
+      border-right: 0.5px solid var(--border);
+      position: relative;
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .16em;
+      color: var(--text-bright);
+      text-transform: uppercase;
+      line-height: 1.5;
+      margin-bottom: 40px;
+    }
+
+    .nav-label {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: .2em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      margin-top: 20px;
+    }
+
+    nav a {
+      display: block;
+      font-size: 11px;
+      color: var(--text-mid);
+      text-decoration: none;
+      padding: 5px 0;
+      letter-spacing: .03em;
+      transition: color .15s;
+      cursor: pointer;
+    }
+
+    nav a:hover, nav a.active { color: var(--text-bright); }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tag-location {
+      font-family: var(--mono);
+      font-size: 8px;
+      color: var(--text-dim);
+      letter-spacing: .08em;
+    }
+
+    .cta-btn {
+      background: var(--text-bright);
+      color: var(--bg);
+      border: none;
+      padding: 10px 0;
+      font-family: var(--font);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      border-radius: 2px;
+      cursor: pointer;
+      width: 100%;
+      transition: opacity .15s;
+    }
+    .cta-btn:hover { opacity: .85; }
+
+    /* ── MAIN ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── HERO SHOWREEL ── */
+    .hero {
+      position: relative;
+      height: 240px;
+      flex-shrink: 0;
+      background: #0c0c0c;
+      border-bottom: 0.5px solid var(--border);
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .hero-video-placeholder {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Scanlines effect */
+    .hero-video-placeholder::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,.15) 2px, rgba(0,0,0,.15) 3px
+      );
+      pointer-events: none;
+    }
+
+    .waveform {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 80px;
+      opacity: .2;
+    }
+    .waveform span {
+      display: block;
+      width: 4px;
+      background: #555;
+      border-radius: 2px;
+      animation: wave 1.8s ease-in-out infinite;
+    }
+    .waveform span:nth-child(odd) { animation-delay: .3s; }
+    .waveform span:nth-child(3n) { animation-delay: .6s; }
+
+    @keyframes wave {
+      0%, 100% { transform: scaleY(1); }
+      50% { transform: scaleY(1.4); }
+    }
+
+    .play-circle {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255,255,255,.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color .2s, transform .2s;
+    }
+    .hero:hover .play-circle {
+      border-color: rgba(255,255,255,.9);
+      transform: scale(1.06);
+    }
+    .play-circle::after {
+      content: '';
+      width: 0; height: 0;
+      border-top: 11px solid transparent;
+      border-bottom: 11px solid transparent;
+      border-left: 18px solid rgba(255,255,255,.7);
+      margin-left: 5px;
+    }
+
+    .hero-duration {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: .06em;
+      border: 0.5px solid var(--border2);
+      padding: 3px 9px;
+      border-radius: 2px;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      padding: 20px;
+      background: linear-gradient(to top, rgba(8,8,8,.9) 0%, transparent 100%);
+      width: 100%;
+    }
+
+    .hero-eyebrow {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: .2em;
+      color: #555;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .hero-heading {
+      font-size: 22px;
+      font-weight: 300;
+      color: var(--text-bright);
+      line-height: 1.15;
+      letter-spacing: -.01em;
+    }
+
+    .hero-sub {
+      font-size: 10px;
+      color: #555;
+      margin-top: 5px;
+      letter-spacing: .04em;
+    }
+
+    /* ── SERVICES STRIP ── */
+    .services {
+      display: flex;
+      border-bottom: 0.5px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .svc {
+      flex: 1;
+      padding: 12px 16px;
+      border-right: 0.5px solid var(--border);
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .svc:last-child { border-right: none; }
+    .svc:hover { background: #0f0f0f; }
+
+    .svc-name {
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 3px;
+      transition: color .15s;
+    }
+    .svc:hover .svc-name { color: var(--text-mid); }
+
+    .svc-desc {
+      font-size: 9px;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+
+    /* ── VIDEO GRID ── */
+    .grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 2px;
+      background: #0d0d0d;
+      overflow: hidden;
+    }
+
+    .vi {
+      position: relative;
+      background: var(--bg3);
+      cursor: pointer;
+      overflow: hidden;
+    }
+
+    .vi-inner {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .vi-waveform {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 32px;
+      opacity: .25;
+    }
+    .vi-waveform span {
+      display: block;
+      width: 3px;
+      background: #444;
+      border-radius: 1px;
+    }
+
+    .vi-play {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color .2s;
+    }
+    .vi:hover .vi-play { border-color: rgba(255,255,255,.6); }
+
+    .vi-play::after {
+      content: '';
+      width: 0; height: 0;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 9px solid rgba(255,255,255,.5);
+      margin-left: 2px;
+    }
+
+    .vi-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.8) 0%, transparent 55%);
+      opacity: 0;
+      transition: opacity .2s;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 10px 12px;
+    }
+    .vi:hover .vi-overlay { opacity: 1; }
+
+    .vi-client {
+      font-family: var(--mono);
+      font-size: 7px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #888;
+    }
+    .vi-type {
+      font-size: 10px;
+      color: var(--text-bright);
+      font-weight: 400;
+    }
+    .vi-dur {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-family: var(--mono);
+      font-size: 8px;
+      color: #555;
+    }
+
+    /* ── BOTTOM BAR ── */
+    .bottom-bar {
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 0.5px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .testimonial {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: #383838;
+      font-style: italic;
+      max-width: 380px;
+    }
+    .testimonial em { color: #555; font-style: normal; }
+
+    .contact-email {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: #444;
+      letter-spacing: .06em;
+      text-decoration: none;
+      transition: color .15s;
+    }
+    .contact-email:hover { color: var(--text-mid); }
+
+    /* ── MODAL DEVIS ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.85);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: #111;
+      border: 0.5px solid var(--border2);
+      border-radius: 4px;
+      padding: 32px;
+      width: 380px;
+      max-width: 90vw;
+    }
+    .modal h2 {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-bright);
+      margin-bottom: 20px;
+      letter-spacing: .04em;
+    }
+    .modal label {
+      display: block;
+      font-family: var(--mono);
+      font-size: 8px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: #555;
+      margin-bottom: 6px;
+      margin-top: 14px;
+    }
+    .modal input, .modal select, .modal textarea {
+      width: 100%;
+      background: #0a0a0a;
+      border: 0.5px solid var(--border2);
+      color: var(--text-bright);
+      font-family: var(--font);
+      font-size: 12px;
+      padding: 9px 12px;
+      border-radius: 2px;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .modal input:focus, .modal select:focus, .modal textarea:focus {
+      border-color: #444;
+    }
+    .modal select option { background: #111; }
+    .modal textarea { resize: vertical; min-height: 80px; }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 22px;
+    }
+    .btn-send {
+      flex: 1;
+      background: var(--text-bright);
+      color: var(--bg);
+      border: none;
+      padding: 10px;
+      font-family: var(--font);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+    .btn-cancel {
+      background: transparent;
+      color: var(--text-dim);
+      border: 0.5px solid var(--border2);
+      padding: 10px 16px;
+      font-family: var(--font);
+      font-size: 10px;
+      letter-spacing: .08em;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      html, body { overflow: auto; }
+      .site { flex-direction: column; height: auto; }
+      .sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 16px 20px; border-right: none; border-bottom: 0.5px solid var(--border); gap: 0; }
+      .logo { margin-bottom: 0; margin-right: auto; }
+      nav { display: flex; gap: 0; }
+      nav a { padding: 5px 10px; }
+      .nav-label, .tag-location { display: none; }
+      .sidebar-bottom { margin-top: 0; margin-left: 12px; flex-direction: row; }
+      .cta-btn { width: auto; padding: 9px 16px; }
+      .main { overflow: auto; }
+      .hero { height: 200px; }
+      .services { overflow-x: auto; }
+      .svc { min-width: 120px; }
+      .grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; height: auto; }
+      .vi { aspect-ratio: 16/9; }
     }
   </style>
 </head>
 <body>
-  <video autoplay muted loop playsinline id="bg-video">
-    <source src="fond.mp4" type="video/mp4" />
-  </video>
 
-  <audio id="bg-music" src="MUSIQUE.mp3" autoplay loop></audio>
+<div class="site">
 
-  <div class="logo-container" id="logo">
-    <img src="logo1.png" alt="Logo" />
-  </div>
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar">
+    <div class="logo">Votre<br>Nom</div>
+    <div class="nav-label">Navigation</div>
+    <nav>
+      <a href="#" class="active">Accueil</a>
+      <a href="#">Projets</a>
+      <a href="#">Services</a>
+      <a href="#">À propos</a>
+      <a href="#" onclick="openModal()">Contact</a>
+    </nav>
+    <div class="nav-label">Réseaux</div>
+    <nav>
+      <a href="https://linkedin.com" target="_blank">LinkedIn</a>
+      <a href="https://vimeo.com" target="_blank">Vimeo</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="tag-location">Île-de-France · FR</div>
+      <button class="cta-btn" onclick="openModal()">Devis gratuit</button>
+    </div>
+  </aside>
 
-  <div id="videos-container"></div>
+  <!-- ── MAIN ── -->
+  <main class="main">
 
-  <div id="info-container">
-    <video id="info-video" src="video me.mp4" autoplay loop muted playsinline></video>
-    <div id="info-text">
-      <p>I am a videographer passionate about capturing life through my camera. My goal is to make viewers feel the deepest emotions possible when watching my videos. While I primarily focus on documentaries and music videos, I’m open to collaborating on any artistic project that inspires me.<br/><br/>Feel free to contact me.</p>
+    <!-- HERO SHOWREEL -->
+    <!-- 💡 Remplacez cette section par une vraie vidéo :
+         <video autoplay muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5">
+           <source src="showreel.mp4" type="video/mp4">
+         </video>
+    -->
+    <section class="hero" onclick="alert('Votre showreel ici — intégrez votre lien Vimeo/YouTube')">
+      <div class="hero-video-placeholder">
+        <div class="waveform" id="wf">
+          <!-- généré par JS -->
+        </div>
+        <div class="play-circle"></div>
+      </div>
+      <div class="hero-duration">2:34</div>
+      <div class="hero-content">
+        <div class="hero-eyebrow">Showreel 2025</div>
+        <div class="hero-heading">Films d'entreprise<br>&amp; contenus digitaux</div>
+        <div class="hero-sub">Île-de-France · Disponible en France entière</div>
+      </div>
+    </section>
+
+    <!-- SERVICES -->
+    <div class="services">
+      <div class="svc">
+        <div class="svc-name">Film institutionnel</div>
+        <div class="svc-desc">Valorisez votre image de marque</div>
+      </div>
+      <div class="svc">
+        <div class="svc-name">Réseaux sociaux</div>
+        <div class="svc-desc">Formats natifs, impact max</div>
+      </div>
+      <div class="svc">
+        <div class="svc-name">Événementiel</div>
+        <div class="svc-desc">Captation &amp; montage live</div>
+      </div>
+      <div class="svc">
+        <div class="svc-name">Motion design</div>
+        <div class="svc-desc">Animation &amp; habillage graphique</div>
+      </div>
+    </div>
+
+    <!-- VIDEO GRID -->
+    <!-- 💡 Pour chaque projet, remplacez href="#" par votre lien Vimeo/YouTube
+         et le texte par le vrai nom du client et du type de projet -->
+    <div class="grid" id="grid">
+      <!-- Les vignettes sont générées par JS ci-dessous -->
+    </div>
+
+    <!-- BOTTOM BAR -->
+    <div class="bottom-bar">
+      <div class="testimonial">
+        <em>« Un interlocuteur unique, du tournage au rendu final. Résultat impeccable. »</em>
+        — Directrice communication, PME Paris
+      </div>
+      <a class="contact-email" href="mailto:contact@votresite.fr">contact@votresite.fr</a>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── MODAL DEVIS ── -->
+<div class="modal-backdrop" id="modal" onclick="closeModal(event)">
+  <div class="modal">
+    <h2>Demande de devis</h2>
+    <label>Nom / Entreprise</label>
+    <input type="text" placeholder="Votre entreprise" />
+    <label>Email</label>
+    <input type="email" placeholder="contact@entreprise.fr" />
+    <label>Type de projet</label>
+    <select>
+      <option>Film institutionnel</option>
+      <option>Contenu réseaux sociaux</option>
+      <option>Captation événementielle</option>
+      <option>Motion design</option>
+      <option>Autre</option>
+    </select>
+    <label>Message</label>
+    <textarea placeholder="Décrivez votre projet en quelques lignes…"></textarea>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+      <button class="btn-send">Envoyer →</button>
     </div>
   </div>
+</div>
 
-  <img id="back-btn" src="back.png" alt="Revenir" />
+<script>
+  // ── Waveform hero ──
+  const wf = document.getElementById('wf');
+  const heights = [28,48,20,60,36,52,18,44,30,56,22,50,38,26,58,16,46,32,54,24,42,34,62,20,48];
+  heights.forEach(h => {
+    const s = document.createElement('span');
+    s.style.height = h + 'px';
+    wf.appendChild(s);
+  });
 
-  <!-- LECTEUR VIDEO -->
-  <div id="video-player-overlay">
-    <div id="video-player-container">
-      <video id="video-player" controls autoplay></video>
-    </div>
-  </div>
+  // ── Video grid ──
+  const projects = [
+    { client: 'Société Dupont', type: 'Film institutionnel', dur: '1:45' },
+    { client: 'Studio Créatif', type: 'Réseaux sociaux',    dur: '0:58' },
+    { client: 'Conférence RH',  type: 'Événementiel',        dur: '3:12' },
+    { client: 'Marque X',       type: 'Spot publicitaire',   dur: '0:30' },
+    { client: 'Agence Y',       type: 'Motion design',       dur: '1:20' },
+    { client: 'PME Loire',      type: 'Film corporate',      dur: '2:48' },
+  ];
 
-  <script>
-    window.onload = () => {
-      const videos = ["video1.mp4", "video2.mp4", "video3.mp4", "video4.mp4", "video5.mp4", "video6.mp4"];
-      const positions = [
-        { x: -250, y: -220 },
-        { x: 250, y: -220 },
-        { x: 530, y: 0 },
-        { x: 250, y: 220 },
-        { x: -250, y: 220 },
-        { x: -530, y: 0 }
-      ];
-      const container = document.getElementById("videos-container");
-      const videoElements = [];
+  const waveSets = [
+    [10,18,12,24,8,20,14],
+    [22,10,28,14,20,8,24],
+    [14,26,10,22,18,28,12],
+    [18,8,24,16,28,10,20],
+    [26,12,20,28,8,22,16],
+    [10,24,16,28,12,20,8],
+  ];
 
-      videos.forEach((src, i) => {
-        const video = document.createElement("video");
-        video.src = src;
-        video.muted = true;
-        video.loop = true;
-        video.autoplay = true;
-        video.playsInline = true;
-        video.classList.add("floating-video");
-        video.style.left = `calc(50% + ${positions[i].x}px - 180px)`;
-        video.style.top = `calc(50% + ${positions[i].y}px - 102px)`;
-        container.appendChild(video);
-        videoElements.push(video);
-      });
+  const grid = document.getElementById('grid');
+  projects.forEach((p, i) => {
+    const vi = document.createElement('div');
+    vi.className = 'vi';
+    vi.innerHTML = `
+      <div class="vi-inner">
+        <div class="vi-waveform">${waveSets[i].map(h => `<span style="height:${h}px"></span>`).join('')}</div>
+        <div class="vi-play"></div>
+      </div>
+      <div class="vi-dur">${p.dur}</div>
+      <div class="vi-overlay">
+        <div class="vi-client">${p.client}</div>
+        <div class="vi-type">${p.type}</div>
+      </div>
+    `;
+    // 💡 Remplacez alert() par window.open('https://vimeo.com/votre-video')
+    vi.addEventListener('click', () => alert(`Projet : ${p.type} — ${p.client}\n\n💡 Liez ici votre vidéo Vimeo ou YouTube.`));
+    grid.appendChild(vi);
+  });
 
-      const bgMusic = document.getElementById("bg-music");
-      const logo = document.getElementById("logo");
-      const infoContainer = document.getElementById("info-container");
-      const infoVideo = document.getElementById("info-video");
-      const backBtn = document.getElementById("back-btn");
-      const videosContainer = document.getElementById("videos-container");
+  // ── Modal ──
+  function openModal() {
+    document.getElementById('modal').classList.add('open');
+  }
+  function closeModal(e) {
+    if (!e || e.target === document.getElementById('modal')) {
+      document.getElementById('modal').classList.remove('open');
+    }
+  }
+</script>
 
-      bgMusic.volume = 0.15;
-      bgMusic.play().catch(() => {});
-      let descriptionShown = false;
-
-      function showDescription() {
-        descriptionShown = true;
-        logo.classList.add("moved-up");
-        videosContainer.classList.add("hidden");
-        videoElements.forEach(v => v.classList.add("description-state"));
-        infoContainer.classList.add("active");
-        infoVideo.classList.add("active-state");
-        backBtn.classList.add("active");
-        bgMusic.pause();
-      }
-
-      function hideDescription() {
-        descriptionShown = false;
-        logo.classList.remove("moved-up");
-        videosContainer.classList.remove("hidden");
-        videoElements.forEach(v => v.classList.remove("description-state"));
-        infoContainer.classList.remove("active");
-        infoVideo.classList.remove("active-state");
-        backBtn.classList.remove("active");
-        bgMusic.play().catch(() => {});
-      }
-
-      logo.addEventListener("click", () => {
-        descriptionShown ? hideDescription() : showDescription();
-      });
-
-      backBtn.addEventListener("click", hideDescription);
-
-      // Effet d’opacité relative à la souris
-      window.addEventListener("mousemove", (e) => {
-        const mouseX = e.clientX;
-        const mouseY = e.clientY;
-
-        videoElements.forEach(video => {
-          const rect = video.getBoundingClientRect();
-          const videoCenterX = rect.left + rect.width / 2;
-          const videoCenterY = rect.top + rect.height / 2;
-          const dist = Math.sqrt((mouseX - videoCenterX) ** 2 + (mouseY - videoCenterY) ** 2);
-          const maxDist = 800;
-          let opacity = 0.7 - (dist / maxDist) * (0.7 - 0.1);
-          opacity = Math.min(Math.max(opacity, 0.1), 0.7);
-          if (!video.classList.contains('description-state') && !video.matches(':hover')) {
-            video.style.opacity = opacity;
-          }
-        });
-      });
-
-      // LECTEUR VIDEO LOGIQUE
-      const overlay = document.getElementById("video-player-overlay");
-      const player = document.getElementById("video-player");
-
-      videoElements.forEach(video => {
-        video.addEventListener("click", (e) => {
-          if (descriptionShown) return;
-          player.src = video.src;
-          player.currentTime = 0;
-          overlay.style.display = "flex";
-          bgMusic.pause();
-        });
-      });
-
-      overlay.addEventListener("click", (e) => {
-        if (e.target === overlay) {
-          player.pause();
-          player.src = "";
-          overlay.style.display = "none";
-          bgMusic.play().catch(() => {});
-        }
-      });
-    };
-  </script>
 </body>
 </html>
