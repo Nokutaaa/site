@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Vidéaste & Monteur</title>
+  <title>Nokuta</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -17,7 +18,7 @@
       --text-mid:  #888;
       --text-dim:  #bbb;
       --border:    #ddd;
-      --font:      'EB Garamond', Georgia, serif;
+      --font:      'Cormorant Garamond', Georgia, serif;
       --mono:      'DM Mono', monospace;
     }
 
@@ -25,7 +26,7 @@
       background: var(--bg);
       color: var(--text);
       font-family: var(--font);
-      font-size: 15px;
+      font-size: 17px;
     }
 
     body {
@@ -59,9 +60,8 @@
       display: block;
     }
 
-    /* Showreel : pleine largeur 16:9 */
+    /* Showreel : large dans la mosaïque, sans column-span */
     .tile.showreel {
-      column-span: all;
       margin-bottom: 6px;
     }
     .tile.showreel .tile-ratio { padding-bottom: 56.25%; }
@@ -152,14 +152,15 @@
       display: flex;
       flex-direction: column;
       padding: 28px 22px 28px 18px;
-      border-left: 0.5px solid var(--border);
+      border-left: none;
       background: var(--bg);
       z-index: 100;
       overflow-y: auto;
+      text-align: right;
     }
 
     .logo-wrap {
-      margin-bottom: 40px;
+      margin-bottom: 32px;
     }
     .logo-wrap img {
       display: block;
@@ -172,17 +173,17 @@
 
     /* Navigation */
     .nav-section {
-      margin-bottom: 6px;
+      margin-bottom: 10px;
     }
 
     .nav-cat {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-end;
       font-family: var(--font);
-      font-size: 13px;
-      font-weight: 500;
-      letter-spacing: .06em;
+      font-size: 15px;
+      font-weight: 400;
+      letter-spacing: .08em;
       color: var(--text);
       text-decoration: none;
       padding: 5px 0;
@@ -191,7 +192,7 @@
       border: none;
       background: none;
       width: 100%;
-      text-align: left;
+      text-align: right;
     }
     .nav-cat:hover { color: var(--text-mid); }
 
@@ -200,25 +201,29 @@
       color: var(--text-dim);
       transition: transform .2s;
       display: inline-block;
+      margin-right: 5px;
+      order: -1;
     }
     .nav-cat.open .arrow { transform: rotate(90deg); }
 
     .nav-sub {
-      display: none;
+      display: flex;
       flex-direction: column;
-      padding-left: 10px;
+      padding-right: 0;
+      padding-left: 0;
       margin-bottom: 4px;
+      align-items: flex-end;
     }
-    .nav-sub.visible { display: flex; }
 
     .nav-sub a {
       font-family: var(--mono);
-      font-size: 10px;
+      font-size: 11px;
       color: var(--text-mid);
       text-decoration: none;
       padding: 4px 0;
       letter-spacing: .04em;
       transition: color .15s;
+      text-align: right;
     }
     .nav-sub a:hover { color: var(--text); }
 
@@ -226,19 +231,20 @@
     .nav-sep {
       height: 0.5px;
       background: var(--border);
-      margin: 14px 0;
+      margin: 20px 0;
     }
 
     /* Liens simples (sans sous-menu) */
     .nav-link {
       display: block;
       font-family: var(--font);
-      font-size: 13px;
+      font-size: 15px;
       color: var(--text);
       text-decoration: none;
       padding: 5px 0;
       letter-spacing: .04em;
       transition: color .15s;
+      text-align: right;
     }
     .nav-link:hover { color: var(--text-mid); }
 
@@ -250,12 +256,13 @@
     .sidebar-bottom a {
       display: block;
       font-family: var(--mono);
-      font-size: 9px;
+      font-size: 10px;
       color: var(--text-dim);
       text-decoration: none;
       padding: 3px 0;
       letter-spacing: .06em;
       transition: color .15s;
+      text-align: right;
     }
     .sidebar-bottom a:hover { color: var(--text); }
 
@@ -473,7 +480,7 @@
   <!-- FILMS -->
   <div class="nav-section">
     <button class="nav-cat" onclick="toggleSub('sub-films', this)">
-      Films <span class="arrow">›</span>
+      <span class="arrow">›</span> Films
     </button>
     <div class="nav-sub" id="sub-films">
       <!-- 💡 Remplacez # par les vrais liens de pages quand elles seront créées -->
@@ -486,7 +493,7 @@
   <!-- PHOTOS -->
   <div class="nav-section">
     <button class="nav-cat" onclick="toggleSub('sub-photos', this)">
-      Photos <span class="arrow">›</span>
+      <span class="arrow">›</span> Photos
     </button>
     <div class="nav-sub" id="sub-photos">
       <!-- 💡 Personnalisez ces 3 sous-catégories -->
@@ -502,8 +509,7 @@
   <a href="contact.html" class="nav-link">Contact</a>
 
   <div class="sidebar-bottom">
-    <a href="mailto:contact@votresite.fr">contact@votresite.fr</a>
-    <a href="https://vimeo.com" target="_blank">Vimeo</a>
+    <a href="mailto:nokuta.video@gmail.com">nokuta.video@gmail.com</a>
     <a href="https://instagram.com" target="_blank">Instagram</a>
   </div>
 
@@ -523,17 +529,10 @@
 </div>
 
 <script>
-  /* ── Sous-menus ── */
+  /* ── Sous-menus toujours visibles ── */
+  // Les sous-menus sont affichés en permanence via CSS (display:flex), pas besoin de toggle
   function toggleSub(id, btn) {
-    const sub = document.getElementById(id);
-    const isOpen = sub.classList.contains('visible');
-    // Ferme tous les autres
-    document.querySelectorAll('.nav-sub').forEach(s => s.classList.remove('visible'));
-    document.querySelectorAll('.nav-cat').forEach(b => b.classList.remove('open'));
-    if (!isOpen) {
-      sub.classList.add('visible');
-      btn.classList.add('open');
-    }
+    // conservé pour compatibilité mais les sous-menus restent toujours ouverts
   }
 
   /* ── Modal lecteur vidéo ── */
