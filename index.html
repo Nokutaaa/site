@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Nokuta</title>
   <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="shortcut icon" href="favicon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
@@ -13,7 +14,7 @@
 
     :root {
       --bg:        #f5f4f0;
-      --sidebar-w: 200px;
+      --sidebar-w: 210px;
       --text:      #1a1a1a;
       --text-mid:  #888;
       --text-dim:  #bbb;
@@ -35,7 +36,7 @@
     }
 
     /* ══════════════════════════════════
-       MOSAÏQUE  (zone scrollable gauche)
+       MOSAÏQUE
     ══════════════════════════════════ */
     .mosaic-wrap {
       flex: 1;
@@ -44,12 +45,15 @@
       overflow-y: auto;
     }
 
-    /* Grille éditoriale — 6 colonnes, hauteur variable par rangées */
+    /*
+      Grille éditoriale — 12 colonnes fines, rangées de 60px.
+      Chaque tile combine colonnes ET rangées pour des proportions variées.
+    */
     .mosaic {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      grid-auto-rows: 120px;
-      gap: 6px;
+      grid-template-columns: repeat(12, 1fr);
+      grid-auto-rows: 60px;
+      gap: 5px;
     }
 
     .tile {
@@ -57,49 +61,33 @@
       cursor: pointer;
       overflow: hidden;
       background: #1a1a1a;
-      display: block;
     }
 
-    /* Chaque tile a une position et taille explicite */
+    /*
+      ── Placement & dimensions de chaque tile ──
+      Largeur ET hauteur intentionnellement asymétriques.
 
-    /* video1 : showreel — 4 col × 3 rangées (grand) */
-    .tile.showreel {
-      grid-column: 1 / 5;
-      grid-row: 1 / 4;
-    }
+      showreel : 8 col × 6 rangées  → paysage large (proche 16:9)
+      t2       : 4 col × 6 rangées  → portrait
+      t3       : 5 col × 4 rangées  → paysage moyen
+      t4       : 3 col × 7 rangées  → portrait étroit et haut
+      t5       : 4 col × 3 rangées  → quasi-carré
+      t6       : 5 col × 5 rangées  → carré large
+      t7       : 7 col × 3 rangées  → cinémascope
+      t8       : 3 col × 5 rangées  → colonne fine
+      t9       : 9 col × 4 rangées  → très large
+    */
+    .tile.showreel { grid-column: 1 / 9;  grid-row: 1 / 7;  }
+    .tile.t2       { grid-column: 9 / 13; grid-row: 1 / 7;  }
+    .tile.t3       { grid-column: 1 / 6;  grid-row: 7 / 11; }
+    .tile.t4       { grid-column: 6 / 9;  grid-row: 7 / 14; }
+    .tile.t5       { grid-column: 9 / 13; grid-row: 7 / 10; }
+    .tile.t6       { grid-column: 9 / 13; grid-row: 10 / 14;}
+    .tile.t7       { grid-column: 1 / 6;  grid-row: 11 / 14;}
+    .tile.t8       { grid-column: 1 / 4;  grid-row: 14 / 19;}
+    .tile.t9       { grid-column: 4 / 13; grid-row: 14 / 19;}
 
-    /* video2 : portrait — 2 col × 3 rangées */
-    .tile.t2 { grid-column: 5 / 7; grid-row: 1 / 4; }
-
-    /* video3 : paysage — 3 col × 2 rangées */
-    .tile.t3 { grid-column: 1 / 4; grid-row: 4 / 6; }
-
-    /* video4 : carré — 2 col × 2 rangées */
-    .tile.t4 { grid-column: 4 / 6; grid-row: 4 / 6; }
-
-    /* video5 : fin — 1 col × 2 rangées */
-    .tile.t5 { grid-column: 6 / 7; grid-row: 4 / 6; }
-
-    /* video6 : large — 2 col × 2 rangées */
-    .tile.t6 { grid-column: 1 / 3; grid-row: 6 / 8; }
-
-    /* video7 : paysage — 3 col × 2 rangées */
-    .tile.t7 { grid-column: 3 / 6; grid-row: 6 / 8; }
-
-    /* video8 : carré — 1 col × 2 rangées */
-    .tile.t8 { grid-column: 6 / 7; grid-row: 6 / 8; }
-
-    /* video9 : plein — 6 col × 2 rangées */
-    .tile.t9 { grid-column: 1 / 7; grid-row: 8 / 10; }
-
-    /* Le tile-ratio n'est plus nécessaire pour les proportions (la grille gère la hauteur),
-       mais on le garde pour la compatibilité — on force juste height: 100% */
-    .tile-ratio {
-      position: relative;
-      width: 100%;
-      height: 100%;
-    }
-
+    /* Media — couvre toute la tile */
     .tile-media {
       position: absolute;
       inset: 0;
@@ -107,7 +95,7 @@
       height: 100%;
       object-fit: cover;
       display: block;
-      transition: transform .4s ease, opacity .3s;
+      transition: transform .45s ease;
     }
 
     /* Overlay hover */
@@ -119,49 +107,36 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      z-index: 2;
     }
-    .tile:hover .tile-overlay { background: rgba(0,0,0,.28); }
-    .tile:hover .tile-media   { transform: scale(1.03); }
+    .tile:hover .tile-overlay { background: rgba(0,0,0,.25); }
+    .tile:hover .tile-media   { transform: scale(1.04); }
 
-    /* Icône play sur les tiles vidéo */
+    /* Icône play */
     .play-icon {
-      width: 48px;
-      height: 48px;
+      width: 46px;
+      height: 46px;
       border-radius: 50%;
-      border: 1.5px solid rgba(255,255,255,.7);
+      border: 1.5px solid rgba(255,255,255,.65);
       display: flex;
       align-items: center;
       justify-content: center;
       opacity: 0;
       transition: opacity .25s;
+      flex-shrink: 0;
     }
     .play-icon::after {
       content: '';
       width: 0; height: 0;
-      border-top:  9px solid transparent;
-      border-bottom: 9px solid transparent;
-      border-left: 15px solid rgba(255,255,255,.85);
-      margin-left: 4px;
+      border-top:    8px solid transparent;
+      border-bottom: 8px solid transparent;
+      border-left:   14px solid rgba(255,255,255,.85);
+      margin-left: 3px;
     }
-    .tile:hover .play-icon { opacity: 1; }
-
-    /* Caption */
-    .tile-caption {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      padding: 10px 12px;
-      background: linear-gradient(to top, rgba(0,0,0,.6) 0%, transparent 100%);
-      font-family: var(--mono);
-      font-size: 10px;
-      color: rgba(255,255,255,.75);
-      letter-spacing: .08em;
-      opacity: 0;
-      transition: opacity .25s;
-    }
-    .tile:hover .tile-caption { opacity: 1; }
+    .tile[data-yt]:hover .play-icon { opacity: 1; }
 
     /* ══════════════════════════════════
-       SIDEBAR DROITE (fixe)
+       SIDEBAR (fixe, droite)
     ══════════════════════════════════ */
     .sidebar {
       position: fixed;
@@ -171,12 +146,12 @@
       height: 100vh;
       display: flex;
       flex-direction: column;
-      padding: 52px 26px 28px 18px;
+      padding: 52px 18px 28px 22px;
       border-left: none;
       background: var(--bg);
       z-index: 100;
       overflow-y: auto;
-      text-align: right;
+      text-align: left;
     }
 
     .logo-wrap {
@@ -185,21 +160,16 @@
     .logo-wrap img {
       display: block;
       width: 100%;
-      max-width: 130px;
+      max-width: 155px;
       height: auto;
-      /* Retirez ce filtre si votre logo est déjà sombre */
-      /* filter: brightness(0); */
     }
 
-    /* Navigation */
-    .nav-section {
-      margin-bottom: 10px;
-    }
+    .nav-section { margin-bottom: 10px; }
 
     .nav-cat {
       display: flex;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: flex-start;
       font-family: var(--font);
       font-size: 15px;
       font-weight: 400;
@@ -207,32 +177,28 @@
       color: var(--text);
       text-decoration: none;
       padding: 5px 0;
-      cursor: pointer;
+      cursor: default;
       user-select: none;
       border: none;
       background: none;
       width: 100%;
-      text-align: right;
+      text-align: left;
     }
     .nav-cat:hover { color: var(--text-mid); }
 
     .nav-cat .arrow {
       font-size: 10px;
       color: var(--text-dim);
-      transition: transform .2s;
       display: inline-block;
-      margin-right: 5px;
-      order: -1;
+      margin-left: 5px;
     }
-    .nav-cat.open .arrow { transform: rotate(90deg); }
 
     .nav-sub {
       display: flex;
       flex-direction: column;
-      padding-right: 0;
-      padding-left: 0;
+      padding-left: 8px;
       margin-bottom: 4px;
-      align-items: flex-end;
+      align-items: flex-start;
     }
 
     .nav-sub a {
@@ -243,18 +209,15 @@
       padding: 4px 0;
       letter-spacing: .04em;
       transition: color .15s;
-      text-align: right;
     }
     .nav-sub a:hover { color: var(--text); }
 
-    /* Séparateur */
     .nav-sep {
       height: 0.5px;
       background: var(--border);
       margin: 20px 0;
     }
 
-    /* Liens simples (sans sous-menu) */
     .nav-link {
       display: block;
       font-family: var(--font);
@@ -264,11 +227,9 @@
       padding: 5px 0;
       letter-spacing: .04em;
       transition: color .15s;
-      text-align: right;
     }
     .nav-link:hover { color: var(--text-mid); }
 
-    /* Bas sidebar */
     .sidebar-bottom {
       margin-top: auto;
       padding-top: 20px;
@@ -282,12 +243,11 @@
       padding: 3px 0;
       letter-spacing: .06em;
       transition: color .15s;
-      text-align: right;
     }
     .sidebar-bottom a:hover { color: var(--text); }
 
     /* ══════════════════════════════════
-       MODAL LECTEUR VIDÉO
+       MODAL YOUTUBE
     ══════════════════════════════════ */
     .modal-backdrop {
       position: fixed;
@@ -312,8 +272,6 @@
       padding-bottom: 56.25%;
       background: #000;
     }
-
-    .modal-video-wrap video,
     .modal-video-wrap iframe {
       position: absolute;
       inset: 0;
@@ -328,7 +286,7 @@
       right: 0;
       background: none;
       border: none;
-      color: rgba(255,255,255,.6);
+      color: rgba(255,255,255,.55);
       font-family: var(--mono);
       font-size: 11px;
       letter-spacing: .12em;
@@ -338,49 +296,40 @@
     }
     .modal-close:hover { color: #fff; }
 
-    .modal-title {
-      margin-top: 14px;
-      font-family: var(--mono);
-      font-size: 10px;
-      color: rgba(255,255,255,.4);
-      letter-spacing: .1em;
-      text-transform: uppercase;
-    }
-
     /* ══════════════════════════════════
        RESPONSIVE
     ══════════════════════════════════ */
     @media (max-width: 900px) {
       .mosaic {
-        grid-template-columns: repeat(4, 1fr);
-        grid-auto-rows: 100px;
+        grid-template-columns: repeat(8, 1fr);
+        grid-auto-rows: 55px;
       }
-      .tile.showreel { grid-column: 1 / 4; grid-row: 1 / 3; }
-      .tile.t2 { grid-column: 4 / 5; grid-row: 1 / 3; }
-      .tile.t3 { grid-column: 1 / 3; grid-row: 3 / 5; }
-      .tile.t4 { grid-column: 3 / 5; grid-row: 3 / 5; }
-      .tile.t5 { grid-column: 1 / 2; grid-row: 5 / 7; }
-      .tile.t6 { grid-column: 2 / 4; grid-row: 5 / 7; }
-      .tile.t7 { grid-column: 4 / 5; grid-row: 5 / 7; }
-      .tile.t8 { grid-column: 1 / 3; grid-row: 7 / 9; }
-      .tile.t9 { grid-column: 3 / 5; grid-row: 7 / 9; }
+      .tile.showreel { grid-column: 1 / 6;  grid-row: 1 / 5;  }
+      .tile.t2       { grid-column: 6 / 9;  grid-row: 1 / 5;  }
+      .tile.t3       { grid-column: 1 / 5;  grid-row: 5 / 8;  }
+      .tile.t4       { grid-column: 5 / 7;  grid-row: 5 / 10; }
+      .tile.t5       { grid-column: 7 / 9;  grid-row: 5 / 8;  }
+      .tile.t6       { grid-column: 7 / 9;  grid-row: 8 / 10; }
+      .tile.t7       { grid-column: 1 / 5;  grid-row: 8 / 10; }
+      .tile.t8       { grid-column: 1 / 3;  grid-row: 10 / 14;}
+      .tile.t9       { grid-column: 3 / 9;  grid-row: 10 / 14;}
     }
     @media (max-width: 600px) {
       body { flex-direction: column; }
-      .mosaic-wrap { margin-right: 0; padding: 16px 12px 80px; }
+      .mosaic-wrap { margin-right: 0; padding: 14px 10px 80px; }
       .mosaic {
-        grid-template-columns: repeat(2, 1fr);
-        grid-auto-rows: 120px;
+        grid-template-columns: repeat(4, 1fr);
+        grid-auto-rows: 60px;
       }
-      .tile.showreel { grid-column: 1 / 3; grid-row: 1 / 3; }
-      .tile.t2 { grid-column: 1 / 3; grid-row: 3 / 5; }
-      .tile.t3 { grid-column: 1 / 2; grid-row: 5 / 7; }
-      .tile.t4 { grid-column: 2 / 3; grid-row: 5 / 6; }
-      .tile.t5 { grid-column: 2 / 3; grid-row: 6 / 7; }
-      .tile.t6 { grid-column: 1 / 3; grid-row: 7 / 9; }
-      .tile.t7 { grid-column: 1 / 2; grid-row: 9 / 11; }
-      .tile.t8 { grid-column: 2 / 3; grid-row: 9 / 10; }
-      .tile.t9 { grid-column: 2 / 3; grid-row: 10 / 11; }
+      .tile.showreel { grid-column: 1 / 5; grid-row: 1 / 4;  }
+      .tile.t2       { grid-column: 1 / 3; grid-row: 4 / 7;  }
+      .tile.t3       { grid-column: 3 / 5; grid-row: 4 / 6;  }
+      .tile.t4       { grid-column: 3 / 5; grid-row: 6 / 9;  }
+      .tile.t5       { grid-column: 1 / 3; grid-row: 7 / 9;  }
+      .tile.t6       { grid-column: 1 / 3; grid-row: 9 / 12; }
+      .tile.t7       { grid-column: 3 / 5; grid-row: 9 / 11; }
+      .tile.t8       { grid-column: 3 / 5; grid-row: 11 / 14;}
+      .tile.t9       { grid-column: 1 / 3; grid-row: 12 / 14;}
       .sidebar {
         position: fixed;
         top: auto; bottom: 0;
@@ -391,7 +340,6 @@
         flex-wrap: wrap;
         align-items: center;
         padding: 12px 16px;
-        border-left: none;
         border-top: 0.5px solid var(--border);
         overflow: visible;
       }
@@ -409,125 +357,104 @@
 <div class="mosaic-wrap">
   <div class="mosaic" id="mosaic">
 
-    <!-- ── SHOWREEL (plein largeur, se lance automatiquement sans son) ── -->
-    <div class="tile showreel" data-type="local" data-src="video1.mp4" data-title="Showreel 2025">
-      <div class="tile-ratio">
-        <!--
-          La vidéo showreel joue en fond dès le chargement (autoplay muted).
-          Au clic, elle s'ouvre en plein écran dans le modal avec le son.
-        -->
-        <video
-          class="tile-media"
-          src="video1.mp4"
-          autoplay muted loop playsinline
-          id="showreel-bg"
-        ></video>
-        <div class="tile-overlay">
-          <div class="play-icon"></div>
-        </div>
-        <div class="tile-caption">Showreel 2025 — Cliquez pour regarder avec le son</div>
-      </div>
+    <!--
+      ════════════════════════════════════════════════════
+      GUIDE — comment modifier chaque tile
+      ════════════════════════════════════════════════════
+
+      SHOWREEL (video1.mp4) :
+        Remplacez src="video1.mp4" par votre fichier.
+        Autoplay muet en boucle, pas de clic.
+
+      TILES t2 → t9 :
+        data-yt="VOTRE_ID_YOUTUBE"
+          → L'identifiant YouTube (ex: dQw4w9WgXcQ dans youtube.com/watch?v=dQw4w9WgXcQ)
+          → Clic ouvre le lecteur YouTube en modal 16:9
+          → Laissez data-yt="" pour désactiver le clic
+
+        <img class="tile-media" src="imageN.jpg" alt="" />
+          → Remplacez imageN.jpg par votre vignette (image1.jpg, image2.jpg…)
+          → Ou utilisez une vidéo en fond :
+             <video class="tile-media" src="fichier.mp4" muted loop playsinline></video>
+      ════════════════════════════════════════════════════
+    -->
+
+    <!-- ── SHOWREEL — autoplay muet, pas de clic ── -->
+    <div class="tile showreel">
+      <video
+        class="tile-media"
+        src="video1.mp4"
+        autoplay muted loop playsinline
+        id="showreel-bg"
+      ></video>
     </div>
 
-    <!-- ══════════════════════════════════
-         PROJETS
-         💡 Personnalisez chaque tile :
-            - class : portrait / square / landscape / wide
-            - data-type : "local" (fichier .mp4 local) ou "vimeo" ou "youtube"
-            - data-src  : chemin du fichier ou ID de la vidéo
-            - data-title : titre affiché dans le modal
-            - Remplacez les <div class="tile-media bg-…"> par de vraies <img>
-              ou des <video> en poster.
-         Exemple avec image :
-            <img class="tile-media" src="thumb1.jpg" alt="Projet 1" />
-         Exemple avec poster vidéo :
-            <video class="tile-media" src="projet.mp4" muted loop playsinline poster="thumb.jpg"></video>
-    ══════════════════════════════════ -->
-
-    <div class="tile t2" data-type="local" data-src="video2.mp4" data-title="Esport — Tournoi Paris 2024">
-      <div class="tile-ratio">
-        <video class="tile-media" src="video2.mp4" muted loop playsinline></video>
-        <div class="tile-overlay"><div class="play-icon"></div></div>
-        <div class="tile-caption">Esport — Tournoi Paris 2024</div>
-      </div>
+    <!-- ── TILE 2 — remplacez YOUTUBE_ID_ICI et image2.jpg ── -->
+    <div class="tile t2" data-yt="YOUTUBE_ID_ICI">
+      <img class="tile-media" src="image2.jpg" alt="" />
+      <div class="tile-overlay"><div class="play-icon"></div></div>
     </div>
 
-    <div class="tile t3" data-type="local" data-src="video3.mp4" data-title="Travel — Islande 2024">
-      <div class="tile-ratio">
-        <video class="tile-media" src="video3.mp4" muted loop playsinline></video>
-        <div class="tile-overlay"><div class="play-icon"></div></div>
-        <div class="tile-caption">Travel — Islande 2024</div>
-      </div>
+    <!-- ── TILE 3 ── -->
+    <div class="tile t3" data-yt="YOUTUBE_ID_ICI">
+      <img class="tile-media" src="image3.jpg" alt="" />
+      <div class="tile-overlay"><div class="play-icon"></div></div>
     </div>
 
-    <div class="tile t4" data-type="local" data-src="video4.mp4" data-title="Music Video — Artiste A">
-      <div class="tile-ratio">
-        <video class="tile-media" src="video4.mp4" muted loop playsinline></video>
-        <div class="tile-overlay"><div class="play-icon"></div></div>
-        <div class="tile-caption">Music Video — Artiste A</div>
-      </div>
+    <!-- ── TILE 4 ── -->
+    <div class="tile t4" data-yt="YOUTUBE_ID_ICI">
+      <img class="tile-media" src="image4.jpg" alt="" />
+      <div class="tile-overlay"><div class="play-icon"></div></div>
     </div>
 
-    <div class="tile t5" data-type="local" data-src="video5.mp4" data-title="Esport — Finale Lyon">
-      <div class="tile-ratio">
-        <video class="tile-media" src="video5.mp4" muted loop playsinline></video>
-        <div class="tile-overlay"><div class="play-icon"></div></div>
-        <div class="tile-caption">Esport — Finale Lyon</div>
-      </div>
+    <!-- ── TILE 5 ── -->
+    <div class="tile t5" data-yt="YOUTUBE_ID_ICI">
+      <img class="tile-media" src="image5.jpg" alt="" />
+      <div class="tile-overlay"><div class="play-icon"></div></div>
     </div>
 
-    <div class="tile t6" data-type="local" data-src="video6.mp4" data-title="Travel — Japon 2023">
-      <div class="tile-ratio">
-        <video class="tile-media" src="video6.mp4" muted loop playsinline></video>
-        <div class="tile-overlay"><div class="play-icon"></div></div>
-        <div class="tile-caption">Travel — Japon 2023</div>
-      </div>
+    <!-- ── TILE 6 ── -->
+    <div class="tile t6" data-yt="YOUTUBE_ID_ICI">
+      <img class="tile-media" src="image6.jpg" alt="" />
+      <div class="tile-overlay"><div class="play-icon"></div></div>
     </div>
 
-    <div class="tile t7" data-type="local" data-src="video7.mp4" data-title="Music Video — Artiste B">
-      <div class="tile-ratio">
-        <video class="tile-media" src="video7.mp4" muted loop playsinline></video>
-        <div class="tile-overlay"><div class="play-icon"></div></div>
-        <div class="tile-caption">Music Video — Artiste B</div>
-      </div>
+    <!-- ── TILE 7 ── -->
+    <div class="tile t7" data-yt="YOUTUBE_ID_ICI">
+      <img class="tile-media" src="image7.jpg" alt="" />
+      <div class="tile-overlay"><div class="play-icon"></div></div>
     </div>
 
-    <div class="tile t8" data-type="local" data-src="video8.mp4" data-title="Esport — Summit 2024">
-      <div class="tile-ratio">
-        <video class="tile-media" src="video8.mp4" muted loop playsinline></video>
-        <div class="tile-overlay"><div class="play-icon"></div></div>
-        <div class="tile-caption">Esport — Summit 2024</div>
-      </div>
+    <!-- ── TILE 8 ── -->
+    <div class="tile t8" data-yt="YOUTUBE_ID_ICI">
+      <img class="tile-media" src="image8.jpg" alt="" />
+      <div class="tile-overlay"><div class="play-icon"></div></div>
     </div>
 
-    <div class="tile t9" data-type="local" data-src="video9.mp4" data-title="Travel — Maroc 2023">
-      <div class="tile-ratio">
-        <video class="tile-media" src="video9.mp4" muted loop playsinline></video>
-        <div class="tile-overlay"><div class="play-icon"></div></div>
-        <div class="tile-caption">Travel — Maroc 2023</div>
-      </div>
+    <!-- ── TILE 9 ── -->
+    <div class="tile t9" data-yt="YOUTUBE_ID_ICI">
+      <img class="tile-media" src="image9.jpg" alt="" />
+      <div class="tile-overlay"><div class="play-icon"></div></div>
     </div>
 
   </div>
 </div>
 
 <!-- ══════════════════════════════════
-     SIDEBAR DROITE
+     SIDEBAR
 ══════════════════════════════════ -->
 <aside class="sidebar">
 
   <div class="logo-wrap">
-    <!-- 💡 logo1.png dans le même dossier que index.html -->
-    <img src="logo1.png" alt="Logo" />
+    <img src="logo1.png" alt="Nokuta" />
   </div>
 
   <!-- FILMS -->
   <div class="nav-section">
-    <button class="nav-cat" onclick="toggleSub('sub-films', this)">
-      <span class="arrow">›</span> Films
+    <button class="nav-cat">
+      Films <span class="arrow">›</span>
     </button>
-    <div class="nav-sub" id="sub-films">
-      <!-- 💡 Remplacez # par les vrais liens de pages quand elles seront créées -->
+    <div class="nav-sub">
       <a href="esport.html">Esport</a>
       <a href="travel.html">Travel</a>
       <a href="music.html">Music</a>
@@ -536,11 +463,10 @@
 
   <!-- PHOTOS -->
   <div class="nav-section">
-    <button class="nav-cat" onclick="toggleSub('sub-photos', this)">
-      <span class="arrow">›</span> Photos
+    <button class="nav-cat">
+      Photos <span class="arrow">›</span>
     </button>
-    <div class="nav-sub" id="sub-photos">
-      <!-- 💡 Personnalisez ces 3 sous-catégories -->
+    <div class="nav-sub">
       <a href="photo-cat1.html">Catégorie 1</a>
       <a href="photo-cat2.html">Catégorie 2</a>
       <a href="photo-cat3.html">Catégorie 3</a>
@@ -560,64 +486,36 @@
 </aside>
 
 <!-- ══════════════════════════════════
-     MODAL LECTEUR
+     MODAL YOUTUBE
 ══════════════════════════════════ -->
 <div class="modal-backdrop" id="modal" onclick="handleBackdropClick(event)">
   <div class="modal-inner">
     <button class="modal-close" onclick="closeModal()">✕ FERMER</button>
-    <div class="modal-video-wrap" id="modal-video-wrap">
-      <!-- contenu injecté par JS -->
-    </div>
-    <div class="modal-title" id="modal-title"></div>
+    <div class="modal-video-wrap" id="modal-video-wrap"></div>
   </div>
 </div>
 
 <script>
-  /* ── Sous-menus toujours visibles ── */
-  // Les sous-menus sont affichés en permanence via CSS (display:flex), pas besoin de toggle
-  function toggleSub(id, btn) {
-    // conservé pour compatibilité mais les sous-menus restent toujours ouverts
-  }
+  const modal     = document.getElementById('modal');
+  const modalWrap = document.getElementById('modal-video-wrap');
+  const showreel  = document.getElementById('showreel-bg');
 
-  /* ── Modal lecteur vidéo ── */
-  const modal        = document.getElementById('modal');
-  const modalWrap    = document.getElementById('modal-video-wrap');
-  const modalTitle   = document.getElementById('modal-title');
-  const showreelBg   = document.getElementById('showreel-bg');
-
-  function openModal(type, src, title) {
-    modalTitle.textContent = title || '';
+  function openYT(ytId) {
     modalWrap.innerHTML = '';
-
-    if (type === 'local') {
-      const v = document.createElement('video');
-      v.src = src;
-      v.controls = true;
-      v.autoplay = true;
-      v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;background:#000;';
-      modalWrap.appendChild(v);
-    } else if (type === 'vimeo') {
-      const iframe = document.createElement('iframe');
-      iframe.src = `https://player.vimeo.com/video/${src}?autoplay=1`;
-      iframe.allow = 'autoplay; fullscreen';
-      modalWrap.appendChild(iframe);
-    } else if (type === 'youtube') {
-      const iframe = document.createElement('iframe');
-      iframe.src = `https://www.youtube.com/embed/${src}?autoplay=1`;
-      iframe.allow = 'autoplay; fullscreen';
-      modalWrap.appendChild(iframe);
-    }
-
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`;
+    iframe.allow = 'autoplay; fullscreen';
+    iframe.allowFullscreen = true;
+    modalWrap.appendChild(iframe);
     modal.classList.add('open');
-    // Met en pause la boucle fond du showreel pendant que le modal est ouvert
-    if (showreelBg) showreelBg.pause();
+    if (showreel) showreel.pause();
     document.body.style.overflow = 'hidden';
   }
 
   function closeModal() {
     modal.classList.remove('open');
     modalWrap.innerHTML = '';
-    if (showreelBg) showreelBg.play();
+    if (showreel) showreel.play();
     document.body.style.overflow = '';
   }
 
@@ -625,25 +523,14 @@
     if (e.target === modal) closeModal();
   }
 
-  // Fermer avec Escape
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeModal();
   });
 
-  /* ── Hover play/pause sur les tiles vidéo (hors showreel) ── */
-  document.querySelectorAll('.tile:not(.showreel) video.tile-media').forEach(v => {
-    const tile = v.closest('.tile');
-    tile.addEventListener('mouseenter', () => v.play());
-    tile.addEventListener('mouseleave', () => { v.pause(); v.currentTime = 0; });
-  });
-
-  /* ── Clic sur chaque tile ── */
-  document.querySelectorAll('.tile').forEach(tile => {
+  document.querySelectorAll('.tile[data-yt]').forEach(tile => {
     tile.addEventListener('click', () => {
-      const type  = tile.dataset.type;
-      const src   = tile.dataset.src;
-      const title = tile.dataset.title;
-      if (type && src) openModal(type, src, title);
+      const ytId = tile.dataset.yt;
+      if (ytId && ytId !== 'YOUTUBE_ID_ICI') openYT(ytId);
     });
   });
 </script>
