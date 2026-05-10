@@ -77,15 +77,33 @@
       t8       : 3 col × 5 rangées  → colonne fine
       t9       : 9 col × 4 rangées  → très large
     */
-    .tile.showreel { grid-column: 1 / 9;  grid-row: 1 / 7;  }
-    .tile.t2       { grid-column: 9 / 13; grid-row: 1 / 7;  }
-    .tile.t3       { grid-column: 1 / 6;  grid-row: 7 / 11; }
-    .tile.t4       { grid-column: 6 / 9;  grid-row: 7 / 14; }
-    .tile.t5       { grid-column: 9 / 13; grid-row: 7 / 10; }
-    .tile.t6       { grid-column: 9 / 13; grid-row: 10 / 14;}
-    .tile.t7       { grid-column: 1 / 6;  grid-row: 11 / 14;}
-    .tile.t8       { grid-column: 1 / 4;  grid-row: 14 / 19;}
-    .tile.t9       { grid-column: 4 / 13; grid-row: 14 / 19;}
+    /*
+      ── Showreel 16:9 ──
+      aspect-ratio force la hauteur à partir de la largeur réelle de la tile.
+      align-self: start empêche la grille d'étirer la hauteur.
+    */
+    .tile.showreel {
+      grid-column: 1 / 9;
+      grid-row: 1;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      align-self: start;
+    }
+    /* t2 : même rangée que le showreel, hauteur calée sur lui */
+    .tile.t2 {
+      grid-column: 9 / 13;
+      grid-row: 1;
+      width: 100%;
+      aspect-ratio: 9 / 16;  /* portrait — s'adapte à la hauteur du showreel */
+      align-self: start;
+    }
+    .tile.t3       { grid-column: 1 / 6;  grid-row: 2 / 6;  }
+    .tile.t4       { grid-column: 6 / 9;  grid-row: 2 / 9;  }
+    .tile.t5       { grid-column: 9 / 13; grid-row: 2 / 5;  }
+    .tile.t6       { grid-column: 9 / 13; grid-row: 5 / 9;  }
+    .tile.t7       { grid-column: 1 / 6;  grid-row: 6 / 9;  }
+    .tile.t8       { grid-column: 1 / 4;  grid-row: 9 / 14; }
+    .tile.t9       { grid-column: 4 / 13; grid-row: 9 / 14; }
 
     /* Media — couvre toute la tile */
     .tile-media {
@@ -480,7 +498,7 @@
 
   <div class="sidebar-bottom">
     <a href="mailto:nokuta.video@gmail.com">nokuta.video@gmail.com</a>
-    <a href="https://www.instagram.com/_nokuta/" target="_blank">Instagram</a>
+    <a href="https://instagram.com" target="_blank">Instagram</a>
   </div>
 
 </aside>
