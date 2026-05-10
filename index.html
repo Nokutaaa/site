@@ -3,26 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Nokuta</title>
+  <title>Vidéaste & Monteur</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #080808;
-      --bg2: #101010;
-      --bg3: #161616;
-      --border: #1e1e1e;
-      --border2: #2a2a2a;
-      --text-bright: #f0f0f0;
-      --text-mid: #888;
-      --text-dim: #444;
-      --accent: #f0f0f0;
-      --font: 'DM Sans', sans-serif;
-      --mono: 'DM Mono', monospace;
-      --sidebar: 160px;
+      --bg:          #070707;
+      --bg2:         #0e0e0e;
+      --bg3:         #141414;
+      --border:      rgba(255,255,255,.07);
+      --border2:     rgba(255,255,255,.12);
+      --text-bright: #f2f2f2;
+      --text-mid:    #777;
+      --text-dim:    #333;
+      --font:        'DM Sans', sans-serif;
+      --mono:        'DM Mono', monospace;
+      --sidebar:     220px;
     }
 
     html, body {
@@ -48,75 +47,82 @@
       min-width: var(--sidebar);
       display: flex;
       flex-direction: column;
-      padding: 28px 20px 24px;
+      padding: 36px 28px 32px;
       border-right: 0.5px solid var(--border);
       position: relative;
       z-index: 10;
+      background: var(--bg);
     }
 
-    .logo {
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: .16em;
-      color: var(--text-bright);
-      text-transform: uppercase;
-      line-height: 1.5;
-      margin-bottom: 40px;
+    .logo-img {
+      display: block;
+      width: 100%;
+      max-width: 140px;
+      height: auto;
+      margin-bottom: 52px;
+      filter: brightness(0) invert(1);
+      object-fit: contain;
     }
 
     .nav-label {
       font-family: var(--mono);
       font-size: 8px;
-      letter-spacing: .2em;
+      letter-spacing: .22em;
       color: var(--text-dim);
       text-transform: uppercase;
-      margin-bottom: 6px;
-      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+
+    nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
 
     nav a {
       display: block;
-      font-size: 11px;
+      font-size: 13px;
+      font-weight: 300;
       color: var(--text-mid);
       text-decoration: none;
-      padding: 5px 0;
-      letter-spacing: .03em;
-      transition: color .15s;
+      padding: 7px 0;
+      letter-spacing: .04em;
+      transition: color .2s;
       cursor: pointer;
     }
-
-    nav a:hover, nav a.active { color: var(--text-bright); }
+    nav a:hover  { color: var(--text-bright); }
+    nav a.active { color: var(--text-bright); }
 
     .sidebar-bottom {
       margin-top: auto;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 14px;
     }
 
     .tag-location {
       font-family: var(--mono);
       font-size: 8px;
       color: var(--text-dim);
-      letter-spacing: .08em;
+      letter-spacing: .1em;
     }
 
     .cta-btn {
       background: var(--text-bright);
       color: var(--bg);
       border: none;
-      padding: 10px 0;
+      padding: 12px 0;
       font-family: var(--font);
       font-size: 9px;
       font-weight: 500;
-      letter-spacing: .14em;
+      letter-spacing: .16em;
       text-transform: uppercase;
       border-radius: 2px;
       cursor: pointer;
       width: 100%;
       transition: opacity .15s;
     }
-    .cta-btn:hover { opacity: .85; }
+    .cta-btn:hover { opacity: .82; }
 
     /* ── MAIN ── */
     .main {
@@ -129,126 +135,101 @@
     /* ── HERO SHOWREEL ── */
     .hero {
       position: relative;
-      height: 240px;
-      flex-shrink: 0;
-      background: #0c0c0c;
+      flex: 0 0 52%;
+      background: #000;
       border-bottom: 0.5px solid var(--border);
       display: flex;
       align-items: flex-end;
       overflow: hidden;
-      cursor: pointer;
     }
 
-    .hero-video-placeholder {
+    .hero-video {
       position: absolute;
       inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: .72;
     }
 
-    /* Scanlines effect */
-    .hero-video-placeholder::after {
+    .hero::after {
       content: '';
       position: absolute;
       inset: 0;
       background-image: repeating-linear-gradient(
-        0deg, transparent, transparent 2px,
-        rgba(0,0,0,.15) 2px, rgba(0,0,0,.15) 3px
+        0deg, transparent, transparent 3px,
+        rgba(0,0,0,.08) 3px, rgba(0,0,0,.08) 4px
       );
       pointer-events: none;
-    }
-
-    .waveform {
-      display: flex;
-      align-items: flex-end;
-      gap: 3px;
-      height: 80px;
-      opacity: .2;
-    }
-    .waveform span {
-      display: block;
-      width: 4px;
-      background: #555;
-      border-radius: 2px;
-      animation: wave 1.8s ease-in-out infinite;
-    }
-    .waveform span:nth-child(odd) { animation-delay: .3s; }
-    .waveform span:nth-child(3n) { animation-delay: .6s; }
-
-    @keyframes wave {
-      0%, 100% { transform: scaleY(1); }
-      50% { transform: scaleY(1.4); }
+      z-index: 1;
     }
 
     .play-circle {
       position: absolute;
-      width: 60px;
-      height: 60px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 68px;
+      height: 68px;
       border-radius: 50%;
-      border: 1.5px solid rgba(255,255,255,.4);
+      border: 1.5px solid rgba(255,255,255,.35);
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: border-color .2s, transform .2s;
+      z-index: 3;
+      cursor: pointer;
+      transition: border-color .25s, transform .25s;
     }
     .hero:hover .play-circle {
-      border-color: rgba(255,255,255,.9);
-      transform: scale(1.06);
+      border-color: rgba(255,255,255,.85);
+      transform: translate(-50%, -50%) scale(1.08);
     }
     .play-circle::after {
       content: '';
       width: 0; height: 0;
-      border-top: 11px solid transparent;
-      border-bottom: 11px solid transparent;
-      border-left: 18px solid rgba(255,255,255,.7);
-      margin-left: 5px;
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
+      border-left: 20px solid rgba(255,255,255,.75);
+      margin-left: 6px;
     }
 
-    .hero-duration {
+    .hero-gradient {
       position: absolute;
-      top: 16px;
-      right: 16px;
-      font-family: var(--mono);
-      font-size: 9px;
-      color: var(--text-dim);
-      letter-spacing: .06em;
-      border: 0.5px solid var(--border2);
-      padding: 3px 9px;
-      border-radius: 2px;
+      inset: 0;
+      background: linear-gradient(to top, rgba(7,7,7,.95) 0%, rgba(7,7,7,.1) 55%, transparent 100%);
+      z-index: 2;
+      pointer-events: none;
     }
 
     .hero-content {
       position: relative;
-      z-index: 2;
-      padding: 20px;
-      background: linear-gradient(to top, rgba(8,8,8,.9) 0%, transparent 100%);
+      z-index: 4;
+      padding: 32px 36px;
       width: 100%;
     }
 
     .hero-eyebrow {
       font-family: var(--mono);
       font-size: 8px;
-      letter-spacing: .2em;
+      letter-spacing: .24em;
       color: #555;
       text-transform: uppercase;
-      margin-bottom: 5px;
+      margin-bottom: 8px;
     }
 
     .hero-heading {
-      font-size: 22px;
+      font-size: 28px;
       font-weight: 300;
       color: var(--text-bright);
       line-height: 1.15;
-      letter-spacing: -.01em;
+      letter-spacing: -.02em;
     }
 
     .hero-sub {
-      font-size: 10px;
-      color: #555;
-      margin-top: 5px;
-      letter-spacing: .04em;
+      font-size: 11px;
+      color: #4a4a4a;
+      margin-top: 8px;
+      letter-spacing: .05em;
     }
 
     /* ── SERVICES STRIP ── */
@@ -260,30 +241,32 @@
 
     .svc {
       flex: 1;
-      padding: 12px 16px;
+      padding: 16px 22px;
       border-right: 0.5px solid var(--border);
       cursor: pointer;
-      transition: background .15s;
+      transition: background .2s;
     }
     .svc:last-child { border-right: none; }
-    .svc:hover { background: #0f0f0f; }
+    .svc:hover { background: var(--bg2); }
 
     .svc-name {
       font-family: var(--mono);
       font-size: 8px;
-      letter-spacing: .16em;
+      letter-spacing: .18em;
       text-transform: uppercase;
-      color: #555;
-      margin-bottom: 3px;
-      transition: color .15s;
+      color: #444;
+      margin-bottom: 4px;
+      transition: color .2s;
     }
     .svc:hover .svc-name { color: var(--text-mid); }
 
     .svc-desc {
-      font-size: 9px;
-      color: var(--text-dim);
+      font-size: 10px;
+      color: #2c2c2c;
       line-height: 1.4;
+      transition: color .2s;
     }
+    .svc:hover .svc-desc { color: #444; }
 
     /* ── VIDEO GRID ── */
     .grid {
@@ -291,8 +274,8 @@
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(2, 1fr);
-      gap: 2px;
-      background: #0d0d0d;
+      gap: 3px;
+      background: #050505;
       overflow: hidden;
     }
 
@@ -303,6 +286,17 @@
       overflow: hidden;
     }
 
+    .vi-thumb {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: .55;
+      transition: opacity .3s;
+    }
+    .vi:hover .vi-thumb { opacity: .75; }
+
     .vi-inner {
       position: absolute;
       inset: 0;
@@ -310,111 +304,87 @@
       align-items: center;
       justify-content: center;
     }
-
     .vi-waveform {
       display: flex;
       align-items: flex-end;
       gap: 2px;
       height: 32px;
-      opacity: .25;
+      opacity: .18;
     }
     .vi-waveform span {
       display: block;
       width: 3px;
-      background: #444;
+      background: #666;
       border-radius: 1px;
     }
 
     .vi-play {
       position: absolute;
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      border: 1px solid rgba(255,255,255,.25);
+      border: 1px solid rgba(255,255,255,.2);
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: border-color .2s;
+      transition: border-color .2s, transform .2s;
+      z-index: 3;
     }
-    .vi:hover .vi-play { border-color: rgba(255,255,255,.6); }
-
+    .vi:hover .vi-play {
+      border-color: rgba(255,255,255,.6);
+      transform: scale(1.1);
+    }
     .vi-play::after {
       content: '';
       width: 0; height: 0;
       border-top: 5px solid transparent;
       border-bottom: 5px solid transparent;
-      border-left: 9px solid rgba(255,255,255,.5);
+      border-left: 9px solid rgba(255,255,255,.55);
       margin-left: 2px;
     }
 
     .vi-overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,.8) 0%, transparent 55%);
+      background: linear-gradient(to top, rgba(0,0,0,.85) 0%, transparent 60%);
       opacity: 0;
-      transition: opacity .2s;
+      transition: opacity .25s;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      padding: 10px 12px;
+      padding: 14px 16px;
+      z-index: 2;
     }
     .vi:hover .vi-overlay { opacity: 1; }
 
     .vi-client {
       font-family: var(--mono);
       font-size: 7px;
-      letter-spacing: .14em;
+      letter-spacing: .16em;
       text-transform: uppercase;
       color: #888;
+      margin-bottom: 2px;
     }
     .vi-type {
-      font-size: 10px;
+      font-size: 11px;
       color: var(--text-bright);
       font-weight: 400;
     }
     .vi-dur {
       position: absolute;
-      top: 8px;
-      right: 8px;
+      top: 10px;
+      right: 10px;
       font-family: var(--mono);
       font-size: 8px;
-      color: #555;
-    }
-
-    /* ── BOTTOM BAR ── */
-    .bottom-bar {
-      padding: 10px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-top: 0.5px solid var(--border);
-      flex-shrink: 0;
-    }
-
-    .testimonial {
-      font-family: var(--mono);
-      font-size: 9px;
-      color: #383838;
-      font-style: italic;
-      max-width: 380px;
-    }
-    .testimonial em { color: #555; font-style: normal; }
-
-    .contact-email {
-      font-family: var(--mono);
-      font-size: 9px;
       color: #444;
-      letter-spacing: .06em;
-      text-decoration: none;
-      transition: color .15s;
+      z-index: 3;
     }
-    .contact-email:hover { color: var(--text-mid); }
 
     /* ── MODAL DEVIS ── */
     .modal-backdrop {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,.85);
+      background: rgba(0,0,0,.88);
       z-index: 100;
       display: none;
       align-items: center;
@@ -423,29 +393,29 @@
     .modal-backdrop.open { display: flex; }
 
     .modal {
-      background: #111;
+      background: #0f0f0f;
       border: 0.5px solid var(--border2);
       border-radius: 4px;
-      padding: 32px;
-      width: 380px;
-      max-width: 90vw;
+      padding: 40px;
+      width: 400px;
+      max-width: 92vw;
     }
     .modal h2 {
-      font-size: 14px;
-      font-weight: 500;
+      font-size: 15px;
+      font-weight: 400;
       color: var(--text-bright);
-      margin-bottom: 20px;
+      margin-bottom: 24px;
       letter-spacing: .04em;
     }
     .modal label {
       display: block;
       font-family: var(--mono);
       font-size: 8px;
-      letter-spacing: .16em;
+      letter-spacing: .18em;
       text-transform: uppercase;
-      color: #555;
+      color: #444;
       margin-bottom: 6px;
-      margin-top: 14px;
+      margin-top: 16px;
     }
     .modal input, .modal select, .modal textarea {
       width: 100%;
@@ -453,41 +423,37 @@
       border: 0.5px solid var(--border2);
       color: var(--text-bright);
       font-family: var(--font);
-      font-size: 12px;
-      padding: 9px 12px;
+      font-size: 13px;
+      padding: 10px 14px;
       border-radius: 2px;
       outline: none;
       transition: border-color .15s;
     }
-    .modal input:focus, .modal select:focus, .modal textarea:focus {
-      border-color: #444;
-    }
+    .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: #555; }
     .modal select option { background: #111; }
-    .modal textarea { resize: vertical; min-height: 80px; }
-    .modal-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 22px;
-    }
+    .modal textarea { resize: vertical; min-height: 90px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 26px; }
     .btn-send {
       flex: 1;
       background: var(--text-bright);
       color: var(--bg);
       border: none;
-      padding: 10px;
+      padding: 12px;
       font-family: var(--font);
       font-size: 10px;
       font-weight: 500;
-      letter-spacing: .12em;
+      letter-spacing: .14em;
       text-transform: uppercase;
       border-radius: 2px;
       cursor: pointer;
+      transition: opacity .15s;
     }
+    .btn-send:hover { opacity: .85; }
     .btn-cancel {
       background: transparent;
       color: var(--text-dim);
       border: 0.5px solid var(--border2);
-      padding: 10px 16px;
+      padding: 12px 18px;
       font-family: var(--font);
       font-size: 10px;
       letter-spacing: .08em;
@@ -499,17 +465,25 @@
     @media (max-width: 768px) {
       html, body { overflow: auto; }
       .site { flex-direction: column; height: auto; }
-      .sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 16px 20px; border-right: none; border-bottom: 0.5px solid var(--border); gap: 0; }
-      .logo { margin-bottom: 0; margin-right: auto; }
-      nav { display: flex; gap: 0; }
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 16px 20px;
+        border-right: none;
+        border-bottom: 0.5px solid var(--border);
+      }
+      .logo-img { max-width: 90px; margin-bottom: 0; margin-right: auto; }
+      nav { flex-direction: row; }
       nav a { padding: 5px 10px; }
       .nav-label, .tag-location { display: none; }
       .sidebar-bottom { margin-top: 0; margin-left: 12px; flex-direction: row; }
       .cta-btn { width: auto; padding: 9px 16px; }
       .main { overflow: auto; }
-      .hero { height: 200px; }
+      .hero { flex: none; height: 52vw; min-height: 200px; }
       .services { overflow-x: auto; }
-      .svc { min-width: 120px; }
+      .svc { min-width: 130px; }
       .grid { grid-template-columns: repeat(2, 1fr); grid-template-rows: auto; height: auto; }
       .vi { aspect-ratio: 16/9; }
     }
@@ -521,20 +495,16 @@
 
   <!-- ── SIDEBAR ── -->
   <aside class="sidebar">
-    <div class="logo">Votre<br>Nom</div>
-    <div class="nav-label">Navigation</div>
+    <!-- 💡 logo1.png dans le même dossier que index.html -->
+    <img class="logo-img" src="logo1.png" alt="Logo" />
+
+    <div class="nav-label">Menu</div>
     <nav>
       <a href="#" class="active">Accueil</a>
-      <a href="#">Projets</a>
-      <a href="#">Services</a>
       <a href="#">À propos</a>
-      <a href="#" onclick="openModal()">Contact</a>
+      <a href="#" onclick="openModal(); return false;">Contact</a>
     </nav>
-    <div class="nav-label">Réseaux</div>
-    <nav>
-      <a href="https://linkedin.com" target="_blank">LinkedIn</a>
-      <a href="https://vimeo.com" target="_blank">Vimeo</a>
-    </nav>
+
     <div class="sidebar-bottom">
       <div class="tag-location">Île-de-France · FR</div>
       <button class="cta-btn" onclick="openModal()">Devis gratuit</button>
@@ -544,20 +514,17 @@
   <!-- ── MAIN ── -->
   <main class="main">
 
-    <!-- HERO SHOWREEL -->
-    <!-- 💡 Remplacez cette section par une vraie vidéo :
-         <video autoplay muted loop playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.5">
-           <source src="showreel.mp4" type="video/mp4">
-         </video>
-    -->
-    <section class="hero" onclick="alert('Votre showreel ici — intégrez votre lien Vimeo/YouTube')">
-      <div class="hero-video-placeholder">
-        <div class="waveform" id="wf">
-          <!-- généré par JS -->
-        </div>
-        <div class="play-circle"></div>
-      </div>
-      <div class="hero-duration">2:34</div>
+    <!-- ── HERO — vidéo liée à video1.mp4 ── -->
+    <section class="hero">
+      <!--
+        💡 video1.mp4 doit être dans le même dossier que index.html.
+           autoplay + muted + loop = lecture automatique en boucle silencieuse.
+      -->
+      <video class="hero-video" autoplay muted loop playsinline>
+        <source src="video1.mp4" type="video/mp4" />
+      </video>
+      <div class="hero-gradient"></div>
+      <div class="play-circle"></div>
       <div class="hero-content">
         <div class="hero-eyebrow">Showreel 2025</div>
         <div class="hero-heading">Films d'entreprise<br>&amp; contenus digitaux</div>
@@ -565,7 +532,7 @@
       </div>
     </section>
 
-    <!-- SERVICES -->
+    <!-- ── SERVICES ── -->
     <div class="services">
       <div class="svc">
         <div class="svc-name">Film institutionnel</div>
@@ -585,21 +552,13 @@
       </div>
     </div>
 
-    <!-- VIDEO GRID -->
-    <!-- 💡 Pour chaque projet, remplacez href="#" par votre lien Vimeo/YouTube
-         et le texte par le vrai nom du client et du type de projet -->
-    <div class="grid" id="grid">
-      <!-- Les vignettes sont générées par JS ci-dessous -->
-    </div>
-
-    <!-- BOTTOM BAR -->
-    <div class="bottom-bar">
-      <div class="testimonial">
-        <em>« Un interlocuteur unique, du tournage au rendu final. Résultat impeccable. »</em>
-        — Directrice communication, PME Paris
-      </div>
-      <a class="contact-email" href="mailto:contact@votresite.fr">contact@votresite.fr</a>
-    </div>
+    <!-- ── VIDEO GRID ── -->
+    <!--
+      💡 Pour ajouter un visuel de prévisualisation à chaque cellule,
+         ajoutez une propriété "thumb" dans les projets ci-dessous.
+         Pour ouvrir une vidéo au clic, remplacez alert() par window.open('url').
+    -->
+    <div class="grid" id="grid"></div>
 
   </main>
 </div>
@@ -630,32 +589,25 @@
 </div>
 
 <script>
-  // ── Waveform hero ──
-  const wf = document.getElementById('wf');
-  const heights = [28,48,20,60,36,52,18,44,30,56,22,50,38,26,58,16,46,32,54,24,42,34,62,20,48];
-  heights.forEach(h => {
-    const s = document.createElement('span');
-    s.style.height = h + 'px';
-    wf.appendChild(s);
-  });
-
-  // ── Video grid ──
+  /* ── Projets de la grille ──
+     Personnalisez : client, type, dur(ée), et optionnellement thumb (chemin image).
+     Au clic, remplacez le alert() par : window.open('https://vimeo.com/ID', '_blank') */
   const projects = [
-    { client: 'Société Dupont', type: 'Film institutionnel', dur: '1:45' },
-    { client: 'Studio Créatif', type: 'Réseaux sociaux',    dur: '0:58' },
-    { client: 'Conférence RH',  type: 'Événementiel',        dur: '3:12' },
-    { client: 'Marque X',       type: 'Spot publicitaire',   dur: '0:30' },
-    { client: 'Agence Y',       type: 'Motion design',       dur: '1:20' },
-    { client: 'PME Loire',      type: 'Film corporate',      dur: '2:48' },
+    { client: 'Société Dupont',  type: 'Film institutionnel', dur: '1:45' },
+    { client: 'Studio Créatif',  type: 'Réseaux sociaux',     dur: '0:58' },
+    { client: 'Conférence RH',   type: 'Événementiel',         dur: '3:12' },
+    { client: 'Marque X',        type: 'Spot publicitaire',    dur: '0:30' },
+    { client: 'Agence Y',        type: 'Motion design',        dur: '1:20' },
+    { client: 'PME Loire',       type: 'Film corporate',       dur: '2:48' },
   ];
 
   const waveSets = [
-    [10,18,12,24,8,20,14],
-    [22,10,28,14,20,8,24],
-    [14,26,10,22,18,28,12],
-    [18,8,24,16,28,10,20],
-    [26,12,20,28,8,22,16],
-    [10,24,16,28,12,20,8],
+    [10,18,12,24,8,20,14,16,22],
+    [22,10,28,14,20,8,24,12,18],
+    [14,26,10,22,18,28,12,20,8],
+    [18,8,24,16,28,10,20,14,26],
+    [26,12,20,28,8,22,16,10,24],
+    [10,24,16,28,12,20,8,26,14],
   ];
 
   const grid = document.getElementById('grid');
@@ -663,8 +615,11 @@
     const vi = document.createElement('div');
     vi.className = 'vi';
     vi.innerHTML = `
+      ${p.thumb ? `<img class="vi-thumb" src="${p.thumb}" alt="${p.type}" />` : ''}
       <div class="vi-inner">
-        <div class="vi-waveform">${waveSets[i].map(h => `<span style="height:${h}px"></span>`).join('')}</div>
+        <div class="vi-waveform">
+          ${waveSets[i].map(h => `<span style="height:${h}px"></span>`).join('')}
+        </div>
         <div class="vi-play"></div>
       </div>
       <div class="vi-dur">${p.dur}</div>
@@ -673,12 +628,13 @@
         <div class="vi-type">${p.type}</div>
       </div>
     `;
-    // 💡 Remplacez alert() par window.open('https://vimeo.com/votre-video')
-    vi.addEventListener('click', () => alert(`Projet : ${p.type} — ${p.client}\n\n💡 Liez ici votre vidéo Vimeo ou YouTube.`));
+    vi.addEventListener('click', () => {
+      alert(`${p.type} — ${p.client}\n\n💡 Remplacez ce alert() par votre lien Vimeo/YouTube.`);
+    });
     grid.appendChild(vi);
   });
 
-  // ── Modal ──
+  /* ── Modal ── */
   function openModal() {
     document.getElementById('modal').classList.add('open');
   }
